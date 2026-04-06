@@ -1,0 +1,97 @@
+.header-layout-client {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.7);
+
+  .header-container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .header-logo {
+    cursor: pointer;
+    flex: 1; // Chiếm không gian bên trái
+    .logo-text-fancy {
+      font-family: "Georgia", serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: #1a4d2e;
+      letter-spacing: 0.2px;
+    }
+  }
+
+  .header-nav {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 60px;
+
+    .nav-link {
+      margin: 0;
+      font-size: 14px;
+      color: #1a4d2e;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+      font-weight: 500;
+
+      &:hover {
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .book-now-btn {
+    outline: none;
+    background-color: #ffffff;
+    color: #1a4d2e;
+    border: none;
+    padding: 12px 32px; // Padding ngang rộng hơn
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+    &:hover {
+      background-color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// When header scrolls or on other pages, it might need a background
+.header-layout-client.scrolled {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  height: 80px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+}
+
+.header-content-wrapper {
+  // Removed margin-top because Hero is now full-screen under header
+  width: 100%;
+}
