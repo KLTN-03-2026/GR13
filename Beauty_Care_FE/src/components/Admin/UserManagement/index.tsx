@@ -53,7 +53,7 @@ interface UserManagementProps {
 }
 
 const roleLabelMap: Record<UserRole, string> = {
-  Admin: "Admin",
+  Admin: "Quản trị viên",
   Staff: "Nhân viên",
   Customer: "Khách hàng",
 };
@@ -67,50 +67,54 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
 
   // Mock data for Users
   const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      email: "vana@gmail.com",
-      phone: "0912345678",
-      role: "Admin",
-      status: "Active",
-      lastLogin: "10 phút trước",
-      orders: 0,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin1",
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      email: "thib@gmail.com",
-      phone: "0987654321",
-      role: "Staff",
-      status: "Active",
-      lastLogin: "2 giờ trước",
-      orders: 0,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Staff1",
-    },
-    {
-      id: 3,
-      name: "Lê Văn C",
-      email: "vanc@gmail.com",
-      phone: "0909090909",
-      role: "Customer",
-      status: "Active",
-      lastLogin: "1 ngày trước",
-      orders: 15,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer1",
-    },
-    {
-      id: 4,
-      name: "Phạm Minh D",
-      email: "minhd@gmail.com",
-      phone: "0911223344",
-      role: "Customer",
-      status: "Inactive",
-      lastLogin: "5 ngày trước",
-      orders: 8,
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer2",
-    },
+      {
+        id: 1,
+        name: "Nguyễn Văn A",
+        email: "vana@gmail.com",
+        phone: "0912345678",
+        role: "Admin",
+        status: "Active",
+        lastLogin: "10 phút trước",
+        orders: 0,
+        age: 35,
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin1",
+      },
+      {
+        id: 2,
+        name: "Trần Thị B",
+        email: "thib@gmail.com",
+        phone: "0987654321",
+        role: "Staff",
+        status: "Active",
+        lastLogin: "2 giờ trước",
+        orders: 0,
+        age: 28,
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Staff1",
+      },
+      {
+        id: 3,
+        name: "Lê Văn C",
+        email: "vanc@gmail.com",
+        phone: "0909090909",
+        role: "Customer",
+        status: "Active",
+        lastLogin: "1 ngày trước",
+        orders: 15,
+        age: 24,
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer1",
+      },
+      {
+        id: 4,
+        name: "Phạm Minh D",
+        email: "minhd@gmail.com",
+        phone: "0911223344",
+        role: "Customer",
+        status: "Inactive",
+        lastLogin: "5 ngày trước",
+        orders: 8,
+        age: 42,
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer2",
+      },
   ]);
 
   // Mock data for New Users Stats
@@ -141,9 +145,9 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
   };
 
   const roleDistribution = [
-    { name: "Admin", value: 3, color: "#f5222d" },
-    { name: "Staff", value: 12, color: "#faad14" },
-    { name: "Customer", value: 850, color: "#1890ff" },
+    { name: "Quản trị viên", value: 3, color: "#f5222d" },
+    { name: "Nhân viên", value: 12, color: "#faad14" },
+    { name: "Khách hàng", value: 850, color: "#1890ff" },
   ];
 
   const handleAdd = () => {
@@ -221,8 +225,17 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
       dataIndex: "role",
       key: "role",
       render: (role: string) => {
-        let color = role === "Admin" ? "volcano" : role === "Staff" ? "orange" : "blue";
-        return <Tag color={color}>{role.toUpperCase()}</Tag>;
+        const roleColors: Record<string, string> = {
+          Admin: "volcano",
+          Staff: "orange",
+          Customer: "blue",
+        };
+        const roleLabels: Record<string, string> = {
+          Admin: "ADMIN",
+          Staff: "NHÂN VIÊN",
+          Customer: "KHÁCH HÀNG",
+        };
+        return <Tag color={roleColors[role] || "default"}>{roleLabels[role] || role.toUpperCase()}</Tag>;
       },
     },
     {
@@ -371,7 +384,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
                 onChange={(value) => setRoleFilter(value)}
                 options={[
                   { value: "all", label: "Tất cả vai trò" },
-                  { value: "Admin", label: "Admin" },
+                  { value: "Admin", label: "Quản trị viên" },
                   { value: "Staff", label: "Nhân viên" },
                   { value: "Customer", label: "Khách hàng" },
                 ]}
@@ -429,7 +442,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
                   initialValue="Customer"
                 >
                   <Select>
-                    <Select.Option value="Admin">Admin</Select.Option>
+                    <Select.Option value="Admin">Quản trị viên</Select.Option>
                     <Select.Option value="Staff">Nhân viên</Select.Option>
                     <Select.Option value="Customer">Khách hàng</Select.Option>
                   </Select>

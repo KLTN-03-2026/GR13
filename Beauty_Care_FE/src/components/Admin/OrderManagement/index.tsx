@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from "react";
+import dayjs from "dayjs";
 import {
   Badge,
   Button,
   Card,
   Col,
+  DatePicker,
   Descriptions,
   Divider,
   Dropdown,
@@ -268,6 +270,7 @@ const OrderManagementComponent: React.FC = () => {
       orderType: "Đơn thường",
       paymentStatus: "Chưa thanh toán",
       status: "Chờ xác nhận",
+      createdAt: dayjs(),
     });
     setIsCreateOpen(true);
   };
@@ -284,7 +287,7 @@ const OrderManagementComponent: React.FC = () => {
         orderType: values.orderType,
         paymentStatus: values.paymentStatus,
         status: values.status,
-        createdAt: "Vừa mới đây",
+        createdAt: values.createdAt.format("DD/MM/YYYY HH:mm"),
         total: values.total,
         note: values.note,
         lines: [],
@@ -706,6 +709,19 @@ const OrderManagementComponent: React.FC = () => {
             rules={[{ required: true, message: "Nhập địa chỉ giao" }]}
           >
             <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="createdAt"
+            label="Thời gian tạo đơn"
+            rules={[{ required: true, message: "Chọn thời gian tạo đơn" }]}
+          >
+            <DatePicker
+              showTime
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY HH:mm"
+              placeholder="Chọn ngày và giờ"
+            />
           </Form.Item>
 
           <Row gutter={16}>

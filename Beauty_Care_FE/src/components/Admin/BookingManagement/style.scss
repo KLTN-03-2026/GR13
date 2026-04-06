@@ -1,0 +1,26 @@
+.booking-management {
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+
+      .ant-card-head-title {
+        font-weight: 600;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .ant-table-wrapper {
+    .ant-table-thead > tr > th {
+      background: #fafafa;
+      font-weight: 600;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #fafafa;
+    }
+  }
+}

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Typography,
   Row,
@@ -42,10 +43,21 @@ import "./style.scss";
 const { Title } = Typography;
 
 const ProductManagementComponent: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      setEditingProduct(null);
+      form.resetFields();
+      setIsModalVisible(true);
+      searchParams.delete("action");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, form]);
 
   // Quill modules configuration
   const quillModules = {
