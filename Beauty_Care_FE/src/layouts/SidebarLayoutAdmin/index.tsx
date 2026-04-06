@@ -15,6 +15,7 @@ import {
   AppstoreOutlined,
   HeartOutlined,
   SettingOutlined,
+  BarChartOutlined as AnalyticsOutlined,
 } from "@ant-design/icons";
 import "./style.scss";
 
@@ -41,6 +42,7 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
     navigate(`/admin/${e.key}`);
   };
 
+  
   const menuItems: MenuItem[] = [
     {
       key: "dashboard",
@@ -55,7 +57,7 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
       icon: <TeamOutlined />,
       label: "Quản lý người dùng",
       children: [
-        { key: "users-admin", icon: <SafetyCertificateOutlined />, label: "Admin" },
+        { key: "users-admin", icon: <SafetyCertificateOutlined />, label: "Quản trị viên" },
         { key: "users-staff", icon: <TeamOutlined />, label: "Nhân viên" },
         { key: "users-customers", icon: <UserOutlined />, label: "Khách hàng" },
       ],
@@ -88,10 +90,11 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
         { key: "reviews", icon: <StarOutlined />, label: "Đánh giá" },
       ],
     },
+   
     {
-      key: "wishlist",
-      icon: <HeartOutlined />,
-      label: "Danh sách yêu thích",
+      key: "analytics",
+      icon: <AnalyticsOutlined />,
+      label: "Phân tích hành vi",
     },
     {
       type: "divider",

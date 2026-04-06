@@ -245,7 +245,13 @@ const AdminOverviewComponent: React.FC = () => {
       {/* Top statistics */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="stat-card">
+          <Card 
+            bordered={false} 
+            className="stat-card" 
+            hoverable 
+            onClick={() => navigate("/admin/revenue")}
+            style={{ cursor: "pointer" }}
+          >
             <Statistic
               title="Tổng doanh thu"
               value={152000000}
@@ -260,7 +266,13 @@ const AdminOverviewComponent: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="stat-card">
+          <Card
+            bordered={false}
+            className="stat-card"
+            hoverable
+            onClick={() => navigate("/admin/orders-success")}
+            style={{ cursor: "pointer" }}
+          >
             <Statistic
               title="Đơn hàng thành công"
               value={456}
@@ -475,6 +487,7 @@ const AdminOverviewComponent: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
     </div>
   );
 };

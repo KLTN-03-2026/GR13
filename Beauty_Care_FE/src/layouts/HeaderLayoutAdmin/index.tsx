@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Layout,
   Avatar,
@@ -10,6 +11,9 @@ import {
   Tooltip,
   Divider,
   Typography,
+  List,
+  Card,
+  message,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -25,11 +29,15 @@ import {
   FullscreenExitOutlined,
   QuestionCircleOutlined,
   GlobalOutlined,
+  ShoppingCartOutlined,
+  CheckCircleOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import logo from "../../assets/images/logo.png";
 import "./style.scss";
 
 const { Header } = Layout;
+const { Text } = Typography;
 
 interface HeaderLayoutAdminProps {
   collapsed?: boolean;
@@ -41,6 +49,102 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
   setCollapsed,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleQuickActionClick = ({ key }: { key: string }) => {
+    switch (key) {
+      case "new-product":
+        navigate("/admin/products?action=create");
+        break;
+      case "new-blog":
+        navigate("/admin/blogs?action=create");
+        break;
+      case "new-booking":
+        navigate("/admin/bookings?action=create");
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleOpenHelp = () => {
+    navigate("/admin/help");
+  };
+
+  const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "profile") {
+      navigate("/admin/profile");
+      return;
+    }
+    if (key === "settings") {
+      navigate("/admin/settings");
+      return;
+    }
+    if (key === "logout") {
+      message.success("Đã đăng xuất");
+      navigate("/");
+    }
+  };
+
+  const notifications = [
+    {
+      id: 1,
+      title: "Thanh Thuý vừa đặt hàng",
+      time: "5 phút trước",
+      icon: <ShoppingCartOutlined style={{ color: "#1890ff" }} />,
+      status: "new",
+    },
+    {
+      id: 2,
+      title: "Đơn hàng #BC-001 giao thành công",
+      time: "15 phút trước",
+      icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+      status: "success",
+    },
+    {
+      id: 3,
+      title: "Lịch hẹn mới: Nguyễn Văn A",
+      time: "1 giờ trước",
+      icon: <CalendarOutlined style={{ color: "#faad14" }} />,
+      status: "appointment",
+    },
+    {
+      id: 4,
+      title: "Bài viết của bạn đã được duyệt",
+      time: "3 giờ trước",
+      icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+      status: "info",
+    },
+    {
+      id: 5,
+      title: "Có 2 đánh giá mới chưa phản hồi",
+      time: "5 giờ trước",
+      icon: <BellOutlined style={{ color: "#ff4d4f" }} />,
+      status: "alert",
+    },
+  ];
+
+  const notificationContent = (
+    <Card
+      title="Thông báo mới"
+      extra={<a href="#">Xem tất cả</a>}
+      style={{ width: 350, boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.08)" }}
+      styles={{ body: { padding: 0 } }}
+    >
+      <List
+        dataSource={notifications}
+        renderItem={(item) => (
+          <List.Item className="notification-item" style={{ padding: "12px 16px", cursor: "pointer" }}>
+            <List.Item.Meta
+              avatar={<Avatar icon={item.icon} style={{ backgroundColor: "#f0f2f5" }} />}
+              title={<Text strong style={{ fontSize: 14 }}>{item.title}</Text>}
+              description={<Text type="secondary" style={{ fontSize: 12 }}>{item.time}</Text>}
+            />
+          </List.Item>
+        )}
+      />
+    </Card>
+  );
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -129,8 +233,8 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
             />
           </div>
 
-          <Space size={4} className="action-icons">
-            <Dropdown menu={{ items: quickActionItems }} trigger={["click"]}>
+          <Space size={16} align="center">
+            <Dropdown menu={{ items: quickActionItems, onClick: handleQuickActionClick }} trigger={["click"]}>
               <Tooltip title="Thêm nhanh">
                 <Button type="text" icon={<PlusOutlined />} className="action-btn" />
               </Tooltip>
@@ -146,7 +250,7 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
             </Tooltip>
 
             <Tooltip title="Trợ giúp">
-              <Button type="text" icon={<QuestionCircleOutlined />} className="action-btn" />
+              <Button type="text" icon={<QuestionCircleOutlined />} className="action-btn" onClick={handleOpenHelp} />
             </Tooltip>
 
             <Dropdown menu={{ items: languageItems }} trigger={["click"]}>
@@ -155,19 +259,21 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
               </Tooltip>
             </Dropdown>
 
-            <Badge count={5} size="small" offset={[-2, 10]}>
-              <Tooltip title="Thông báo">
-                <Button
-                  type="text"
-                  icon={<BellOutlined style={{ fontSize: "18px" }} />}
-                  className="action-btn"
-                />
-              </Tooltip>
-            </Badge>
+            <Dropdown dropdownRender={() => notificationContent} trigger={["click"]} placement="bottomRight">
+              <Badge count={5} size="small" offset={[-2, 10]}>
+                <Tooltip title="Thông báo">
+                  <Button
+                    type="text"
+                    icon={<BellOutlined style={{ fontSize: "18px" }} />}
+                    className="action-btn"
+                  />
+                </Tooltip>
+              </Badge>
+            </Dropdown>
           </Space>
 
           <Dropdown
-            menu={{ items: userMenuItems }}
+            menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
             placement="bottomRight"
             trigger={["click"]}
           >

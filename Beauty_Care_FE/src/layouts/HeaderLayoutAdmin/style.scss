@@ -124,3 +124,10 @@
     }
   }
 }
+
+.notification-item {
+  transition: all 0.2s;
+  &:hover {
+    background-color: #f5faff;
+  }
+}
