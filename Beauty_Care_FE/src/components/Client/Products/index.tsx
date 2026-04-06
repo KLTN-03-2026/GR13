@@ -13,13 +13,11 @@ import {
   Row,
   Col,
   Typography,
-  Space,
 } from "antd";
 import {
   FilterOutlined,
   HeartOutlined,
   ShoppingCartOutlined,
-  ArrowRightOutlined,
 } from "@ant-design/icons";
 import { useMemo, useState } from "react";
 

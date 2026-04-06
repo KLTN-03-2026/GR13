@@ -10,6 +10,9 @@ const HeaderLayoutClient = () => {
   const handleClickProducts = () => {
     navigate("/products");
   };
+  const handleClickAdmin = () => {
+    navigate("/admin");
+  };
   return (
     <>
       <div className="header-layout-client">
@@ -26,7 +29,7 @@ const HeaderLayoutClient = () => {
               Sản phẩm
             </p>
             <p className="nav-link">Bài viết</p>
-            <p className="nav-link">Đánh giá</p>
+            <p className="nav-link" onClick={handleClickAdmin}>Đánh giá</p>
           </nav>
 
           <div className="header-actions">
