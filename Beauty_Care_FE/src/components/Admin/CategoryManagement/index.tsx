@@ -18,6 +18,7 @@ import {
   Typography,
   Upload,
   message,
+  Spin,
 } from "antd";
 import {
   BarChartOutlined,
@@ -40,31 +41,33 @@ import {
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import "./style.scss";
+import {
+  useGetCategories,
+  useCreateCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+} from "../../../hooks/product";
+import type { ICategory } from "../../../api/product";
 
 const { Title, Text } = Typography;
 
-type Period = "week" | "month" | "year";
-
-type CategoryStatus = "Hiển thị" | "Ẩn";
-
-interface CategoryItem {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  productsCount: number;
-  soldQty: number;
-  status: CategoryStatus;
-}
-
 const CategoryManagementComponent: React.FC = () => {
-  const [period, setPeriod] = useState<Period>("week");
+  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const [search, setSearch] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(
+  const [editingCategory, setEditingCategory] = useState<ICategory | null>(
     null,
   );
   const [form] = Form.useForm();
+
+  // Queries & Mutations
+  const { data: categoriesRes, isLoading: isLoadingCategories } =
+    useGetCategories();
+  const createCategoryMutation = useCreateCategory();
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
+
+  const categories = categoriesRes?.data || [];
 
   const quillModules = {
     toolbar: [
@@ -97,54 +100,6 @@ const CategoryManagementComponent: React.FC = () => {
     "image",
   ];
 
-  const [categories, setCategories] = useState<CategoryItem[]>([
-    {
-      id: 1,
-      name: "Làm sạch",
-      description: "Sữa rửa mặt, tẩy trang, toner…",
-      image: "https://api.dicebear.com/7.x/shapes/svg?seed=cleanser",
-      productsCount: 42,
-      soldQty: 1280,
-      status: "Hiển thị",
-    },
-    {
-      id: 2,
-      name: "Chống nắng",
-      description: "Kem chống nắng, xịt chống nắng…",
-      image: "https://api.dicebear.com/7.x/shapes/svg?seed=sunscreen",
-      productsCount: 25,
-      soldQty: 980,
-      status: "Hiển thị",
-    },
-    {
-      id: 3,
-      name: "Tinh chất",
-      description: "Serum, ampoule…",
-      image: "https://api.dicebear.com/7.x/shapes/svg?seed=serum",
-      productsCount: 36,
-      soldQty: 860,
-      status: "Hiển thị",
-    },
-    {
-      id: 4,
-      name: "Dưỡng ẩm",
-      description: "Kem dưỡng, lotion…",
-      image: "https://api.dicebear.com/7.x/shapes/svg?seed=moisturizer",
-      productsCount: 31,
-      soldQty: 740,
-      status: "Hiển thị",
-    },
-    {
-      id: 5,
-      name: "Trang điểm",
-      description: "Son, phấn, kem nền…",
-      image: "https://api.dicebear.com/7.x/shapes/svg?seed=makeup",
-      productsCount: 18,
-      soldQty: 520,
-      status: "Ẩn",
-    },
-  ]);
-
   type TimelineRow = { name: string } & Record<string, number | string>;
 
   const timelineByPeriod = useMemo(() => {
@@ -174,7 +129,7 @@ const CategoryManagementComponent: React.FC = () => {
       { name: "Tháng 6", "Làm sạch": 740, "Chống nắng": 640, "Tinh chất": 610, "Dưỡng ẩm": 510, "Trang điểm": 380 },
     ];
 
-    return { week, month, year } satisfies Record<Period, TimelineRow[]>;
+    return { week, month, year };
   }, []);
 
   const top3CategoryNames = useMemo(() => {
@@ -208,23 +163,25 @@ const CategoryManagementComponent: React.FC = () => {
     return categories.filter((c) => {
       return (
         c.name.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q)
+        c.description?.toLowerCase().includes(q)
       );
     });
   }, [categories, search]);
 
   const totalCategories = categories.length;
-  const visibleCategories = categories.filter((c) => c.status === "Hiển thị").length;
-  const totalProducts = categories.reduce((sum, c) => sum + c.productsCount, 0);
+  const visibleCategories = categories.length;
+  const totalProducts = categories.reduce(
+    (sum, c) => sum + (c.productsCount || 0),
+    0,
+  );
 
   const handleAdd = () => {
     setEditingCategory(null);
     form.resetFields();
-    form.setFieldsValue({ status: "Hiển thị" });
     setIsModalVisible(true);
   };
 
-  const handleEdit = (record: CategoryItem) => {
+  const handleEdit = (record: ICategory) => {
     setEditingCategory(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
@@ -234,39 +191,40 @@ const CategoryManagementComponent: React.FC = () => {
     Modal.confirm({
       title: "Xác nhận xóa?",
       content: "Bạn có chắc chắn muốn xóa danh mục này không?",
-      onOk: () => {
-        setCategories(categories.filter((c) => c.id !== id));
-        message.success("Đã xóa danh mục");
+      onOk: async () => {
+        try {
+          await deleteCategoryMutation.mutateAsync(id);
+          message.success("Đã xóa danh mục");
+        } catch (error) {
+          message.error("Lỗi khi xóa danh mục");
+        }
       },
     });
   };
 
   const handleModalOk = () => {
-    form.validateFields().then((values) => {
-      if (editingCategory) {
-        setCategories(
-          categories.map((c) =>
-            c.id === editingCategory.id
-              ? {
-                  ...c,
-                  ...values,
-                }
-              : c,
-          ),
-        );
-        message.success("Đã cập nhật danh mục");
-      } else {
-        const newCategory: CategoryItem = {
-          id: Date.now(),
-          image:
-            "https://api.dicebear.com/7.x/shapes/svg?seed=" + Date.now().toString(),
-          soldQty: 0,
-          ...values,
-        };
-        setCategories([...categories, newCategory]);
-        message.success("Đã thêm danh mục mới");
+    form.validateFields().then(async (values) => {
+      try {
+        if (editingCategory) {
+          await updateCategoryMutation.mutateAsync({
+            id: editingCategory.id,
+            ...values,
+          });
+          message.success("Đã cập nhật danh mục");
+        } else {
+          await createCategoryMutation.mutateAsync({
+            ...values,
+            image:
+              values.image ||
+              "https://api.dicebear.com/7.x/shapes/svg?seed=" +
+                Date.now().toString(),
+          });
+          message.success("Đã thêm danh mục mới");
+        }
+        setIsModalVisible(false);
+      } catch (error) {
+        message.error("Có lỗi xảy ra, vui lòng thử lại");
       }
-      setIsModalVisible(false);
     });
   };
 
@@ -277,7 +235,12 @@ const CategoryManagementComponent: React.FC = () => {
       key: "image",
       width: 80,
       render: (src: string) => (
-        <Image src={src} width={48} height={48} style={{ borderRadius: 8 }} />
+        <Image
+          src={src || "https://via.placeholder.com/48"}
+          width={48}
+          height={48}
+          style={{ borderRadius: 8, objectFit: "cover" }}
+        />
       ),
     },
     {
@@ -292,32 +255,37 @@ const CategoryManagementComponent: React.FC = () => {
       dataIndex: "description",
       key: "description",
       ellipsis: true,
+      render: (text: string) => (
+        <div dangerouslySetInnerHTML={{ __html: text || "" }} />
+      ),
     },
     {
       title: "Số SP",
       dataIndex: "productsCount",
       key: "productsCount",
       width: 90,
-      sorter: (a: CategoryItem, b: CategoryItem) => a.productsCount - b.productsCount,
-      render: (v: number) => <Tag color="blue">{v}</Tag>,
+      sorter: (a: ICategory, b: ICategory) =>
+        (a.productsCount || 0) - (b.productsCount || 0),
+      render: (v: number) => <Tag color="blue">{v || 0}</Tag>,
     },
     {
       title: "Đã bán",
       dataIndex: "soldQty",
       key: "soldQty",
       width: 110,
-      sorter: (a: CategoryItem, b: CategoryItem) => a.soldQty - b.soldQty,
-      render: (v: number) => <Tag color="geekblue">{v}</Tag>,
+      sorter: (a: ICategory, b: ICategory) =>
+        (a.soldQty || 0) - (b.soldQty || 0),
+      render: (v: number) => <Tag color="geekblue">{v || 0}</Tag>,
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: CategoryStatus) => (
+      render: (status: string) => (
         <Badge
-          status={status === "Hiển thị" ? "success" : "default"}
-          text={status}
+          status={status === "active" ? "success" : "default"}
+          text={status === "active" ? "Hiển thị" : "Ẩn"}
         />
       ),
     },
@@ -325,7 +293,7 @@ const CategoryManagementComponent: React.FC = () => {
       title: "Thao tác",
       key: "action",
       width: 120,
-      render: (_: unknown, record: CategoryItem) => (
+      render: (_: unknown, record: ICategory) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
@@ -447,7 +415,9 @@ const CategoryManagementComponent: React.FC = () => {
           </Space>
         }
       >
-        <Table columns={columns} dataSource={filteredCategories} rowKey="id" />
+        <Spin spinning={isLoadingCategories}>
+          <Table columns={columns} dataSource={filteredCategories} rowKey="id" />
+        </Spin>
       </Card>
 
       <Modal
@@ -456,25 +426,17 @@ const CategoryManagementComponent: React.FC = () => {
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
         width={720}
+        confirmLoading={createCategoryMutation.isPending || updateCategoryMutation.isPending}
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={24}>
               <Form.Item
                 name="name"
                 label="Tên danh mục"
                 rules={[{ required: true, message: "Vui lòng nhập tên danh mục" }]}
               >
                 <Input placeholder="Ví dụ: Làm sạch" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="productsCount"
-                label="Số sản phẩm"
-                rules={[{ required: true, message: "Vui lòng nhập số sản phẩm" }]}
-              >
-                <InputNumber style={{ width: "100%" }} min={0} />
               </Form.Item>
             </Col>
           </Row>
@@ -495,23 +457,22 @@ const CategoryManagementComponent: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="status" label="Trạng thái" initialValue="Hiển thị">
+              <Form.Item
+                name="status"
+                label="Trạng thái"
+                initialValue="active"
+              >
                 <Select
                   options={[
-                    { value: "Hiển thị", label: "Hiển thị" },
-                    { value: "Ẩn", label: "Ẩn" },
+                    { value: "active", label: "Hiển thị" },
+                    { value: "inactive", label: "Ẩn" },
                   ]}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label="Hình ảnh">
-                <Upload listType="picture-card">
-                  <div>
-                    <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>Tải lên</div>
-                  </div>
-                </Upload>
+              <Form.Item name="image" label="Link hình ảnh">
+                <Input placeholder="Nhập link hình ảnh hoặc dùng mặc định" />
               </Form.Item>
             </Col>
           </Row>

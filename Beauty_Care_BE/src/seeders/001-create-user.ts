@@ -12,6 +12,7 @@ export default {
           Email: "admin@techspa.com",
           Phone: "0123456789",
           img: "https://example.com/admin.png",
+          avatar: "https://example.com/admin.png",
           password: "password123", // Trong thực tế nên hash password
           role_code: "R1",
           createdAt: new Date(),

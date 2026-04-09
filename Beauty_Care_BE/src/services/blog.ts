@@ -36,6 +36,7 @@ export const createBlog = async (payload: any, authorId?: number) => {
       content: payload.content,
       image: payload.image || null,
       category: payload.category,
+      blog_category_id: payload.blog_category_id,
       status: payload.status || "draft",
       author_id: authorId ?? payload.author_id ?? null,
     });
@@ -73,23 +74,38 @@ export const getAllBlogs = async (query: any) => {
 
   const { rows, count } = await db.Blog.findAndCountAll({
     where,
+    distinct: true,
     limit,
     offset,
-    order: [["created_at", "DESC"]],
+    order: [["createdAt", "DESC"]],
     include: [
       {
         model: db.User,
         as: "authorData",
         attributes: ["id", "firstName", "lastName", "Email", "role_code"],
       },
+      {
+        model: db.BlogCategory,
+        as: "blogCategoryData",
+        attributes: ["id", "name"],
+      },
     ],
+  });
+
+  // Map data to handle legacy category column
+  const items = rows.map((blog: any) => {
+    const plainBlog = blog.get({ plain: true });
+    if (!plainBlog.blogCategoryData && plainBlog.category) {
+      plainBlog.blogCategoryData = { name: plainBlog.category };
+    }
+    return plainBlog;
   });
 
   return {
     err: 0,
     mess: "Lấy danh sách bài viết thành công",
     data: {
-      items: rows,
+      items,
       pagination: {
         page,
         limit,
@@ -108,37 +124,10 @@ export const getBlogById = async (id: number, options?: { incViews?: boolean }) 
         as: "authorData",
         attributes: ["id", "firstName", "lastName", "Email", "role_code"],
       },
-    ],
-  });
-
-  if (!blog) {
-    return {
-      err: 1,
-      mess: "Không tìm thấy bài viết",
-      data: null,
-    };
-  }
-
-  if (options?.incViews) {
-    await blog.increment("views", { by: 1 });
-    await blog.reload();
-  }
-
-  return {
-    err: 0,
-    mess: "Lấy bài viết thành công",
-    data: blog,
-  };
-};
-
-export const getBlogBySlug = async (slug: string, options?: { incViews?: boolean }) => {
-  const blog = await db.Blog.findOne({
-    where: { slug },
-    include: [
       {
-        model: db.User,
-        as: "authorData",
-        attributes: ["id", "firstName", "lastName", "Email", "role_code"],
+        model: db.BlogCategory,
+        as: "blogCategoryData",
+        attributes: ["id", "name"],
       },
     ],
   });
@@ -151,15 +140,61 @@ export const getBlogBySlug = async (slug: string, options?: { incViews?: boolean
     };
   }
 
+  const plainBlog = blog.get({ plain: true });
+  if (!plainBlog.blogCategoryData && plainBlog.category) {
+    plainBlog.blogCategoryData = { name: plainBlog.category };
+  }
+
   if (options?.incViews) {
     await blog.increment("views", { by: 1 });
-    await blog.reload();
+    // Reload if needed, but we already have the plain object
   }
 
   return {
     err: 0,
     mess: "Lấy bài viết thành công",
-    data: blog,
+    data: plainBlog,
+  };
+};
+
+export const getBlogBySlug = async (slug: string, options?: { incViews?: boolean }) => {
+  const blog = await db.Blog.findOne({
+    where: { slug },
+    include: [
+      {
+        model: db.User,
+        as: "authorData",
+        attributes: ["id", "firstName", "lastName", "Email", "role_code"],
+      },
+      {
+        model: db.BlogCategory,
+        as: "blogCategoryData",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+
+  if (!blog) {
+    return {
+      err: 1,
+      mess: "Không tìm thấy bài viết",
+      data: null,
+    };
+  }
+
+  const plainBlog = blog.get({ plain: true });
+  if (!plainBlog.blogCategoryData && plainBlog.category) {
+    plainBlog.blogCategoryData = { name: plainBlog.category };
+  }
+
+  if (options?.incViews) {
+    await blog.increment("views", { by: 1 });
+  }
+
+  return {
+    err: 0,
+    mess: "Lấy bài viết thành công",
+    data: plainBlog,
   };
 };
 

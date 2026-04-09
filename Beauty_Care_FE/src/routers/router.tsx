@@ -10,6 +10,7 @@ import ProductManagementPage from "../pages/Admin/ProductManagement";
 import UserManagementPage from "../pages/Admin/UserManagement";
 import BookingManagementPage from "../pages/Admin/BookingManagement";
 import BlogManagementPage from "../pages/Admin/BlogManagement";
+import BlogCategoryManagementPage from "../pages/Admin/BlogCategoryManagement";
 import ReviewManagementPage from "../pages/Admin/ReviewManagement";
 import AnalyticsManagementPage from "../pages/Admin/AnalyticsManagement";
 import SettingsManagementPage from "../pages/Admin/SettingsManagement";
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
       {
         path: "blogs",
         element: <BlogManagementPage />,
+      },
+      {
+        path: "blog-categories",
+        element: <BlogCategoryManagementPage />,
       },
       {
         path: "reviews",

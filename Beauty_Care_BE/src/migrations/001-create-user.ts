@@ -31,6 +31,10 @@ export default {
       img: {
         type: Sequelize.STRING,
       },
+      avatar: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       password: {
         type: Sequelize.STRING,
         allowNull: false,

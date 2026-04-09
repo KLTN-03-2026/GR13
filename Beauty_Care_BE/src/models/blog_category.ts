@@ -1,39 +1,37 @@
 import { Model, DataTypes, Sequelize, Optional } from "sequelize";
 
-export interface CategoryAttributes {
+export interface BlogCategoryAttributes {
   id: number;
   name: string;
   description?: string | null;
-  image?: string | null;
   status: "active" | "inactive";
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface CategoryCreationAttributes
-  extends Optional<CategoryAttributes, "id" | "description" | "image" | "status" | "createdAt" | "updatedAt"> {}
+export interface BlogCategoryCreationAttributes
+  extends Optional<BlogCategoryAttributes, "id" | "description" | "status" | "createdAt" | "updatedAt"> {}
 
-class Category
-  extends Model<CategoryAttributes, CategoryCreationAttributes>
-  implements CategoryAttributes
+class BlogCategory
+  extends Model<BlogCategoryAttributes, BlogCategoryCreationAttributes>
+  implements BlogCategoryAttributes
 {
   public id!: number;
   public name!: string;
   public description!: string | null;
-  public image!: string | null;
   public status!: "active" | "inactive";
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   static associate(models: any) {
-    Category.hasMany(models.Product, {
-      foreignKey: "categoryId",
-      as: "products",
+    BlogCategory.hasMany(models.Blog, {
+      foreignKey: "blog_category_id",
+      as: "blogs",
     });
   }
 
-  static initModel(sequelize: Sequelize): typeof Category {
-    Category.init(
+  static initModel(sequelize: Sequelize): typeof BlogCategory {
+    BlogCategory.init(
       {
         id: {
           type: DataTypes.INTEGER,
@@ -48,10 +46,6 @@ class Category
           type: DataTypes.TEXT,
           allowNull: true,
         },
-        image: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
         status: {
           type: DataTypes.ENUM("active", "inactive"),
           defaultValue: "active",
@@ -59,13 +53,14 @@ class Category
       },
       {
         sequelize,
-        modelName: "Category",
-        tableName: "Categories",
+        modelName: "BlogCategory",
+        tableName: "blog_categories",
         timestamps: true,
+        underscored: true,
       }
     );
-    return Category;
+    return BlogCategory;
   }
 }
 
-export default Category;
+export default BlogCategory;

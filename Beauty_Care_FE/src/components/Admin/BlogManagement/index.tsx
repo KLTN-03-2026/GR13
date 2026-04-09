@@ -16,8 +16,9 @@ import {
   Row,
   Col,
   Tooltip,
-    Upload,
+  Upload,
   Statistic,
+  Spin,
 } from "antd";
 import {
   EditOutlined,
@@ -35,31 +36,47 @@ import {
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import "./style.scss";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip as ChartTooltip,
+} from "recharts";
+import {
+  useGetBlogs,
+  useCreateBlog,
+  useUpdateBlog,
+  useDeleteBlog,
+  useGetBlogCategories,
+} from "../../../hooks/blog";
+import type { IBlog } from "../../../api/blog";
+
+
 
 const { Title, Text } = Typography;
-
-type BlogStatus = "published" | "draft" | "pending";
-
-interface BlogItem {
-  id: number;
-  title: string;
-  author: string;
-  category: string;
-  image: string;
-  content: string;
-  createdAt: string;
-  status: BlogStatus;
-}
 
 const BlogManagementComponent: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<BlogItem | null>(null);
+  const [editingBlog, setEditingBlog] = useState<IBlog | null>(null);
   const [search, setSearch] = useState("");
   const [fileList, setFileList] = useState<any[]>([]);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const [form] = Form.useForm();
+
+  // Queries & Mutations
+  const { data: blogsRes, isLoading } = useGetBlogs({ q: search });
+  const { data: blogCategoriesRes } = useGetBlogCategories();
+  const createBlogMutation = useCreateBlog();
+  const updateBlogMutation = useUpdateBlog();
+  const deleteBlogMutation = useDeleteBlog();
+
+  const blogs = blogsRes?.data?.items || [];
+  const blogCategories = blogCategoriesRes?.data || [];
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -72,93 +89,39 @@ const BlogManagementComponent: React.FC = () => {
     }
   }, [searchParams, setSearchParams, form]);
 
-  // Mock data for Blogs
-  const [blogs, setBlogs] = useState<BlogItem[]>([
-    {
-      id: 1,
-      title: "5 Bí quyết chăm sóc da mặt tại nhà",
-      author: "Admin",
-      category: "Chăm sóc da",
-      image: "https://media.vov.vn/sites/default/files/styles/large/public/2022-08/istockphoto-921797424-612x612.jpg",
-      content: "<p>Nội dung chi tiết về cách chăm sóc da mặt tại nhà...</p>",
-      createdAt: "2024-04-01",
-      status: "published",
-    },
-    {
-      id: 2,
-      title: "Tác dụng của kem chống nắng hằng ngày",
-      author: "Nguyễn Thu Thảo",
-      category: "Chăm sóc da",
-      image: "https://hongngochospital.vn/wp-content/uploads/2020/02/cham-soc-da-dep.jpg",
-      content: "<p>Tầm quan trọng của việc sử dụng kem chống nắng mỗi ngày...</p>",
-      createdAt: "2024-04-03",
-      status: "published",
-    },
-    {
-      id: 3,
-      title: "Xu hướng trang điểm tự nhiên 2024",
-      author: "Lê Minh Anh",
-      category: "Trang điểm",
-      image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-      content: "<p>Những phong cách trang điểm tự nhiên đang lên ngôi...</p>",
-      createdAt: "2024-04-05",
-      status: "draft",
-    },
-    {
-      id: 4,
-      title: "Quy trình chăm sóc da mụn đúng cách",
-      author: "Trần Văn B",
-      category: "Chăm sóc da",
-      image: "https://thammyquoctednd.vn/wp-content/uploads/2024/06/cham-soc-da-chuyen-sau.jpg",
-      content: "<p>Các bước chăm sóc da mụn...</p>",
-      createdAt: "2024-04-06",
-      status: "pending",
-    },
-  ]);
-
   const stats = useMemo(() => {
-    const published = blogs.filter(b => b.status === "published").length;
-    const draft = blogs.filter(b => b.status === "draft").length;
-    const pending = blogs.filter(b => b.status === "pending").length;
-    return { published, draft, pending };
+    const published = blogs.filter((b) => b.status === "published").length;
+    const draft = blogs.filter((b) => b.status === "draft").length;
+    const archived = blogs.filter((b) => b.status === "archived").length;
+    return { published, draft, archived };
   }, [blogs]);
 
   const chartData = useMemo(() => {
     const week = [
-      { name: "T2", published: 2, draft: 1, pending: 1 },
-      { name: "T3", published: 3, draft: 2, pending: 0 },
-      { name: "T4", published: 1, draft: 1, pending: 2 },
-      { name: "T5", published: 4, draft: 0, pending: 1 },
-      { name: "T6", published: 2, draft: 3, pending: 1 },
-      { name: "T7", published: 5, draft: 1, pending: 0 },
-      { name: "CN", published: 3, draft: 1, pending: 1 },
+      { name: "T2", published: 2, draft: 1, archived: 1 },
+      { name: "T3", published: 3, draft: 2, archived: 0 },
+      { name: "T4", published: 1, draft: 1, archived: 2 },
+      { name: "T5", published: 4, draft: 0, archived: 1 },
+      { name: "T6", published: 2, draft: 3, archived: 1 },
+      { name: "T7", published: 5, draft: 1, archived: 0 },
+      { name: "CN", published: 3, draft: 1, archived: 1 },
     ];
     const month = [
-      { name: "Tuần 1", published: 12, draft: 5, pending: 3 },
-      { name: "Tuần 2", published: 15, draft: 4, pending: 6 },
-      { name: "Tuần 3", published: 10, draft: 8, pending: 4 },
-      { name: "Tuần 4", published: 18, draft: 3, pending: 5 },
+      { name: "Tuần 1", published: 12, draft: 5, archived: 3 },
+      { name: "Tuần 2", published: 15, draft: 4, archived: 6 },
+      { name: "Tuần 3", published: 10, draft: 8, archived: 4 },
+      { name: "Tuần 4", published: 18, draft: 3, archived: 5 },
     ];
     const year = [
-      { name: "Tháng 1", published: 45, draft: 12, pending: 8 },
-      { name: "Tháng 2", published: 38, draft: 15, pending: 10 },
-      { name: "Tháng 3", published: 52, draft: 10, pending: 12 },
-      { name: "Tháng 4", published: 60, draft: 8, pending: 15 },
-      { name: "Tháng 5", published: 48, draft: 14, pending: 9 },
-      { name: "Tháng 6", published: 55, draft: 11, pending: 11 },
+      { name: "Tháng 1", published: 45, draft: 12, archived: 8 },
+      { name: "Tháng 2", published: 38, draft: 15, archived: 10 },
+      { name: "Tháng 3", published: 52, draft: 10, archived: 12 },
+      { name: "Tháng 4", published: 60, draft: 8, archived: 15 },
+      { name: "Tháng 5", published: 48, draft: 14, archived: 9 },
+      { name: "Tháng 6", published: 55, draft: 11, archived: 11 },
     ];
     return { week, month, year };
   }, []);
-
-  const filteredBlogs = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return blogs.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q) ||
-        b.category.toLowerCase().includes(q)
-    );
-  }, [blogs, search]);
 
   const handleAdd = () => {
     setEditingBlog(null);
@@ -167,16 +130,18 @@ const BlogManagementComponent: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleEdit = (record: BlogItem) => {
+  const handleEdit = (record: IBlog) => {
     setEditingBlog(record);
-    const currentFileList = [
-      {
-        uid: "-1",
-        name: "image.png",
-        status: "done",
-        url: record.image,
-      },
-    ];
+    const currentFileList = record.image
+      ? [
+          {
+            uid: "-1",
+            name: "image.png",
+            status: "done",
+            url: record.image,
+          },
+        ]
+      : [];
     setFileList(currentFileList);
     form.setFieldsValue({
       ...record,
@@ -192,9 +157,13 @@ const BlogManagementComponent: React.FC = () => {
       okText: "Xóa",
       cancelText: "Hủy",
       okButtonProps: { danger: true },
-      onOk: () => {
-        setBlogs(blogs.filter((b) => b.id !== id));
-        message.success("Đã xóa bài viết");
+      onOk: async () => {
+        try {
+          await deleteBlogMutation.mutateAsync(id);
+          message.success("Đã xóa bài viết");
+        } catch (error) {
+          message.error("Lỗi khi xóa bài viết");
+        }
       },
     });
   };
@@ -209,36 +178,35 @@ const BlogManagementComponent: React.FC = () => {
 
   const handleModalOk = () => {
     form.validateFields().then(async (values) => {
-      let imageUrl = values.image;
-      if (fileList.length > 0 && fileList[0].originFileObj) {
-        imageUrl = await getBase64(fileList[0].originFileObj);
-      } else if (fileList.length > 0 && fileList[0].url) {
-        imageUrl = fileList[0].url;
-      }
+      try {
+        let imageUrl = values.image;
+        if (fileList.length > 0 && fileList[0].originFileObj) {
+          imageUrl = await getBase64(fileList[0].originFileObj);
+        } else if (fileList.length > 0 && fileList[0].url) {
+          imageUrl = fileList[0].url;
+        } else {
+          imageUrl = null;
+        }
 
-      const blogData = {
-        ...values,
-        image: imageUrl,
-      };
-
-      if (editingBlog) {
-        setBlogs(
-          blogs.map((b) =>
-            b.id === editingBlog.id ? { ...b, ...blogData } : b
-          )
-        );
-        message.success("Đã cập nhật bài viết");
-      } else {
-        const newBlog: BlogItem = {
-          id: Date.now(),
-          ...blogData,
-          createdAt: new Date().toISOString().split("T")[0],
-          status: values.status || "draft",
+        const blogData = {
+          ...values,
+          image: imageUrl,
         };
-        setBlogs([newBlog, ...blogs]);
-        message.success("Đã thêm bài viết mới");
+
+        if (editingBlog) {
+          await updateBlogMutation.mutateAsync({
+            id: editingBlog.id,
+            ...blogData,
+          });
+          message.success("Đã cập nhật bài viết");
+        } else {
+          await createBlogMutation.mutateAsync(blogData);
+          message.success("Đã thêm bài viết mới");
+        }
+        setIsModalVisible(false);
+      } catch (error) {
+        message.error("Có lỗi xảy ra, vui lòng thử lại");
       }
-      setIsModalVisible(false);
     });
   };
 
@@ -249,7 +217,12 @@ const BlogManagementComponent: React.FC = () => {
       key: "image",
       width: 100,
       render: (img: string) => (
-        <Image src={img} alt="blog" width={80} style={{ borderRadius: 4 }} />
+        <Image
+          src={img || "https://via.placeholder.com/80"}
+          alt="blog"
+          width={80}
+          style={{ borderRadius: 4, objectFit: "cover" }}
+        />
       ),
     },
     {
@@ -261,39 +234,41 @@ const BlogManagementComponent: React.FC = () => {
     },
     {
       title: "Tác giả",
-      dataIndex: "author",
+      dataIndex: "authorData",
       key: "author",
       width: 150,
-      render: (text: string) => (
+      render: (authorData: any) => (
         <Space>
           <UserOutlined />
-          {text}
+          {authorData ? `${authorData.firstName} ${authorData.lastName}` : "N/A"}
         </Space>
       ),
     },
     {
       title: "Danh mục",
-      dataIndex: "category",
       key: "category",
       width: 130,
-      render: (cat: string) => <Tag color="blue">{cat}</Tag>,
+      render: (_: any, record: IBlog) => (
+        <Tag color="blue">{record.blogCategoryData?.name || "N/A"}</Tag>
+      ),
     },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
+      render: (date: string) => (date ? new Date(date).toLocaleDateString() : "N/A"),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: 120,
-      render: (status: BlogStatus) => {
+      render: (status: "published" | "draft" | "archived") => {
         const config = {
           published: { color: "green", label: "Đã đăng" },
           draft: { color: "orange", label: "Bản nháp" },
-          pending: { color: "blue", label: "Chờ duyệt" },
+          archived: { color: "blue", label: "Lưu trữ" },
         };
         return <Tag color={config[status].color}>{config[status].label}</Tag>;
       },
@@ -302,7 +277,7 @@ const BlogManagementComponent: React.FC = () => {
       title: "Thao tác",
       key: "action",
       width: 120,
-      render: (_: any, record: BlogItem) => (
+      render: (_: any, record: IBlog) => (
         <Space>
           <Tooltip title="Sửa">
             <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
@@ -345,8 +320,8 @@ const BlogManagementComponent: React.FC = () => {
         <Col xs={24} sm={8}>
           <Card bordered={false} className="blog-stat-card">
             <Statistic
-              title="Chờ duyệt"
-              value={stats.pending}
+              title="Lưu trữ"
+              value={stats.archived}
               prefix={<ClockCircleOutlined style={{ color: "#1890ff" }} />}
             />
           </Card>
@@ -357,8 +332,16 @@ const BlogManagementComponent: React.FC = () => {
         <Col span={24}>
           <Card
             title={
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Space><BarChartOutlined /> Thống kê bài viết theo thời gian</Space>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Space>
+                  <BarChartOutlined /> Thống kê bài viết theo thời gian
+                </Space>
                 <Select
                   value={period}
                   onChange={(v) => setPeriod(v)}
@@ -379,11 +362,26 @@ const BlogManagementComponent: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip />
+                  <ChartTooltip />
                   <Legend />
-                  <Bar dataKey="published" fill="#52c41a" name="Đã đăng" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="draft" fill="#faad14" name="Bản nháp" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="pending" fill="#1890ff" name="Chờ duyệt" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="published"
+                    fill="#52c41a"
+                    name="Đã đăng"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="draft"
+                    fill="#faad14"
+                    name="Bản nháp"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="archived"
+                    fill="#1890ff"
+                    name="Lưu trữ"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -402,7 +400,7 @@ const BlogManagementComponent: React.FC = () => {
           <Space wrap>
             <Input
               prefix={<SearchOutlined />}
-              placeholder="Tìm theo tiêu đề, tác giả..."
+              placeholder="Tìm theo tiêu đề..."
               style={{ width: 250 }}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -413,13 +411,15 @@ const BlogManagementComponent: React.FC = () => {
           </Space>
         }
       >
-        <Table
-          columns={columns}
-          dataSource={filteredBlogs}
-          rowKey="id"
-          size="small"
-          scroll={{ x: "max-content" }}
-        />
+        <Spin spinning={isLoading}>
+          <Table
+            columns={columns}
+            dataSource={blogs}
+            rowKey="id"
+            size="small"
+            scroll={{ x: "max-content" }}
+          />
+        </Spin>
       </Card>
 
       <Modal
@@ -430,6 +430,7 @@ const BlogManagementComponent: React.FC = () => {
         width={1000}
         okText={editingBlog ? "Cập nhật" : "Tạo bài viết"}
         cancelText="Hủy"
+        confirmLoading={createBlogMutation.isPending || updateBlogMutation.isPending}
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
@@ -437,38 +438,41 @@ const BlogManagementComponent: React.FC = () => {
               <Form.Item
                 name="title"
                 label="Tên bài viết"
-                rules={[{ required: true, message: "Vui lòng nhập tên bài viết" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên bài viết" },
+                ]}
               >
                 <Input placeholder="Nhập tiêu đề bài viết" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                name="category"
+                name="blog_category_id"
                 label="Danh mục"
                 rules={[{ required: true, message: "Chọn danh mục" }]}
               >
                 <Select placeholder="Chọn danh mục">
-                  <Select.Option value="Chăm sóc da">Chăm sóc da</Select.Option>
-                  <Select.Option value="Trang điểm">Trang điểm</Select.Option>
-                  <Select.Option value="Tư vấn">Tư vấn</Select.Option>
-                  <Select.Option value="Khác">Khác</Select.Option>
+                  {blogCategories.map((cat: any) => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col span={16}>
               <Form.Item
-                name="author"
-                label="Tác giả"
-                rules={[{ required: true, message: "Vui lòng nhập tên tác giả" }]}
+                name="desc"
+                label="Mô tả ngắn"
+                rules={[{ required: true, message: "Vui lòng nhập mô tả ngắn" }]}
               >
-                <Input placeholder="Tên người viết" />
+                <Input placeholder="Nhập mô tả ngắn cho bài viết" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
                 name="status"
                 label="Trạng thái"
@@ -477,7 +481,7 @@ const BlogManagementComponent: React.FC = () => {
                 <Select>
                   <Select.Option value="published">Đã đăng</Select.Option>
                   <Select.Option value="draft">Bản nháp</Select.Option>
-                  <Select.Option value="pending">Chờ duyệt</Select.Option>
+                  <Select.Option value="archived">Lưu trữ</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -491,7 +495,6 @@ const BlogManagementComponent: React.FC = () => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
-            rules={[{ required: true, message: "Vui lòng tải lên hình ảnh" }]}
           >
             <Upload
               listType="picture-card"
@@ -512,7 +515,9 @@ const BlogManagementComponent: React.FC = () => {
           <Form.Item
             name="content"
             label="Nội dung"
-            rules={[{ required: true, message: "Vui lòng nhập nội dung bài viết" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập nội dung bài viết" },
+            ]}
           >
             <ReactQuill theme="snow" style={{ height: 300, marginBottom: 50 }} />
           </Form.Item>

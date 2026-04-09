@@ -14,6 +14,7 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
   declare Email: string;
   declare Phone: string;
   declare img: string | null;
+  declare avatar: string | null;
   declare password: string;
   declare role_code: string;
 
@@ -43,6 +44,10 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
           allowNull: false,
         },
         img: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        avatar: {
           type: DataTypes.STRING,
           allowNull: true,
         },

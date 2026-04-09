@@ -86,6 +86,7 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
       icon: <FileTextOutlined />,
       label: "Nội dung",
       children: [
+        { key: "blog-categories", label: "Danh mục bài viết" },
         { key: "blogs", label: "Bài viết" },
         { key: "reviews", icon: <StarOutlined />, label: "Đánh giá" },
       ],

@@ -63,6 +63,7 @@ export const register = async (payload: {
     lastName,
     Phone: "0000000000",
     img: null,
+    avatar: null,
     role_code: "R3",
   });
 
@@ -81,6 +82,7 @@ export const register = async (payload: {
       firstName: created.firstName,
       lastName: created.lastName,
       role_code: created.role_code,
+      avatar: (created as any).avatar ?? created.img ?? null,
     },
   };
 };
@@ -123,6 +125,7 @@ export const login = async (payload: { account: string; password: string }) => {
       firstName: user.firstName,
       lastName: user.lastName,
       role_code: user.role_code,
+      avatar: (user as any).avatar ?? (user as any).img ?? null,
     },
   };
 };

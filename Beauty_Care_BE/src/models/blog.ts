@@ -7,7 +7,8 @@ export interface BlogAttributes {
   desc: string;
   content: string;
   image?: string | null;
-  category: string;
+  category?: string | null;
+  blog_category_id?: number | null;
   status: "draft" | "published" | "archived";
   views: number;
   author_id?: number | null;
@@ -20,6 +21,8 @@ export interface BlogCreationAttributes
     BlogAttributes,
     | "id"
     | "image"
+    | "category"
+    | "blog_category_id"
     | "status"
     | "views"
     | "author_id"
@@ -37,7 +40,8 @@ class Blog
   public desc!: string;
   public content!: string;
   public image!: string | null;
-  public category!: string;
+  public category!: string | null;
+  public blog_category_id!: number | null;
   public status!: "draft" | "published" | "archived";
   public views!: number;
   public author_id!: number | null;
@@ -48,6 +52,10 @@ class Blog
     Blog.belongsTo(models.User, {
       foreignKey: "author_id",
       as: "authorData",
+    });
+    Blog.belongsTo(models.BlogCategory, {
+      foreignKey: "blog_category_id",
+      as: "blogCategoryData",
     });
   }
 
@@ -82,7 +90,11 @@ class Blog
         },
         category: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
+        },
+        blog_category_id: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
         },
         status: {
           type: DataTypes.ENUM("draft", "published", "archived"),

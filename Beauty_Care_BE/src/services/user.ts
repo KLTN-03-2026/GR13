@@ -4,16 +4,16 @@ export const getAllUsers = async () => {
   try {
     const users = await db.User.findAll();
     return {
-      EM: "Lấy danh sách người dùng thành công",
-      EC: 0,
-      DT: users,
+      err: 0,
+      mess: "Lấy danh sách người dùng thành công",
+      data: users,
     };
   } catch (error) {
     console.error(error);
     return {
-      EM: "Lỗi hệ thống",
-      EC: -1,
-      DT: [],
+      err: 1,
+      mess: "Lỗi hệ thống",
+      data: [],
     };
   }
 };
@@ -23,22 +23,22 @@ export const getUserById = async (id: number) => {
     const user = await db.User.findByPk(id);
     if (user) {
       return {
-        EM: "Lấy thông tin người dùng thành công",
-        EC: 0,
-        DT: user,
+        err: 0,
+        mess: "Lấy thông tin người dùng thành công",
+        data: user,
       };
     }
     return {
-      EM: "Không tìm thấy người dùng",
-      EC: 1,
-      DT: null,
+      err: 1,
+      mess: "Không tìm thấy người dùng",
+      data: null,
     };
   } catch (error) {
     console.error(error);
     return {
-      EM: "Lỗi hệ thống",
-      EC: -1,
-      DT: null,
+      err: 1,
+      mess: "Lỗi hệ thống",
+      data: null,
     };
   }
 };
@@ -47,23 +47,23 @@ export const createNewUser = async (userData: any) => {
   try {
     const newUser = await db.User.create(userData);
     return {
-      EM: "Tạo người dùng mới thành công",
-      EC: 0,
-      DT: newUser,
+      err: 0,
+      mess: "Tạo người dùng mới thành công",
+      data: newUser,
     };
   } catch (error: any) {
     console.error(error);
     if (error.name === "SequelizeUniqueConstraintError") {
       return {
-        EM: "Email đã tồn tại",
-        EC: 1,
-        DT: null,
+        err: 1,
+        mess: "Email đã tồn tại",
+        data: null,
       };
     }
     return {
-      EM: "Lỗi hệ thống",
-      EC: -1,
-      DT: null,
+      err: 1,
+      mess: "Lỗi hệ thống",
+      data: null,
     };
   }
 };
@@ -74,22 +74,22 @@ export const updateUserData = async (id: number, userData: any) => {
     if (user) {
       await user.update(userData);
       return {
-        EM: "Cập nhật thông tin thành công",
-        EC: 0,
-        DT: user,
+        err: 0,
+        mess: "Cập nhật thông tin thành công",
+        data: user,
       };
     }
     return {
-      EM: "Không tìm thấy người dùng",
-      EC: 1,
-      DT: null,
+      err: 1,
+      mess: "Không tìm thấy người dùng",
+      data: null,
     };
   } catch (error) {
     console.error(error);
     return {
-      EM: "Lỗi hệ thống",
-      EC: -1,
-      DT: null,
+      err: 1,
+      mess: "Lỗi hệ thống",
+      data: null,
     };
   }
 };
@@ -100,22 +100,22 @@ export const deleteUser = async (id: number) => {
     if (user) {
       await user.destroy();
       return {
-        EM: "Xóa người dùng thành công",
-        EC: 0,
-        DT: null,
+        err: 0,
+        mess: "Xóa người dùng thành công",
+        data: null,
       };
     }
     return {
-      EM: "Không tìm thấy người dùng",
-      EC: 1,
-      DT: null,
+      err: 1,
+      mess: "Không tìm thấy người dùng",
+      data: null,
     };
   } catch (error) {
     console.error(error);
     return {
-      EM: "Lỗi hệ thống",
-      EC: -1,
-      DT: null,
+      err: 1,
+      mess: "Lỗi hệ thống",
+      data: null,
     };
   }
 };

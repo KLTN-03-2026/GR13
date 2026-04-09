@@ -4,11 +4,15 @@ import { Request, Response } from "express";
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role } = req.body;
-    if (!email || !password || !firstName || !lastName || !role)
+    const email = req.body?.email ?? req.body?.Email;
+    const phone = req.body?.phone ?? req.body?.Phone;
+    const { password, firstName, lastName, role } = req.body;
+    if (!email || !password || !firstName || !lastName || !role || !phone)
       return badRequest("Thiếu thông tin tạo người dùng", res);
 
     const payload = { ...req.body };
+    payload.Email = email;
+    payload.Phone = phone;
     if (role === "admin") payload.role_code = "R1";
     else if (role === "staff") payload.role_code = "R2";
     else if (role === "customer") payload.role_code = "R3";
@@ -40,6 +44,10 @@ export const updateUser = async (req: Request, res: Response) => {
     delete payload.role_code;
     delete payload.role;
     delete payload.password;
+    if (payload.email && !payload.Email) payload.Email = payload.email;
+    if (payload.phone && !payload.Phone) payload.Phone = payload.phone;
+    delete payload.email;
+    delete payload.phone;
 
     const response = await services.updateUserData(id, payload);
     return res.status(200).json(response);
@@ -75,6 +83,10 @@ export const updateUserByAdmin = async (req: Request, res: Response) => {
 
     const { role, ...rest } = req.body;
     const payload = { ...rest };
+    if (payload.email && !payload.Email) payload.Email = payload.email;
+    if (payload.phone && !payload.Phone) payload.Phone = payload.phone;
+    delete payload.email;
+    delete payload.phone;
     if (role) {
       if (role === "admin") payload.role_code = "R1";
       else if (role === "staff") payload.role_code = "R2";

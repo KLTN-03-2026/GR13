@@ -23,6 +23,10 @@ export default {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      status: {
+        type: Sequelize.ENUM("active", "inactive"),
+        defaultValue: "active",
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

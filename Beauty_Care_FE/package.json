@@ -12,6 +12,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.20",
     "antd": "^6.3.3",
+    "axios": "^1.14.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-quill-new": "^3.8.3",

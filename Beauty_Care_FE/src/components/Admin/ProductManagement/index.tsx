@@ -18,6 +18,7 @@ import {
   Tag,
   Select,
   Badge,
+  Spin,
 } from "antd";
 import {
   PlusOutlined,
@@ -39,15 +40,34 @@ import {
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import "./style.scss";
+import {
+  useGetProducts,
+  useGetCategories,
+  useCreateProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+} from "../../../hooks/product";
+import type { IProduct } from "../../../api/product";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const ProductManagementComponent: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<IProduct | null>(null);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
+
+  // Queries & Mutations
+  const { data: productsRes, isLoading: isLoadingProducts } = useGetProducts();
+  const { data: categoriesRes } = useGetCategories();
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
+
+  const products = productsRes?.data || [];
+  const categories = categoriesRes?.data || [];
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -91,43 +111,7 @@ const ProductManagementComponent: React.FC = () => {
     "image",
   ];
 
-  // Mock data for Products
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Sữa rửa mặt Cetaphil",
-      brand: "Cetaphil",
-      category: "Làm sạch",
-      description: "Dịu nhẹ cho da nhạy cảm",
-      image: "https://api.dicebear.com/7.x/pixel-art/svg?seed=1",
-      oldPrice: 350000,
-      newPrice: 280000,
-      stock: 120,
-      origin: "Canada",
-      volume: "500ml",
-      status: "Đang bán",
-      importQty: 200,
-      soldQty: 150,
-    },
-    {
-      id: 2,
-      name: "Serum B5 La Roche-Posay",
-      brand: "La Roche-Posay",
-      category: "Tinh chất",
-      description: "Phục hồi da chuyên sâu",
-      image: "https://api.dicebear.com/7.x/pixel-art/svg?seed=2",
-      oldPrice: 950000,
-      newPrice: 820000,
-      stock: 45,
-      origin: "Pháp",
-      volume: "30ml",
-      status: "Bán chạy",
-      importQty: 100,
-      soldQty: 45,
-    },
-  ]);
-
-  // Mock data for Stats by Period
+  // Mock data for Stats by Period (keep for UI)
   const statsDataByPeriod = {
     week: [
       { name: "T2", import: 45, sold: 32 },
@@ -160,7 +144,7 @@ const ProductManagementComponent: React.FC = () => {
     setIsModalVisible(true);
   };
 
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: IProduct) => {
     setEditingProduct(record);
     form.setFieldsValue(record);
     setIsModalVisible(true);
@@ -170,82 +154,134 @@ const ProductManagementComponent: React.FC = () => {
     Modal.confirm({
       title: "Xác nhận xóa?",
       content: "Bạn có chắc chắn muốn xóa sản phẩm này không?",
-      onOk: () => {
-        setProducts(products.filter((p) => p.id !== id));
-        message.success("Đã xóa sản phẩm");
+      onOk: async () => {
+        try {
+          await deleteProductMutation.mutateAsync(id);
+          message.success("Đã xóa sản phẩm");
+        } catch (error) {
+          message.error("Lỗi khi xóa sản phẩm");
+        }
       },
     });
   };
 
   const handleModalOk = () => {
-    form.validateFields().then((values) => {
-      if (editingProduct) {
-        setProducts(
-          products.map((p) =>
-            p.id === editingProduct.id ? { ...p, ...values } : p
-          )
-        );
-        message.success("Đã cập nhật sản phẩm");
-      } else {
-        const newProduct = {
-          id: Date.now(),
-          ...values,
-          image: "https://api.dicebear.com/7.x/pixel-art/svg?seed=" + Date.now(),
-          importQty: 0,
-          soldQty: 0,
-        };
-        setProducts([...products, newProduct]);
-        message.success("Đã thêm sản phẩm mới");
+    form.validateFields().then(async (values) => {
+      try {
+        if (editingProduct) {
+          // Chỉ gửi các trường cần thiết khi cập nhật
+          await updateProductMutation.mutateAsync({
+            id: editingProduct.id,
+            ...values,
+          });
+          message.success("Đã cập nhật sản phẩm");
+        } else {
+          await createProductMutation.mutateAsync({
+            ...values,
+            image: values.image || "https://api.dicebear.com/7.x/pixel-art/svg?seed=" + Date.now(),
+          });
+          message.success("Đã thêm sản phẩm mới");
+        }
+        setIsModalVisible(false);
+      } catch (error) {
+        message.error("Có lỗi xảy ra, vui lòng thử lại");
       }
-      setIsModalVisible(false);
     });
   };
+
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const columns = [
     {
       title: "Hình ảnh",
       dataIndex: "image",
       key: "image",
-      render: (src: string) => <Image src={src} width={50} height={50} style={{ borderRadius: 4 }} />,
+      width: 80,
+      render: (src: string) => (
+        <Image
+          src={src}
+          width={40}
+          height={40}
+          style={{ borderRadius: 4, objectFit: "cover" }}
+        />
+      ),
     },
     {
       title: "Tên sản phẩm",
       dataIndex: "name",
       key: "name",
       width: 200,
-      ellipsis: true,
-      render: (text: string) => <Text strong>{text}</Text>,
+      render: (text: string) => (
+        <div style={{ width: 180 }}>
+          <Text strong ellipsis={{ tooltip: text }}>
+            {text}
+          </Text>
+        </div>
+      ),
     },
     {
       title: "Thương hiệu",
       dataIndex: "brand",
       key: "brand",
+      width: 120,
+      render: (text: string) => (
+        <div style={{ width: 100 }}>
+          <Text ellipsis={{ tooltip: text }}>{text}</Text>
+        </div>
+      ),
     },
     {
       title: "Danh mục",
-      dataIndex: "category",
+      dataIndex: ["categoryData", "name"],
       key: "category",
-      render: (cat: string) => <Tag color="blue">{cat}</Tag>,
+      width: 140,
+      render: (catName: string) => (
+        <Tag
+          color="blue"
+          style={{
+            marginRight: 0,
+            maxWidth: "130px",
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          <Text ellipsis={{ tooltip: catName }} style={{ color: "inherit" }}>
+            {catName || "N/A"}
+          </Text>
+        </Tag>
+      ),
     },
     {
       title: "Giá",
       key: "price",
-      render: (_: any, record: any) => (
-        <Space direction="vertical" size={0}>
-          <Text delete type="secondary" style={{ fontSize: 12 }}>
-            {record.oldPrice?.toLocaleString()}đ
-          </Text>
-          <Text strong type="danger">
-            {record.newPrice?.toLocaleString()}đ
-          </Text>
-        </Space>
+      width: 110,
+      render: (_: any, record: IProduct) => (
+        <div style={{ whiteSpace: "nowrap" }}>
+          <Space direction="vertical" size={0}>
+            {record.discountPrice && record.discountPrice < record.price ? (
+              <>
+                <Text delete type="secondary" style={{ fontSize: 11 }}>
+                  {Number(record.price).toLocaleString()}đ
+                </Text>
+                <Text strong type="danger" style={{ fontSize: 13 }}>
+                  {Number(record.discountPrice).toLocaleString()}đ
+                </Text>
+              </>
+            ) : (
+              <Text strong>{Number(record.price).toLocaleString()}đ</Text>
+            )}
+          </Space>
+        </div>
       ),
     },
     {
-      title: "Tồn kho",
+      title: "Tồn",
       dataIndex: "stock",
       key: "stock",
-      sorter: (a: any, b: any) => a.stock - b.stock,
+      width: 60,
+      sorter: (a: IProduct, b: IProduct) => a.stock - b.stock,
       render: (stock: number) => (
         <Text type={stock < 10 ? "danger" : "secondary"}>{stock}</Text>
       ),
@@ -254,17 +290,21 @@ const ProductManagementComponent: React.FC = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: 110,
       render: (status: string) => (
-        <Badge 
-          status={status === "Bán chạy" ? "warning" : status === "Hết hàng" ? "error" : "success"} 
-          text={status} 
-        />
+        <div style={{ whiteSpace: "nowrap" }}>
+          <Badge
+            status={status === "active" ? "success" : "error"}
+            text={status === "active" ? "Đang bán" : "Ẩn"}
+          />
+        </div>
       ),
     },
     {
       title: "Thao tác",
       key: "action",
-      render: (_: any, record: any) => (
+      width: 100,
+      render: (_: any, record: IProduct) => (
         <Space>
           <Button icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
@@ -277,19 +317,25 @@ const ProductManagementComponent: React.FC = () => {
     },
   ];
 
-  const { Text } = Typography;
-
   return (
     <div className="product-management">
-      <Title level={2}>Quản lý sản phẩm đang bán</Title>
+      <Title level={2}>Quản lý sản phẩm</Title>
 
       {/* Chart Section */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
           <Card
             title={
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Space><BarChartOutlined /> Thống kê Nhập - Xuất hàng hóa</Space>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Space>
+                  <BarChartOutlined /> Thống kê Nhập - Xuất hàng hóa
+                </Space>
                 <Select
                   value={period}
                   onChange={(value) => setPeriod(value)}
@@ -312,8 +358,18 @@ const ProductManagementComponent: React.FC = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="import" fill="#52c41a" name="Nhập kho" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="sold" fill="#1890ff" name="Đã bán" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="import"
+                    fill="#52c41a"
+                    name="Nhập kho"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="sold"
+                    fill="#1890ff"
+                    name="Đã bán"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -327,14 +383,22 @@ const ProductManagementComponent: React.FC = () => {
         bordered={false}
         extra={
           <Space>
-            <Input prefix={<SearchOutlined />} placeholder="Tìm sản phẩm..." style={{ width: 250 }} />
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="Tìm sản phẩm..."
+              style={{ width: 250 }}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               Thêm sản phẩm
             </Button>
           </Space>
         }
       >
-        <Table columns={columns} dataSource={products} rowKey="id" />
+        <Spin spinning={isLoadingProducts}>
+          <Table columns={columns} dataSource={filteredProducts} rowKey="id" />
+        </Spin>
       </Card>
 
       {/* Modal CRUD */}
@@ -344,16 +408,27 @@ const ProductManagementComponent: React.FC = () => {
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
         width={700}
+        confirmLoading={
+          createProductMutation.isPending || updateProductMutation.isPending
+        }
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={16}>
-              <Form.Item name="name" label="Tên sản phẩm" rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}>
+              <Form.Item
+                name="name"
+                label="Tên sản phẩm"
+                rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}
+              >
                 <Input placeholder="Nhập tên sản phẩm" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="brand" label="Thương hiệu" rules={[{ required: true, message: "Vui lòng nhập thương hiệu" }]}>
+              <Form.Item
+                name="brand"
+                label="Thương hiệu"
+                rules={[{ required: true, message: "Vui lòng nhập thương hiệu" }]}
+              >
                 <Input placeholder="Ví dụ: Cetaphil, Olay..." />
               </Form.Item>
             </Col>
@@ -361,34 +436,40 @@ const ProductManagementComponent: React.FC = () => {
 
           <Row gutter={16}>
             <Col span={8}>
-              <Form.Item name="category" label="Danh mục" rules={[{ required: true, message: "Chọn danh mục" }]}>
+              <Form.Item
+                name="categoryId"
+                label="Danh mục"
+                rules={[{ required: true, message: "Chọn danh mục" }]}
+              >
                 <Select placeholder="Chọn danh mục">
-                  <Select.Option value="Làm sạch">Làm sạch</Select.Option>
-                  <Select.Option value="Tinh chất">Tinh chất</Select.Option>
-                  <Select.Option value="Chống nắng">Chống nắng</Select.Option>
-                  <Select.Option value="Trang điểm">Trang điểm</Select.Option>
+                  {categories.map((cat) => (
+                    <Select.Option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="origin" label="Xuất xứ">
-                <Input placeholder="Ví dụ: Pháp, Hàn Quốc..." />
+              <Form.Item name="usage" label="Công dụng">
+                <Input placeholder="Ví dụ: Dưỡng ẩm, sạch sâu..." />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="volume" label="Dung tích/Trọng lượng">
-                <Input placeholder="Ví dụ: 50ml, 100g..." />
+              <Form.Item name="stock" label="Số lượng tồn">
+                <InputNumber style={{ width: "100%" }} min={0} />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item 
-            name="description" 
+          <Form.Item
+            name="description"
             label="Mô tả sản phẩm"
             className="quill-editor-item"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
-            <ReactQuill 
-              theme="snow" 
+            <ReactQuill
+              theme="snow"
               modules={quillModules}
               formats={quillFormats}
               placeholder="Nhập mô tả chi tiết sản phẩm..."
@@ -397,48 +478,48 @@ const ProductManagementComponent: React.FC = () => {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name="oldPrice" label="Giá gốc (đ)" rules={[{ required: true }]}>
-                <InputNumber 
-                  style={{ width: "100%" }} 
+            <Col span={8}>
+              <Form.Item
+                name="price"
+                label="Giá gốc (đ)"
+                rules={[{ required: true, message: "Vui lòng nhập giá gốc" }]}
+              >
+                <InputNumber
+                  style={{ width: "100%" }}
                   min={0}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
                 />
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Form.Item name="newPrice" label="Giá bán (đ)" rules={[{ required: true }]}>
-                <InputNumber 
-                  style={{ width: "100%" }} 
+            <Col span={8}>
+              <Form.Item name="discountPrice" label="Giá khuyến mãi (đ)">
+                <InputNumber
+                  style={{ width: "100%" }}
                   min={0}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
                 />
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Form.Item name="stock" label="Số lượng tồn" rules={[{ required: true }]}>
-                <InputNumber style={{ width: "100%" }} min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="status" label="Trạng thái" initialValue="Đang bán">
+            <Col span={8}>
+              <Form.Item
+                name="status"
+                label="Trạng thái"
+                initialValue="active"
+              >
                 <Select>
-                  <Select.Option value="Đang bán">Đang bán</Select.Option>
-                  <Select.Option value="Bán chạy">Bán chạy</Select.Option>
-                  <Select.Option value="Hết hàng">Hết hàng</Select.Option>
-                  <Select.Option value="Ẩn">Ẩn</Select.Option>
+                  <Select.Option value="active">Đang bán</Select.Option>
+                  <Select.Option value="inactive">Ẩn</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item label="Hình ảnh sản phẩm">
-            <Upload listType="picture-card">
-              <div>
-                <PlusOutlined />
-                <div style={{ marginTop: 8 }}>Tải lên</div>
-              </div>
-            </Upload>
+          <Form.Item name="image" label="Link hình ảnh (Tạm thời)">
+            <Input placeholder="Nhập link hình ảnh" />
           </Form.Item>
         </Form>
       </Modal>

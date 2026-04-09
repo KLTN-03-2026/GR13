@@ -6,6 +6,7 @@ export const badRequest = (err: string, res: Response) => {
   return res.status(error.status).json({
     err: 1,
     mess: error.message,
+    data: null,
   });
 };
 
@@ -14,6 +15,7 @@ export const InternalServerError = (res: Response) => {
   return res.status(error.status).json({
     err: 1,
     mess: error.message,
+    data: null,
   });
 };
 
@@ -22,6 +24,7 @@ export const NotFound = (req: Request, res: Response) => {
   return res.status(error.status).json({
     err: 1,
     mess: error.message,
+    data: null,
   });
 };
 
@@ -30,5 +33,6 @@ export const NotAuth = (err: string, res: Response) => {
   return res.status(error.status).json({
     err: 1,
     mess: error.message,
+    data: null,
   });
 };

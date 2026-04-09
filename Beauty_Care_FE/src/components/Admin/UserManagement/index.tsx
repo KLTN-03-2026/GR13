@@ -43,6 +43,12 @@ import {
   Cell,
 } from "recharts";
 import "./style.scss";
+import {
+  useCreateUser,
+  useDeleteUser,
+  useGetAllUsers,
+  useUpdateUser,
+} from "../../../hooks/user";
 
 const { Title, Text } = Typography;
 
@@ -63,59 +69,32 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
   const [editingUser, setEditingUser] = useState<any>(null);
   const [period, setPeriod] = useState<"week" | "month" | "year">("week");
   const [roleFilter, setRoleFilter] = useState<string>(fixedRole ?? "all");
+  const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
 
-  // Mock data for Users
-  const [users, setUsers] = useState([
-      {
-        id: 1,
-        name: "Nguyễn Văn A",
-        email: "vana@gmail.com",
-        phone: "0912345678",
-        role: "Admin",
-        status: "Active",
-        lastLogin: "10 phút trước",
-        orders: 0,
-        age: 35,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin1",
-      },
-      {
-        id: 2,
-        name: "Trần Thị B",
-        email: "thib@gmail.com",
-        phone: "0987654321",
-        role: "Staff",
-        status: "Active",
-        lastLogin: "2 giờ trước",
-        orders: 0,
-        age: 28,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Staff1",
-      },
-      {
-        id: 3,
-        name: "Lê Văn C",
-        email: "vanc@gmail.com",
-        phone: "0909090909",
-        role: "Customer",
-        status: "Active",
-        lastLogin: "1 ngày trước",
-        orders: 15,
-        age: 24,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer1",
-      },
-      {
-        id: 4,
-        name: "Phạm Minh D",
-        email: "minhd@gmail.com",
-        phone: "0911223344",
-        role: "Customer",
-        status: "Inactive",
-        lastLogin: "5 ngày trước",
-        orders: 8,
-        age: 42,
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Customer2",
-      },
-  ]);
+  const { data: usersRes, isLoading } = useGetAllUsers();
+  const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
+  const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateUser();
+  const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
+
+  const apiUsers = usersRes?.data ?? [];
+  const users = apiUsers.map((u: any) => {
+    const name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+    const roleCode = u.role_code ?? "";
+    const role =
+      roleCode === "R1" ? "Admin" : roleCode === "R2" ? "Staff" : "Customer";
+    return {
+      id: u.id,
+      name: name || u.Email || "",
+      email: u.Email || "",
+      phone: u.Phone || "",
+      role,
+      status: "Active",
+      lastLogin: "-",
+      avatar: u.avatar ?? u.img ?? undefined,
+      raw: u,
+    };
+  });
 
   // Mock data for New Users Stats
   const newUsersData = {
@@ -158,7 +137,14 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
 
   const handleEdit = (record: any) => {
     setEditingUser(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      name: record.name,
+      email: record.email,
+      phone: record.phone,
+      role: record.role,
+      status: record.status,
+      avatar: record.avatar,
+    });
     setIsModalVisible(true);
   };
 
@@ -166,36 +152,49 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
     Modal.confirm({
       title: "Xác nhận xóa?",
       content: "Bạn có chắc chắn muốn xóa người dùng này không?",
-      onOk: () => {
-        setUsers(users.filter((u) => u.id !== id));
-        message.success("Đã xóa người dùng");
+      onOk: async () => {
+        const res: any = await deleteUser(id);
+        if (res?.err) return message.error(res?.mess || "Xóa người dùng thất bại");
+        message.success(res?.mess || "Đã xóa người dùng");
       },
     });
   };
 
   const handleModalOk = () => {
-    form.validateFields().then((values) => {
-      const normalizedValues = {
-        ...values,
-        role: fixedRole ?? values.role,
-      };
+    form.validateFields().then(async (values) => {
+      const nameValue = (values.name || "").trim();
+      const parts = nameValue.split(/\s+/).filter(Boolean);
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : "";
+      const firstName = parts.length ? (parts.length > 1 ? parts.slice(0, -1).join(" ") : parts[0]) : "";
+
+      const roleUI = fixedRole ?? values.role;
+      const role =
+        roleUI === "Admin" ? "admin" : roleUI === "Staff" ? "staff" : "customer";
+
       if (editingUser) {
-        setUsers(
-          users.map((u) =>
-            u.id === editingUser.id ? { ...u, ...normalizedValues } : u
-          )
-        );
-        message.success("Đã cập nhật thông tin người dùng");
+        const res: any = await updateUser({
+          id: editingUser.id,
+          email: values.email,
+          phone: values.phone,
+          firstName,
+          lastName,
+          role,
+          avatar: values.avatar || null,
+        });
+        if (res?.err) return message.error(res?.mess || "Cập nhật thất bại");
+        message.success(res?.mess || "Đã cập nhật thông tin người dùng");
       } else {
-        const newUser = {
-          id: Date.now(),
-          ...normalizedValues,
-          lastLogin: "Vừa mới đây",
-          orders: 0,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
-        };
-        setUsers([...users, newUser]);
-        message.success("Đã thêm người dùng mới");
+        const res: any = await createUser({
+          email: values.email,
+          phone: values.phone,
+          password: values.password,
+          firstName,
+          lastName,
+          role,
+          avatar: values.avatar || null,
+        });
+        if (res?.err) return message.error(res?.mess || "Thêm người dùng thất bại");
+        message.success(res?.mess || "Đã thêm người dùng mới");
       }
       setIsModalVisible(false);
     });
@@ -268,7 +267,18 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
     },
   ];
 
-  const filteredUsers = roleFilter === "all" ? users : users.filter(u => u.role === roleFilter);
+  const filteredUsers = (roleFilter === "all"
+    ? users
+    : users.filter((u) => u.role === roleFilter)
+  ).filter((u) => {
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return true;
+    return (
+      u.name.toLowerCase().includes(keyword) ||
+      u.email.toLowerCase().includes(keyword) ||
+      u.phone.toLowerCase().includes(keyword)
+    );
+  });
   const title = fixedRole ? `Quản lý ${roleLabelMap[fixedRole]}` : "Quản lý người dùng";
 
   return (
@@ -394,6 +404,8 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
               prefix={<SearchOutlined />}
               placeholder="Tìm kiếm người dùng..."
               style={{ width: 250 }}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
             />
             <Button type="primary" icon={<UserAddOutlined />} onClick={handleAdd}>
               Thêm người dùng
@@ -401,7 +413,12 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
           </Space>
         }
       >
-        <Table columns={columns} dataSource={filteredUsers} rowKey="id" />
+        <Table
+          columns={columns}
+          dataSource={filteredUsers}
+          rowKey="id"
+          loading={isLoading || isCreating || isUpdating || isDeleting}
+        />
       </Card>
 
       {/* Modal CRUD User */}
@@ -411,6 +428,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
         onOk={handleModalOk}
         onCancel={() => setIsModalVisible(false)}
         width={600}
+        confirmLoading={isCreating || isUpdating}
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
@@ -432,6 +450,33 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
               </Form.Item>
             </Col>
           </Row>
+          {!editingUser && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="password"
+                  label="Mật khẩu"
+                  rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+                >
+                  <Input.Password placeholder="Nhập mật khẩu" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="avatar" label="Avatar (URL)">
+                  <Input placeholder="https://..." />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
+          {editingUser && (
+            <Row gutter={16}>
+              <Col span={24}>
+                <Form.Item name="avatar" label="Avatar (URL)">
+                  <Input placeholder="https://..." />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
           <Row gutter={16}>
             {!fixedRole && (
               <Col span={12}>

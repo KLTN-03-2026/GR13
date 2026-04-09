@@ -10,8 +10,9 @@ export const createBlog = async (req: Request, res: Response) => {
       slug: Joi.string().optional(),
       desc: Joi.string().required(),
       content: Joi.string().required(),
-      image: Joi.string().uri().optional(),
-      category: Joi.string().required(),
+      image: Joi.string().uri().allow(null, "").optional(),
+      category: Joi.string().optional(),
+      blog_category_id: Joi.number().integer().optional(),
       status: Joi.string().valid("draft", "published", "archived").optional(),
     });
 
@@ -69,8 +70,9 @@ export const updateBlog = async (req: Request, res: Response) => {
       slug: Joi.string().optional(),
       desc: Joi.string().optional(),
       content: Joi.string().optional(),
-      image: Joi.string().uri().allow(null).optional(),
+      image: Joi.string().uri().allow(null, "").optional(),
       category: Joi.string().optional(),
+      blog_category_id: Joi.number().integer().optional(),
       status: Joi.string().valid("draft", "published", "archived").optional(),
       views: Joi.number().integer().min(0).optional(),
     });

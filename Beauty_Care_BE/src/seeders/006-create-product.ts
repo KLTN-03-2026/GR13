@@ -7,6 +7,7 @@ export default {
       "Products",
       [
         {
+          id: 1,
           name: "Sữa rửa mặt hoa hồng",
           description: "Sữa rửa mặt dịu nhẹ chiết xuất từ hoa hồng thiên nhiên giúp làm sạch sâu mà không gây khô da.",
           usage: "Sử dụng 2 lần mỗi ngày, sáng và tối. Lấy một lượng nhỏ tạo bọt và massage nhẹ nhàng trên da mặt.",
@@ -25,6 +26,7 @@ export default {
           updatedAt: new Date(),
         },
         {
+          id: 2,
           name: "Serum Vitamin C",
           description: "Serum làm sáng da, mờ thâm nám và chống lão hóa hiệu quả.",
           usage: "Nhỏ 3-4 giọt lên mặt sau khi làm sạch, vỗ nhẹ để tinh chất thẩm thấu.",
@@ -42,6 +44,7 @@ export default {
           updatedAt: new Date(),
         },
         {
+          id: 3,
           name: "Kem dưỡng thể Oải hương",
           description: "Dưỡng ẩm sâu cho làn da mềm mịn cùng hương thơm oải hương thư giãn.",
           usage: "Thoa đều khắp cơ thể sau khi tắm, đặc biệt là vùng da khô.",
@@ -57,6 +60,7 @@ export default {
           updatedAt: new Date(),
         },
         {
+          id: 4,
           name: "Tinh dầu Sả chanh",
           description: "Tinh dầu nguyên chất giúp xua đuổi côn trùng và tạo cảm giác tươi mới.",
           usage: "Sử dụng với máy xông tinh dầu hoặc pha loãng để massage.",
@@ -72,7 +76,7 @@ export default {
           updatedAt: new Date(),
         },
       ],
-      {}
+      { ignoreDuplicates: true } as any
     );
   },
 
