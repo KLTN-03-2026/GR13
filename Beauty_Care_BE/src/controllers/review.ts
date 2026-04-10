@@ -47,3 +47,24 @@ export const deleteReview = async (req: Request, res: Response) => {
     return InternalServerError(res);
   }
 };
+
+export const adminGetReviews = async (req: Request, res: Response) => {
+  try {
+    const response = await services.adminGetReviews();
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const adminDeleteReview = async (req: Request, res: Response) => {
+  try {
+    const { reviewId } = req.params;
+    if (!reviewId) return badRequest("Thiếu Review ID", res);
+
+    const response = await services.adminDeleteReview(Number(reviewId));
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};

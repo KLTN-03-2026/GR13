@@ -55,3 +55,50 @@ export const cancelBooking = async (req: Request, res: Response) => {
     return InternalServerError(res);
   }
 };
+
+export const adminGetBookings = async (req: Request, res: Response) => {
+  try {
+    const response = await services.adminGetBookings();
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const adminGetBookingDetail = async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    if (!bookingId) return badRequest("Thiếu Booking ID", res);
+
+    const response = await services.adminGetBookingDetail(Number(bookingId));
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const adminUpdateBooking = async (req: Request, res: Response) => {
+  try {
+    const schema = Joi.object({
+      status: Joi.string().valid("pending", "confirmed", "completed", "cancelled").optional(),
+      staffId: Joi.number().allow(null).optional(),
+      endTime: Joi.string().allow("", null).optional(),
+    });
+
+    const { bookingId } = req.params;
+    if (!bookingId) return badRequest("Thiếu Booking ID", res);
+
+    const { error, value } = schema.validate(req.body);
+    if (error) return badRequest(error.details[0].message, res);
+
+    const response = await services.adminUpdateBooking({
+      bookingId: Number(bookingId),
+      status: value.status,
+      staffId: value.staffId,
+      endTime: value.endTime === "" ? null : value.endTime,
+    });
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};

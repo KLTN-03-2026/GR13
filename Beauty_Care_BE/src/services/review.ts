@@ -77,3 +77,48 @@ export const deleteReview = async (userId: number, reviewId: number) => {
     return { err: 1, mess: "Có lỗi xảy ra khi xóa đánh giá" };
   }
 };
+
+export const adminGetReviews = async () => {
+  try {
+    const reviews = await db.Review.findAll({
+      include: [
+        {
+          model: db.User,
+          as: "userData",
+          attributes: ["id", "firstName", "lastName", "Email", "Phone", "img", "avatar"],
+        },
+        {
+          model: db.Product,
+          as: "productData",
+          attributes: ["id", "name", "image", "price", "discountPrice", "stock", "status"],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      err: 0,
+      mess: "Lấy danh sách đánh giá thành công",
+      data: reviews,
+    };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi lấy đánh giá", data: [] };
+  }
+};
+
+export const adminDeleteReview = async (reviewId: number) => {
+  try {
+    const deleted = await db.Review.destroy({
+      where: { id: reviewId },
+    });
+
+    return {
+      err: deleted > 0 ? 0 : 1,
+      mess: deleted > 0 ? "Xóa đánh giá thành công" : "Không tìm thấy đánh giá",
+    };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi xóa đánh giá" };
+  }
+};

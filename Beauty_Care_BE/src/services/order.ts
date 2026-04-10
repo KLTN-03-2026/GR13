@@ -205,3 +205,133 @@ export const cancelOrder = async (userId: number, orderId: number) => {
     return { err: 1, mess: "Có lỗi xảy ra khi hủy đơn hàng" };
   }
 };
+
+export const adminGetOrders = async () => {
+  try {
+    const orders = await db.Order.findAll({
+      include: [
+        {
+          model: db.User,
+          as: "userData",
+          attributes: ["id", "firstName", "lastName", "Email", "Phone", "role_code"],
+        },
+        {
+          model: db.OrderItem,
+          as: "orderItems",
+          include: [{ model: db.Product, as: "productData" }],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    return {
+      err: 0,
+      mess: "Lấy danh sách đơn hàng thành công",
+      data: orders,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      err: 1,
+      mess: "Có lỗi xảy ra khi lấy danh sách đơn hàng",
+      data: [],
+    };
+  }
+};
+
+export const adminGetOrderDetail = async (orderId: number) => {
+  try {
+    const order = await db.Order.findOne({
+      where: { id: orderId },
+      include: [
+        {
+          model: db.User,
+          as: "userData",
+          attributes: ["id", "firstName", "lastName", "Email", "Phone", "role_code"],
+        },
+        {
+          model: db.OrderItem,
+          as: "orderItems",
+          include: [{ model: db.Product, as: "productData" }],
+        },
+      ],
+    });
+
+    if (!order) {
+      return {
+        err: 1,
+        mess: "Không tìm thấy đơn hàng",
+      };
+    }
+
+    return {
+      err: 0,
+      mess: "Lấy chi tiết đơn hàng thành công",
+      data: order,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      err: 1,
+      mess: "Có lỗi xảy ra khi lấy chi tiết đơn hàng",
+    };
+  }
+};
+
+export const adminUpdateOrderStatus = async (
+  orderId: number,
+  status: "pending" | "paid" | "shipping" | "completed" | "cancelled",
+) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const order = await db.Order.findOne({
+      where: { id: orderId },
+      include: [{ model: db.OrderItem, as: "orderItems" }],
+      transaction,
+    });
+
+    if (!order) {
+      await transaction.rollback();
+      return { err: 1, mess: "Không tìm thấy đơn hàng" };
+    }
+
+    if (order.status === "completed" && status === "cancelled") {
+      await transaction.rollback();
+      return { err: 1, mess: "Không thể hủy đơn hàng đã hoàn thành" };
+    }
+
+    if (order.status !== "cancelled" && status === "cancelled") {
+      for (const item of order.orderItems) {
+        await db.Product.increment(
+          { stock: item.quantity },
+          { where: { id: item.productId }, transaction }
+        );
+      }
+    }
+
+    await order.update({ status }, { transaction });
+    await transaction.commit();
+
+    const updated = await db.Order.findOne({
+      where: { id: orderId },
+      include: [
+        {
+          model: db.User,
+          as: "userData",
+          attributes: ["id", "firstName", "lastName", "Email", "Phone", "role_code"],
+        },
+        {
+          model: db.OrderItem,
+          as: "orderItems",
+          include: [{ model: db.Product, as: "productData" }],
+        },
+      ],
+    });
+
+    return { err: 0, mess: "Cập nhật trạng thái đơn hàng thành công", data: updated };
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi cập nhật trạng thái đơn hàng" };
+  }
+};

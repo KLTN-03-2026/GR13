@@ -57,3 +57,48 @@ export const cancelOrder = async (req: Request, res: Response) => {
     return InternalServerError(res);
   }
 };
+
+export const adminGetOrders = async (req: Request, res: Response) => {
+  try {
+    const response = await services.adminGetOrders();
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const adminGetOrderDetail = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
+    if (!orderId) return badRequest("Thiếu Order ID", res);
+
+    const response = await services.adminGetOrderDetail(Number(orderId));
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const adminUpdateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const schema = Joi.object({
+      status: Joi.string()
+        .valid("pending", "paid", "shipping", "completed", "cancelled")
+        .required(),
+    });
+
+    const { orderId } = req.params;
+    if (!orderId) return badRequest("Thiếu Order ID", res);
+
+    const { error, value } = schema.validate(req.body);
+    if (error) return badRequest(error.details[0].message, res);
+
+    const response = await services.adminUpdateOrderStatus(
+      Number(orderId),
+      value.status,
+    );
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};

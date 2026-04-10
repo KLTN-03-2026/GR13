@@ -99,3 +99,89 @@ export const cancelBooking = async (userId: number, bookingId: number) => {
     return { err: 1, mess: "Có lỗi xảy ra khi hủy lịch hẹn" };
   }
 };
+
+export const adminGetBookings = async () => {
+  try {
+    const bookings = await db.Booking.findAll({
+      include: [
+        { model: db.User, as: "userData", attributes: ["id", "firstName", "lastName", "Email", "Phone"] },
+        { model: db.Product, as: "serviceData" },
+        { model: db.Staff, as: "staffData" },
+      ],
+      order: [["bookingDate", "DESC"], ["startTime", "DESC"]],
+    });
+
+    return {
+      err: 0,
+      mess: "Lấy danh sách lịch hẹn thành công",
+      data: bookings,
+    };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi lấy danh sách lịch hẹn", data: [] };
+  }
+};
+
+export const adminGetBookingDetail = async (bookingId: number) => {
+  try {
+    const booking = await db.Booking.findOne({
+      where: { id: bookingId },
+      include: [
+        { model: db.User, as: "userData", attributes: ["id", "firstName", "lastName", "Email", "Phone"] },
+        { model: db.Product, as: "serviceData" },
+        { model: db.Staff, as: "staffData" },
+      ],
+    });
+
+    if (!booking) return { err: 1, mess: "Không tìm thấy lịch hẹn" };
+
+    return {
+      err: 0,
+      mess: "Lấy chi tiết lịch hẹn thành công",
+      data: booking,
+    };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi lấy chi tiết lịch hẹn" };
+  }
+};
+
+export const adminUpdateBooking = async (payload: {
+  bookingId: number;
+  status?: "pending" | "confirmed" | "completed" | "cancelled";
+  staffId?: number | null;
+  endTime?: string | null;
+}) => {
+  try {
+    const { bookingId, status, staffId, endTime } = payload;
+
+    const booking = await db.Booking.findByPk(bookingId);
+    if (!booking) return { err: 1, mess: "Không tìm thấy lịch hẹn" };
+
+    if (typeof staffId === "number") {
+      const staff = await db.Staff.findByPk(staffId);
+      if (!staff) return { err: 1, mess: "Nhân viên không tồn tại" };
+    }
+
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (staffId !== undefined) updateData.staffId = staffId;
+    if (endTime !== undefined) updateData.endTime = endTime;
+
+    await booking.update(updateData);
+
+    const updated = await db.Booking.findOne({
+      where: { id: bookingId },
+      include: [
+        { model: db.User, as: "userData", attributes: ["id", "firstName", "lastName", "Email", "Phone"] },
+        { model: db.Product, as: "serviceData" },
+        { model: db.Staff, as: "staffData" },
+      ],
+    });
+
+    return { err: 0, mess: "Cập nhật lịch hẹn thành công", data: updated };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: "Có lỗi xảy ra khi cập nhật lịch hẹn" };
+  }
+};

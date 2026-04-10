@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Typography, 
@@ -13,7 +13,8 @@ import {
   Space,
   Tag,
   Divider,
-  Select
+  Select,
+  message
 } from "antd";
 import { 
   UserOutlined, 
@@ -43,12 +44,24 @@ import {
   Bar
 } from "recharts";
 import "./style.scss";
+import { useGetDashboardStats } from "../../../hooks/admin";
 
 const { Title, Text } = Typography;
 
 const AdminOverviewComponent: React.FC = () => {
   const navigate = useNavigate();
   const [importExportPeriod, setImportExportPeriod] = useState<"week" | "month" | "year">("week");
+  const { data: dashboardRes, isLoading, isError } = useGetDashboardStats();
+
+  useEffect(() => {
+    if (isError) message.error("Không thể tải thống kê dashboard");
+  }, [isError]);
+
+  const dashboard = dashboardRes?.data;
+  const totalRevenue = useMemo(() => {
+    const n = Number(dashboard?.totalRevenue ?? 0);
+    return Number.isFinite(n) ? n : 0;
+  }, [dashboard?.totalRevenue]);
 
   // Mock data for Import/Export Chart
   const importExportData = {
@@ -251,10 +264,11 @@ const AdminOverviewComponent: React.FC = () => {
             hoverable 
             onClick={() => navigate("/admin/revenue")}
             style={{ cursor: "pointer" }}
+            loading={isLoading}
           >
             <Statistic
               title="Tổng doanh thu"
-              value={152000000}
+              value={totalRevenue}
               precision={0}
               prefix={<DollarOutlined />}
               suffix="đ"
@@ -272,10 +286,11 @@ const AdminOverviewComponent: React.FC = () => {
             hoverable
             onClick={() => navigate("/admin/orders-success")}
             style={{ cursor: "pointer" }}
+            loading={isLoading}
           >
             <Statistic
               title="Đơn hàng thành công"
-              value={456}
+              value={dashboard?.ordersByStatus?.completed ?? 0}
               prefix={<OrderedListOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
@@ -291,10 +306,11 @@ const AdminOverviewComponent: React.FC = () => {
             hoverable 
             onClick={() => navigate("/admin/products")}
             style={{ cursor: "pointer" }}
+            loading={isLoading}
           >
             <Statistic
               title="Sản phẩm đang bán"
-              value={85}
+              value={dashboard?.totalProducts ?? 0}
               prefix={<ShoppingOutlined />}
               valueStyle={{ color: "#cf1322" }}
             />
@@ -310,10 +326,11 @@ const AdminOverviewComponent: React.FC = () => {
             hoverable 
             onClick={() => navigate("/admin/users-customers")}
             style={{ cursor: "pointer" }}
+            loading={isLoading}
           >
             <Statistic
-              title="Người dùng mới"
-              value={128}
+              title="Người dùng"
+              value={dashboard?.totalUsers ?? 0}
               prefix={<UserOutlined />}
               valueStyle={{ color: "#3f8600" }}
             />
