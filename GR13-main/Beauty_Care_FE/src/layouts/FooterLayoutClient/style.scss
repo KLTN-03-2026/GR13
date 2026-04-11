@@ -1,0 +1,204 @@
+.footer-client {
+  background-color: #111812; // Màu xanh rêu cực tối, tạo chiều sâu và sang trọng hơn
+  color: #ffffff;
+  padding: 80px 0 60px;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  border-top: 1px solid rgba(74, 124, 89, 0.1); // Viền nhẹ để phân cách với nội dung trên
+
+  .footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 100px;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+    gap: 40px;
+  }
+
+  .footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+
+    .logo-img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+      // Filter if you want to make it look purple like the image
+      // filter: invert(31%) sepia(87%) saturate(2847%) hue-rotate(253deg) brightness(98%) contrast(92%);
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+  }
+
+  .footer-copyright {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    line-height: 1.6;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .footer-socials {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+
+    .social-icon {
+      color: #ffffff;
+      font-size: 20px;
+      transition: color 0.3s ease;
+      background: rgba(255, 255, 255, 0.1);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+
+      &:hover {
+        color: #4a7c59;
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+
+  .footer-heading {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    margin-bottom: 8px;
+  }
+
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    li a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 15px;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
+
+  .footer-subscribe {
+    .subscribe-form {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 4px 4px 4px 16px;
+      margin-top: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: border-color 0.3s ease;
+
+      &:focus-within {
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .subscribe-input {
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        flex: 1;
+        padding: 10px 0;
+        outline: none;
+        font-size: 14px;
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+      }
+
+      .subscribe-button {
+        background: transparent;
+        border: none;
+        color: #4a7c59; // Greenish send icon from image
+        font-size: 18px;
+        cursor: pointer;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+
+        &:hover {
+          transform: translateX(3px);
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .footer-client {
+    .footer-container {
+      padding: 0 40px;
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  .footer-client {
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 60px 40px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-client {
+    padding: 60px 0 40px;
+
+    .footer-container {
+      padding: 0 20px;
+    }
+
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    .footer-column {
+      align-items: center;
+      text-align: center;
+    }
+
+    .footer-links {
+      align-items: center;
+    }
+
+    .footer-subscribe {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  }
+}
