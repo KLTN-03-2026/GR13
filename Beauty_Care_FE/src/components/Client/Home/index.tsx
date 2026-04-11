@@ -1,5 +1,5 @@
 import "./style.scss";
-import homeBanner from "../../../assets/images/background.png";
+import homeBanner from "../../../assets/images/BG_chinh.webp";
 import imgSkin from "../../../assets/images/698617cdf791d6d2cdb0bcc0_skincare-routine-reset.webp";
 import {
   ScanOutlined,
@@ -34,7 +34,7 @@ const HomeComponent = () => {
           </div>
 
           <h1 className="home-hero-v2__title">
-            Chăm sóc da <em>chuẩn spa</em>, nâng tầm vẻ đẹp tự nhiên
+            <em>Chăm sóc da chuẩn spa, nâng tầm vẻ đẹp tự nhiên</em>
           </h1>
 
           <div className="home-hero-v2__actions">

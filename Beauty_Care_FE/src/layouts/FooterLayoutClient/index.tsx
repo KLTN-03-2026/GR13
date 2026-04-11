@@ -4,6 +4,8 @@ import {
   TwitterOutlined,
   YoutubeOutlined,
   SendOutlined,
+  EnvironmentOutlined,
+  PhoneOutlined
 } from "@ant-design/icons";
 import logo from "../../assets/images/logo.png";
 
@@ -12,77 +14,53 @@ const FooterLayoutClient = () => {
     <footer className="footer-client">
       <div className="footer-container">
         <div className="footer-grid">
-          {/* Logo and Info Column */}
+          {/* Brand Column */}
           <div className="footer-column footer-info">
             <div className="footer-logo">
-              <img src={logo} alt="Tech Global" className="logo-img" />
-              <span className="logo-text">Beauty Care</span>
+              <span className="logo-text-fancy">Beauty Care</span>
             </div>
-            <div className="footer-copyright">
-              <p>Copyright © 2024 Beauty Care.</p>
-              <p>All rights reserved</p>
+            <div className="footer-contact-info">
+              <p><EnvironmentOutlined /> Cs1: 240 Nguyễn Văn Linh, Thanh Khê, Đà Nẵng</p>
+              <p><EnvironmentOutlined /> Cs2: 03 Quang Trung, Hải Châu, Đà Nẵng</p>
+              <p><PhoneOutlined /> +84 111 222 333</p>
             </div>
             <div className="footer-socials">
-              <a href="#" className="social-icon">
-                <InstagramOutlined />
-              </a>
-              <a href="#" className="social-icon">
-                <TwitterOutlined />
-              </a>
-              <a href="#" className="social-icon">
-                <YoutubeOutlined />
-              </a>
+              <a href="#" className="social-icon"><InstagramOutlined /></a>
+              <a href="#" className="social-icon"><TwitterOutlined /></a>
+              <a href="#" className="social-icon"><YoutubeOutlined /></a>
             </div>
           </div>
 
-          {/* Company Column */}
+          {/* Quick Links */}
           <div className="footer-column">
             <h3 className="footer-heading">Công ty</h3>
             <ul className="footer-links">
-              <li>
-                <a href="#">Giới thiệu</a>
-              </li>
-              <li>
-                <a href="#">Blog</a>
-              </li>
-              <li>
-                <a href="#">Liên hệ</a>
-              </li>
-              <li>
-                <a href="#">Pricing</a>
-              </li>
-              <li>
-                <a href="#">Testimonials</a>
-              </li>
+              <li><a href="#">Về chúng tôi</a></li>
+              <li><a href="#">Dịch vụ Spa</a></li>
+              <li><a href="#">Sản phẩm SkinCare</a></li>
+              <li><a href="#">Tin tức & Sự kiện</a></li>
             </ul>
           </div>
 
-          {/* Support Column */}
+          {/* Support */}
           <div className="footer-column">
             <h3 className="footer-heading">Hỗ trợ</h3>
             <ul className="footer-links">
-              <li>
-                <a href="#">Trung tâm trợ giúp</a>
-              </li>
-              <li>
-                <a href="#">Chính sách quyền riêng tư</a>
-              </li>
-              <li>
-                <a href="#">Chính sách bảo mật</a>
-              </li>
-              <li>
-                <a href="#">Trạng thái</a>
-              </li>
+              <li><a href="#">Trung tâm hỗ trợ</a></li>
+              <li><a href="#">Đặt lịch hẹn</a></li>
+              <li><a href="#">Chính sách bảo mật</a></li>
+              <li><a href="#">Điều khoản sử dụng</a></li>
             </ul>
           </div>
 
-          {/* Updates Column */}
+          {/* Newsletter */}
           <div className="footer-column footer-subscribe">
             <h3 className="footer-heading">Cập nhật mới nhất</h3>
+            <p className="subscribe-desc">Đăng ký để nhận ưu đãi đặc quyền và bí quyết làm đẹp từ chuyên gia.</p>
             <div className="subscribe-form">
               <input
                 type="email"
-                placeholder="Email của bạn"
+                placeholder="Email của bạn..."
                 className="subscribe-input"
               />
               <button className="subscribe-button">
@@ -90,6 +68,10 @@ const FooterLayoutClient = () => {
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="footer-bottom">
+          <p>Copyright © 2024 Beauty Care. Thấu hiểu làn da - Nâng tầm vẻ đẹp.</p>
         </div>
       </div>
     </footer>

@@ -1,0 +1,148 @@
+$primary-pink: #D23175;
+$text-dark: #1a1a1a;
+$text-muted: #666;
+$font-serif: 'Playfair Display', serif;
+$transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+.blog {
+  padding: 100px 0;
+  background-color: #fff;
+
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+    
+    .title {
+      font-family: $font-serif;
+      font-size: 48px;
+      color: $text-dark;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: $text-muted;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 40px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: $transition;
+    border: 1px solid #f0f0f0;
+
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      border-color: $primary-pink;
+
+      .image {
+        transform: scale(1.1);
+      }
+
+      .readMore span {
+        margin-left: 8px;
+      }
+    }
+
+    .imageWrapper {
+      position: relative;
+      height: 240px;
+      overflow: hidden;
+
+      .image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+      }
+
+      .category {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+        color: $primary-pink;
+        text-transform: uppercase;
+        backdrop-filter: blur(4px);
+      }
+    }
+
+    .content {
+      padding: 30px;
+
+      .date {
+        font-size: 12px;
+        color: $text-muted;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .articleTitle {
+        font-size: 22px;
+        line-height: 1.4;
+        margin-bottom: 15px;
+        color: $text-dark;
+        font-weight: 700;
+        // Giới hạn 2 dòng tiêu đề
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .summary {
+        font-size: 14px;
+        color: $text-muted;
+        line-height: 1.6;
+        margin-bottom: 25px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .readMore {
+        text-decoration: none;
+        color: $primary-pink;
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        transition: $transition;
+
+        span {
+          margin-left: 4px;
+          transition: 0.3s;
+        }
+      }
+    }
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 768px) {
+  .blog {
+    padding: 60px 0;
+    .header .title { font-size: 36px; }
+    .grid { grid-template-columns: 1fr; }
+  }
+}

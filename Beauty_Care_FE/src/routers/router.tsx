@@ -10,7 +10,6 @@ import ProductManagementPage from "../pages/Admin/ProductManagement";
 import UserManagementPage from "../pages/Admin/UserManagement";
 import BookingManagementPage from "../pages/Admin/BookingManagement";
 import BlogManagementPage from "../pages/Admin/BlogManagement";
-import BlogCategoryManagementPage from "../pages/Admin/BlogCategoryManagement";
 import ReviewManagementPage from "../pages/Admin/ReviewManagement";
 import AnalyticsManagementPage from "../pages/Admin/AnalyticsManagement";
 import SettingsManagementPage from "../pages/Admin/SettingsManagement";
@@ -21,19 +20,35 @@ import ProfileManagementPage from "../pages/Admin/ProfileManagement";
 import UserManagementAdminPage from "../pages/Admin/UserManagement/Admin";
 import UserManagementStaffPage from "../pages/Admin/UserManagement/Staff";
 import UserManagementCustomersPage from "../pages/Admin/UserManagement/Customers";
+import BlogPage from "../pages/Client/Blog";
+import BlogDetailPage from "../pages/Client/BlogDetail";
+import ProfilePage from "../pages/Client/Profile";
 
 const router = createBrowserRouter([
+  // NHÓM 1: CÁC TRANG CLIENT CÓ HEADER & FOOTER
   {
     path: "/",
     element: <HeaderLayoutClient />,
     children: [
       {
+        index: true, // Thay path: "/" bằng index: true cho gọn
         element: <HomePage />,
-        path: "/",
       },
       {
-        element: <ProductsPage />,
         path: "products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "blog",
+        element: <BlogPage />,
+      },
+      {
+        path: "blog/:id",
+        element: <BlogDetailPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
       },
     ],
   },
@@ -72,10 +87,6 @@ const router = createBrowserRouter([
       {
         path: "blogs",
         element: <BlogManagementPage />,
-      },
-      {
-        path: "blog-categories",
-        element: <BlogCategoryManagementPage />,
       },
       {
         path: "reviews",
@@ -120,4 +131,5 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
 export default router;

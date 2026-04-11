@@ -1,204 +1,220 @@
+$primary-pink: #D23175;
+$bg-dark: #0A0A0A; // Đen sâu tạo cảm giác cao cấp
+$font-serif: 'Playfair Display', serif;
+$transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
 .footer-client {
-  background-color: #111812; // Màu xanh rêu cực tối, tạo chiều sâu và sang trọng hơn
+  background-color: $bg-dark;
   color: #ffffff;
-  padding: 80px 0 60px;
-  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
-  border-top: 1px solid rgba(74, 124, 89, 0.1); // Viền nhẹ để phân cách với nội dung trên
+  padding: 100px 0 40px;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+
+  // Họa tiết trang trí mờ cho sang trọng
+  &::before {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba($primary-pink, 0.05) 0%, transparent 70%);
+  }
 
   .footer-container {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 0 100px;
+    padding: 0 40px;
   }
 
   .footer-grid {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
-    gap: 40px;
+    gap: 60px;
+    padding-bottom: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 
   .footer-column {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 25px;
   }
 
   .footer-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-
-    .logo-img {
-      width: 32px;
-      height: 32px;
-      object-fit: contain;
-      // Filter if you want to make it look purple like the image
-      // filter: invert(31%) sepia(87%) saturate(2847%) hue-rotate(253deg) brightness(98%) contrast(92%);
-    }
-
-    .logo-text {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
+    .logo-text-fancy {
+      font-family: $font-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+      
+      &::after {
+        content: ".";
+        color: $primary-pink;
+      }
     }
   }
 
-  .footer-copyright {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    line-height: 1.6;
-
+  .footer-contact-info {
     p {
-      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+      margin-bottom: 12px;
+
+      svg { color: $primary-pink; }
     }
   }
 
   .footer-socials {
     display: flex;
-    gap: 16px;
-    margin-top: 10px;
+    gap: 12px;
 
     .social-icon {
-      color: #ffffff;
-      font-size: 20px;
-      transition: color 0.3s ease;
-      background: rgba(255, 255, 255, 0.1);
-      width: 36px;
-      height: 36px;
+      color: #fff;
+      font-size: 18px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: $transition;
 
       &:hover {
-        color: #4a7c59;
-        background: rgba(255, 255, 255, 0.2);
+        background: $primary-pink;
+        border-color: $primary-pink;
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba($primary-pink, 0.3);
       }
     }
   }
 
   .footer-heading {
+    font-family: $font-serif;
     color: #ffffff;
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-    margin-bottom: 8px;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    position: relative;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -8px;
+      width: 30px;
+      height: 2px;
+      background: $primary-pink;
+    }
   }
 
   .footer-links {
     list-style: none;
     padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    
+    li {
+      margin-bottom: 15px;
+      
+      a {
+        color: rgba(255, 255, 255, 0.5);
+        text-decoration: none;
+        font-size: 15px;
+        transition: $transition;
 
-    li a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      font-size: 15px;
-      transition: color 0.3s ease;
-
-      &:hover {
-        color: #ffffff;
+        &:hover {
+          color: $primary-pink;
+          padding-left: 8px;
+        }
       }
     }
   }
 
   .footer-subscribe {
+    .subscribe-desc {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.6;
+    }
+
     .subscribe-form {
       display: flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 4px 4px 4px 16px;
-      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: border-color 0.3s ease;
+      border-radius: 12px;
+      padding: 6px;
+      margin-top: 15px;
+      transition: $transition;
 
       &:focus-within {
-        border-color: rgba(255, 255, 255, 0.3);
+        border-color: $primary-pink;
+        background: rgba(255, 255, 255, 0.08);
       }
 
       .subscribe-input {
         background: transparent;
         border: none;
-        color: #ffffff;
+        color: #fff;
         flex: 1;
-        padding: 10px 0;
+        padding: 10px 15px;
         outline: none;
         font-size: 14px;
-
-        &::placeholder {
-          color: rgba(255, 255, 255, 0.4);
-        }
       }
 
       .subscribe-button {
-        background: transparent;
+        background: $primary-pink;
         border: none;
-        color: #4a7c59; // Greenish send icon from image
-        font-size: 18px;
+        color: #fff;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
         cursor: pointer;
-        padding: 8px 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 0.3s ease;
+        transition: $transition;
 
         &:hover {
-          transform: translateX(3px);
+          background: #fff;
+          color: $primary-pink;
+          transform: rotate(-15deg);
         }
       }
     }
+  }
+
+  .footer-bottom {
+    padding-top: 40px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 }
 
 // Responsive
-@media (max-width: 1200px) {
-  .footer-client {
-    .footer-container {
-      padding: 0 40px;
-    }
-  }
-}
-
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
   .footer-client {
     .footer-grid {
       grid-template-columns: repeat(2, 1fr);
-      gap: 60px 40px;
+      gap: 50px;
     }
   }
 }
 
 @media (max-width: 640px) {
   .footer-client {
-    padding: 60px 0 40px;
-
-    .footer-container {
-      padding: 0 20px;
-    }
-
-    .footer-grid {
-      grid-template-columns: 1fr;
-      gap: 40px;
-    }
-
-    .footer-column {
-      align-items: center;
-      text-align: center;
-    }
-
-    .footer-links {
-      align-items: center;
-    }
-
-    .footer-subscribe {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-    }
+    padding: 60px 0 30px;
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .footer-logo, .footer-contact-info p, .footer-socials { justify-content: center; }
+    .footer-heading::after { left: 50%; transform: translateX(-50%); }
+    .footer-links li a:hover { padding-left: 0; }
   }
 }
