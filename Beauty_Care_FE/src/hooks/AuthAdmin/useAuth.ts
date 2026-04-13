@@ -1,0 +1,1 @@
+export { useLoginAdmin } from "./index";

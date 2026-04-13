@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -28,6 +28,7 @@ import {
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import "./style.scss";
+import { useGetCurrentUser, useUpdateCurrentUser } from "../../../hooks/user";
 
 const { Title, Text } = Typography;
 
@@ -46,6 +47,9 @@ const ProfileManagementComponent: React.FC = () => {
   const [securityForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
+  const currentUserQuery = useGetCurrentUser();
+  const updateUserMutation = useUpdateCurrentUser();
+
   const [profile, setProfile] = useState<Profile>({
     fullName: "Quản trị viên",
     username: "admin_beauty",
@@ -54,6 +58,62 @@ const ProfileManagementComponent: React.FC = () => {
     role: "Quản trị viên",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin",
   });
+
+  useEffect(() => {
+    const u: any = currentUserQuery.data?.data;
+    if (!u) return;
+
+    const email = u.Email ?? u.email ?? "";
+    const phone = u.Phone ?? u.phone ?? "";
+    const firstName = u.firstName ?? "";
+    const lastName = u.lastName ?? "";
+    const fullName = `${firstName} ${lastName}`.trim() || email;
+    const username = email ? email.split("@")[0] : `user_${u.id ?? ""}`;
+    const roleCode = u.role_code ?? "";
+    const role =
+      roleCode === "R1"
+        ? "Quản trị viên"
+        : roleCode === "R2"
+          ? "Nhân viên"
+          : "Khách hàng";
+    const avatar = u.avatar ?? u.img ?? profile.avatar;
+
+    const nextProfile: Profile = {
+      fullName,
+      username,
+      email,
+      phone,
+      role,
+      avatar,
+    };
+    setProfile(nextProfile);
+
+    profileForm.setFieldsValue({
+      fullName: nextProfile.fullName,
+      email: nextProfile.email,
+      phone: nextProfile.phone,
+      avatar: nextProfile.avatar
+        ? [
+            {
+              uid: "-1",
+              name: "avatar.png",
+              status: "done",
+              url: nextProfile.avatar,
+            },
+          ]
+        : [],
+    });
+
+    const normalizedUser = {
+      id: u.id,
+      email,
+      firstName,
+      lastName,
+      role_code: roleCode,
+      avatar: u.avatar ?? u.img ?? null,
+    };
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
+  }, [currentUserQuery.data?.data, profile.avatar, profileForm]);
 
   const [preferences, setPreferences] = useState({
     notifyOrders: true,
@@ -86,14 +146,61 @@ const ProfileManagementComponent: React.FC = () => {
         if (values.avatar?.length && values.avatar[0]?.originFileObj) {
           avatarUrl = await getBase64(values.avatar[0].originFileObj);
         }
-        const next: Profile = {
-          ...profile,
-          fullName: values.fullName,
+        const fullNameStr = String(values.fullName || "").trim();
+        const tokens = fullNameStr.split(/\s+/).filter(Boolean);
+        const current: any = currentUserQuery.data?.data ?? {};
+        const firstName =
+          tokens.length >= 2 ? tokens[0] : tokens[0] || current.firstName || "";
+        const lastName =
+          tokens.length >= 2
+            ? tokens.slice(1).join(" ")
+            : current.lastName || "";
+
+        const res = await updateUserMutation.mutateAsync({
+          firstName,
+          lastName,
           email: values.email,
           phone: values.phone,
           avatar: avatarUrl,
+        } as any);
+
+        if (res.err) {
+          message.error(res.mess || "Cập nhật thất bại");
+          return;
+        }
+
+        const u: any = res.data;
+        const email = u?.Email ?? values.email;
+        const phone = u?.Phone ?? values.phone;
+        const roleCode = u?.role_code ?? current.role_code ?? "";
+        const role =
+          roleCode === "R1"
+            ? "Quản trị viên"
+            : roleCode === "R2"
+              ? "Nhân viên"
+              : "Khách hàng";
+
+        const next: Profile = {
+          ...profile,
+          fullName: `${u?.firstName ?? firstName} ${u?.lastName ?? lastName}`.trim(),
+          email,
+          phone,
+          role,
+          avatar: u?.avatar ?? u?.img ?? avatarUrl,
         };
         setProfile(next);
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: u?.id ?? current.id,
+            email,
+            firstName: u?.firstName ?? firstName,
+            lastName: u?.lastName ?? lastName,
+            role_code: roleCode,
+            avatar: u?.avatar ?? u?.img ?? avatarUrl ?? null,
+          }),
+        );
         message.success("Đã cập nhật thông tin cá nhân");
       } finally {
         setLoading(false);
@@ -151,25 +258,10 @@ const ProfileManagementComponent: React.FC = () => {
         </Col>
 
         <Col xs={24} md={16}>
-          <Card bordered={false} className="profile-card" title="Cập nhật thông tin">
+          <Card bordered={false} className="profile-card" title="Cập nhật thông tin" loading={currentUserQuery.isLoading}>
             <Form
               form={profileForm}
               layout="vertical"
-              initialValues={{
-                fullName: profile.fullName,
-                email: profile.email,
-                phone: profile.phone,
-                avatar: profile.avatar
-                  ? [
-                      {
-                        uid: "-1",
-                        name: "avatar.png",
-                        status: "done",
-                        url: profile.avatar,
-                      },
-                    ]
-                  : [],
-              }}
             >
               <Row gutter={16}>
                 <Col span={12}>

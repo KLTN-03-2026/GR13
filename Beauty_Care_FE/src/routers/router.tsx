@@ -21,6 +21,9 @@ import ProfileManagementPage from "../pages/Admin/ProfileManagement";
 import UserManagementAdminPage from "../pages/Admin/UserManagement/Admin";
 import UserManagementStaffPage from "../pages/Admin/UserManagement/Staff";
 import UserManagementCustomersPage from "../pages/Admin/UserManagement/Customers";
+import AuthAdminLayout from "../layouts/AuthAdminLayout";
+import LoginAdminPage from "../pages/Auth/AuthAdmin/LoginAdmin";
+import RequireAdminAuth from "../layouts/RequireAdminAuth";
 
 const router = createBrowserRouter([
   {
@@ -39,7 +42,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    element: <LayoutAdmin />,
+    element: (
+      <RequireAdminAuth>
+        <LayoutAdmin />
+      </RequireAdminAuth>
+    ),
     children: [
       {
         path: "",
@@ -119,5 +126,15 @@ const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: "/auth-admin",
+    element: <AuthAdminLayout />,
+    children: [
+      {
+        path: "login",
+        element: <LoginAdminPage />,
+      },
+    ],
+  }
 ]);
 export default router;

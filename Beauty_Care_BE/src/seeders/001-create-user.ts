@@ -1,19 +1,27 @@
 "use strict";
 import { QueryInterface } from "sequelize";
+import crypto from "crypto";
+
+const hashPassword = (plainPassword: string) => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hashed = crypto.scryptSync(plainPassword, salt, 64).toString("hex");
+  return `${salt}:${hashed}`;
+};
 
 export default {
   up: async (queryInterface: QueryInterface, Sequelize: any) => {
+    const passwordHash = hashPassword("Password@123");
     return queryInterface.bulkInsert(
       "Users",
       [
         {
           firstName: "Admin",
           lastName: "System",
-          Email: "admin@techspa.com",
+          Email: "admin@gmail.com",
           Phone: "0123456789",
           img: "https://example.com/admin.png",
           avatar: "https://example.com/admin.png",
-          password: "password123", // Trong thực tế nên hash password
+          password: passwordHash,
           role_code: "R1",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -21,11 +29,11 @@ export default {
         {
           firstName: "User",
           lastName: "User",
-          Email: "user@techspa.com",
+          Email: "staff@gmail.com",
           Phone: "0123456789",
           img: "https://example.com/user.png",
           avatar: "https://example.com/user.png",
-          password: "password123", // Trong thực tế nên hash password
+          password: passwordHash,
           role_code: "R2",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -33,11 +41,11 @@ export default {
         {
           firstName: "Customer",
           lastName: "Customer",
-          Email: "customer@techspa.com",
+          Email: "customer@gmail.com",
           Phone: "0123456789",
           img: "https://example.com/customer.png",
           avatar: "https://example.com/customer.png",
-          password: "password123", // Trong thực tế nên hash password
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -45,11 +53,11 @@ export default {
         {
           firstName: "Nguyễn",
           lastName: "Văn A",
-          Email: "khachhang1@techspa.com",
+          Email: "khachhang1@gmail.com",
           Phone: "0900000001",
           img: "https://example.com/customer1.png",
           avatar: "https://example.com/customer1.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -57,11 +65,11 @@ export default {
         {
           firstName: "Trần",
           lastName: "Thị B",
-          Email: "khachhang2@techspa.com",
+          Email: "khachhang2@gmail.com",
           Phone: "0900000002",
           img: "https://example.com/customer2.png",
           avatar: "https://example.com/customer2.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -69,11 +77,11 @@ export default {
         {
           firstName: "Lê",
           lastName: "Văn C",
-          Email: "khachhang3@techspa.com",
+          Email: "khachhang3@gmail.com",
           Phone: "0900000003",
           img: "https://example.com/customer3.png",
           avatar: "https://example.com/customer3.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -81,11 +89,11 @@ export default {
         {
           firstName: "Phạm",
           lastName: "Thị D",
-          Email: "khachhang4@techspa.com",
+          Email: "khachhang4@gmail.com",
           Phone: "0900000004",
           img: "https://example.com/customer4.png",
           avatar: "https://example.com/customer4.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -93,11 +101,11 @@ export default {
         {
           firstName: "Hoàng",
           lastName: "Văn E",
-          Email: "khachhang5@techspa.com",
+          Email: "khachhang5@gmail.com",
           Phone: "0900000005",
           img: "https://example.com/customer5.png",
           avatar: "https://example.com/customer5.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -105,11 +113,11 @@ export default {
         {
           firstName: "Vũ",
           lastName: "Thị F",
-          Email: "khachhang6@techspa.com",
+          Email: "khachhang6@gmail.com",
           Phone: "0900000006",
           img: "https://example.com/customer6.png",
           avatar: "https://example.com/customer6.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -117,11 +125,11 @@ export default {
         {
           firstName: "Đặng",
           lastName: "Văn G",
-          Email: "khachhang7@techspa.com",
+          Email: "khachhang7@gmail.com",
           Phone: "0900000007",
           img: "https://example.com/customer7.png",
           avatar: "https://example.com/customer7.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -129,11 +137,11 @@ export default {
         {
           firstName: "Bùi",
           lastName: "Thị H",
-          Email: "khachhang8@techspa.com",
+          Email: "khachhang8@gmail.com",
           Phone: "0900000008",
           img: "https://example.com/customer8.png",
           avatar: "https://example.com/customer8.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -141,11 +149,11 @@ export default {
         {
           firstName: "Đỗ",
           lastName: "Văn I",
-          Email: "khachhang9@techspa.com",
+          Email: "khachhang9@gmail.com",
           Phone: "0900000009",
           img: "https://example.com/customer9.png",
           avatar: "https://example.com/customer9.png",
-          password: "password123",
+          password: passwordHash,
           role_code: "R3",
           createdAt: new Date(),
           updatedAt: new Date(),

@@ -29,6 +29,22 @@ export const getAllUsersAPI = async (): Promise<IResponse<IUser[]>> => {
   return data;
 };
 
+export const getCurrentUserAPI = async (): Promise<IResponse<IUser>> => {
+  const { data } = await API.get("/user/current");
+  return data;
+};
+
+export const updateCurrentUserAPI = async (
+  payload: Partial<IUser> & { email?: string; phone?: string }
+): Promise<IResponse<IUser>> => {
+  const { data } = await API.put("/user/update", {
+    ...payload,
+    Email: payload.email ?? payload.Email,
+    Phone: payload.phone ?? payload.Phone,
+  });
+  return data;
+};
+
 export const createUserAPI = async (
   payload: {
     email: string;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Layout,
@@ -51,6 +51,29 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const navigate = useNavigate();
 
+  const currentUser = useMemo(() => {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as any;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const displayName = useMemo(() => {
+    if (!currentUser) return "Tài khoản";
+    const firstName = currentUser.firstName || "";
+    const lastName = currentUser.lastName || "";
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || currentUser.email || "Tài khoản";
+  }, [currentUser]);
+
+  const avatarSrc = useMemo(() => {
+    if (!currentUser) return null;
+    return currentUser.avatar || currentUser.img || null;
+  }, [currentUser]);
+
   const handleQuickActionClick = ({ key }: { key: string }) => {
     switch (key) {
       case "new-product":
@@ -82,6 +105,8 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
     }
     if (key === "logout") {
       message.success("Đã đăng xuất");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       navigate("/");
     }
   };
@@ -280,10 +305,10 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
             <div className="user-profile">
               <Avatar
                 size="small"
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"
+                src={avatarSrc || "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"}
                 icon={<UserOutlined />}
               />
-              <span className="user-name">Quản trị viên</span>
+              <span className="user-name">{displayName}</span>
             </div>
           </Dropdown>
         </Space>

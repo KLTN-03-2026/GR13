@@ -8,6 +8,23 @@ export const useGetAllUsers = () => {
   });
 };
 
+export const useGetCurrentUser = () => {
+  return useQuery({
+    queryKey: ["user", "current"],
+    queryFn: userApi.getCurrentUserAPI,
+  });
+};
+
+export const useUpdateCurrentUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: userApi.updateCurrentUserAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user", "current"] });
+    },
+  });
+};
+
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
