@@ -269,14 +269,17 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
 
   const filteredUsers = (roleFilter === "all"
     ? users
-    : users.filter((u) => u.role === roleFilter)
-  ).filter((u) => {
+    : users.filter((u: any) => u.role === roleFilter)
+  ).filter((u: any) => {
     const keyword = searchText.trim().toLowerCase();
     if (!keyword) return true;
+    const nameStr = (u.name || "").toLowerCase();
+    const emailStr = (u.email || "").toLowerCase();
+    const phoneStr = (u.phone || "").toLowerCase();
     return (
-      u.name.toLowerCase().includes(keyword) ||
-      u.email.toLowerCase().includes(keyword) ||
-      u.phone.toLowerCase().includes(keyword)
+      nameStr.includes(keyword) ||
+      emailStr.includes(keyword) ||
+      phoneStr.includes(keyword)
     );
   });
   const title = fixedRole ? `Quản lý ${roleLabelMap[fixedRole]}` : "Quản lý người dùng";

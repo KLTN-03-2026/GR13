@@ -8,7 +8,7 @@ export default {
       [
         {
           id: 1,
-          userId: 1, // Liên kết với Admin System (id: 1) từ seeder 001
+          userId: 3, // Liên kết với Khách hàng
           createdAt: new Date(),
           updatedAt: new Date(),
         },
