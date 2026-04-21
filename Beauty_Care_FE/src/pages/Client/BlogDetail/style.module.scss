@@ -1,0 +1,288 @@
+$primary-pink: #D23175;
+$hover-pink: #b02660;
+$text-dark: #1a1a1a;
+$text-muted: #666;
+$border-color: #f0f0f0;
+$font-serif: 'Playfair Display', serif;
+$font-sans: 'Inter', sans-serif;
+$transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
+.blogDetail {
+  background-color: #fff;
+  padding-bottom: 120px;
+  font-family: $font-sans;
+
+  // 1. Hero Section: Nâng cấp lớp phủ và typography
+  .hero {
+    position: relative;
+    height: 70vh; // Tăng chiều cao một chút cho sang
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+
+    &::after { // Thêm lớp phủ gradient mượt hơn
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+      z-index: 2;
+    }
+
+    .heroImage {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      transition: transform 10s ease; // Hiệu ứng zoom nhẹ khi load trang
+    }
+
+    &:hover .heroImage {
+      transform: scale(1.1);
+    }
+
+    .heroContent {
+      position: relative;
+      z-index: 3;
+      color: #fff;
+      max-width: 1000px;
+      padding: 0 40px;
+
+      .category {
+        display: inline-block;
+        background: $primary-pink;
+        padding: 8px 24px;
+        border-radius: 50px;
+        font-weight: 700;
+        margin-bottom: 25px;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 2px;
+        box-shadow: 0 4px 15px rgba($primary-pink, 0.3);
+      }
+
+      .mainTitle {
+        font-family: $font-serif;
+        font-size: 64px; // Chữ to và thanh lịch hơn
+        line-height: 1.1;
+        margin-bottom: 25px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      }
+
+      .meta {
+        font-size: 15px;
+        font-weight: 300;
+        letter-spacing: 1px;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+
+        &::before, &::after {
+          content: "";
+          width: 30px;
+          height: 1px;
+          background: rgba(255,255,255,0.5);
+        }
+      }
+    }
+  }
+
+  // 2. Main Wrapper: Chia tỷ lệ và khoảng cách
+  .container {
+    max-width: 1200px; // Rộng hơn một chút
+    margin: 0 auto;
+    padding: 0 30px;
+  }
+
+  .breadcrumb {
+    padding: 40px 0;
+    font-size: 13px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    a {
+      transition: $transition;
+      &:hover { color: $primary-pink; }
+    }
+    span { margin: 0 12px; color: #ddd; }
+  }
+
+  .mainWrapper {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 80px;
+    align-items: start;
+  }
+
+  // 3. Article Body: Focus vào Typography tạp chí
+  .articleBody {
+    .leadText {
+      font-size: 22px;
+      line-height: 1.7;
+      color: #222;
+      font-weight: 500;
+      margin-bottom: 40px;
+      font-style: italic;
+      border-left: 5px solid $primary-pink;
+      padding-left: 30px;
+      letter-spacing: -0.01em;
+    }
+
+    .richText {
+      font-size: 18px;
+      line-height: 1.9;
+      color: #444;
+
+      p {
+        margin-bottom: 25px;
+        &:first-letter { // Chữ cái đầu dòng to (Drop cap) cho cảm giác tạp chí
+          float: left;
+          font-family: $font-serif;
+          font-size: 60px;
+          line-height: 1;
+          padding: 4px 8px 0 0;
+          color: $primary-pink;
+        }
+      }
+    }
+
+    .tags {
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid $border-color;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      span {
+        background: #fff;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-muted;
+        border: 1px solid $border-color;
+        transition: $transition;
+
+        &:hover {
+          border-color: $primary-pink;
+          color: $primary-pink;
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba($primary-pink, 0.1);
+        }
+      }
+    }
+  }
+
+
+  .sidebar {
+    position: sticky;
+    top: 120px; // Cố định sidebar khi scroll cho sang
+
+    .authorCard, .relatedBox {
+      background: #fff;
+      padding: 35px;
+      border-radius: 20px;
+      margin-bottom: 40px;
+      border: 1px solid $border-color;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+      transition: $transition;
+
+      &:hover {
+        box-shadow: 0 15px 45px rgba(0,0,0,0.05);
+      }
+
+      h3 {
+        font-family: $font-serif;
+        font-size: 20px;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 15px;
+
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 40px;
+          height: 2px;
+          background: $primary-pink;
+        }
+      }
+
+      p {
+        font-size: 14px;
+        color: $text-muted;
+        line-height: 1.7;
+      }
+    }
+
+    .relatedBox {
+      background: $text-dark; // Đổi màu card newsletter sang tối cho nổi bật
+      color: #fff;
+      border: none;
+
+      h3 { color: #fff; &::after { background: $primary-pink; } }
+      p { color: #ccc; }
+
+      input {
+        width: 90%;
+        padding: 14px;
+        margin: 20px 0 12px;
+		margin-right: 20px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 10px;
+        color: #fff;
+        outline: none;
+        transition: 0.3s;
+
+        &:focus { border-color: $primary-pink; }
+      }
+
+      button {
+        width: 100%;
+        background: $primary-pink;
+        color: #fff;
+        border: none;
+        padding: 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: $transition;
+
+        &:hover {
+          background: $hover-pink;
+          box-shadow: 0 5px 20px rgba($primary-pink, 0.4);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1100px) {
+  .blogDetail {
+    .mainWrapper { gap: 40px; grid-template-columns: 1fr 300px; }
+    .hero .mainTitle { font-size: 48px; }
+  }
+}
+
+@media (max-width: 900px) {
+  .blogDetail {
+    .hero {
+      height: 50vh;
+      .mainTitle { font-size: 36px; }
+    }
+    .mainWrapper { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .articleBody .richText p:first-letter { font-size: 45px; }
+  }
+}

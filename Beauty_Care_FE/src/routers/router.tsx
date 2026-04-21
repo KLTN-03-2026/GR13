@@ -24,6 +24,11 @@ import UserManagementCustomersPage from "../pages/Admin/UserManagement/Customers
 import AuthAdminLayout from "../layouts/AuthAdminLayout";
 import LoginAdminPage from "../pages/Auth/AuthAdmin/LoginAdmin";
 import RequireAdminAuth from "../layouts/RequireAdminAuth";
+import ProductDetailPage from "../pages/Client/ProductDetail";
+import BlogPage from "../pages/Client/Blog";
+import BlogDetailPage from "../pages/Client/BlogDetail";
+import CartPage from "../pages/Client/Cart";
+import CheckoutPage from "../pages/Client/Checkout";
 
 const router = createBrowserRouter([
   {
@@ -37,6 +42,26 @@ const router = createBrowserRouter([
       {
         element: <ProductsPage />,
         path: "products",
+      },
+      {
+        path: "products/:id",
+        element: <ProductDetailPage />,
+      },
+      {
+        path: "blog",
+        element: <BlogPage />,
+      },
+      {
+        path: "blog/:id",
+        element: <BlogDetailPage />,
+      },
+      {
+        path: "cart",
+        element: <CartPage />,
+      },
+      {
+        path: "checkout",
+        element: <CheckoutPage />,
       },
     ],
   },
