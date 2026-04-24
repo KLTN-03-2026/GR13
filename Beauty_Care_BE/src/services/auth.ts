@@ -2,6 +2,10 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import db from "../models";
 import { Op } from "sequelize";
+import axios from "axios";
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const hashPassword = (plainPassword: string) => {
   const salt = crypto.randomBytes(16).toString("hex");
@@ -26,7 +30,7 @@ const verifyPassword = (plainPassword: string, storedPassword: string) => {
   }
 };
 
-const signAccessToken = (payload: { id: number; role_code: string }) => {
+export const signAccessToken = (payload: { id: number; role_code: string }) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error("Missing JWT_SECRET");
   const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
@@ -128,4 +132,105 @@ export const login = async (payload: { account: string; password: string }) => {
       avatar: (user as any).avatar ?? (user as any).img ?? null,
     },
   };
+};
+
+export const loginUser = async (payload: { account: string; password: string }) => {
+  const account = payload.account.trim();
+  const emailValue = account.toLowerCase();
+  const user = await db.User.findOne({
+    where: {
+      [Op.or]: [{ Email: emailValue }, { Phone: account }],
+      role_code: "R3",
+    },
+  });
+  if (!user) {
+    return {
+      err: 1,
+      mess: "Email hoặc mật khẩu không đúng hoặc tài khoản không có quyền truy cập",
+    };
+  }
+
+  const ok = verifyPassword(payload.password, user.password);
+  if (!ok) {
+    return {
+      err: 1,
+      mess: "Email hoặc mật khẩu không đúng",
+    };
+  }
+
+  const accessToken = signAccessToken({
+    id: user.id,
+    role_code: user.role_code,
+  });
+
+  return {
+    err: 0,
+    mess: "Đăng nhập người dùng thành công",
+    accessToken,
+    user: {
+      id: user.id,
+      email: user.Email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role_code: user.role_code,
+      avatar: (user as any).avatar ?? (user as any).img ?? null,
+    },
+  };
+};
+
+export const loginGoogle = async (token: string) => {
+  try {
+    const response = await axios.get(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+    );
+    const userInfo = response.data;
+
+    if (!userInfo.email) {
+      return {
+        err: 1,
+        mess: "Không thể lấy thông tin email từ Google",
+      };
+    }
+
+    let user = await db.User.findOne({
+      where: { Email: userInfo.email },
+    });
+
+    if (!user) {
+      user = await db.User.create({
+        Email: userInfo.email,
+        firstName: userInfo.given_name || "User",
+        lastName: userInfo.family_name || "Google",
+        password: hashPassword(crypto.randomBytes(16).toString("hex")),
+        Phone: "0000000000",
+        avatar: userInfo.picture || null,
+        role_code: "R3",
+      });
+    }
+
+    const accessToken = signAccessToken({
+      id: user.id,
+      role_code: user.role_code,
+    });
+
+    return {
+      err: 0,
+      mess: "Đăng nhập bằng Google thành công",
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.Email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role_code: user.role_code,
+        avatar: (user as any).avatar ?? (user as any).img ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    return {
+      err: 1,
+      mess: "Xác thực Google thất bại",
+    };
+  }
 };

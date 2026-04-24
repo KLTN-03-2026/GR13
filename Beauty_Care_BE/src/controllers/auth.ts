@@ -35,6 +35,38 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+export const loginGoogle = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token) return badRequest("Token Google là bắt buộc", res);
+
+    const response = await services.loginGoogle(token);
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  try {
+    const schema = Joi.object({
+      account: Joi.string().required(),
+      password,
+    });
+    const { error, value } = schema.validate(req.body);
+    if (error) return badRequest(error.details[0].message, res);
+
+    const { account, password: passwordValue } = value as any;
+    const response = await services.loginUser({
+      account,
+      password: passwordValue,
+    });
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};
+
 export const login = async (req: Request, res: Response) => {
   try {
     const schema = Joi.object({
@@ -54,3 +86,4 @@ export const login = async (req: Request, res: Response) => {
     return InternalServerError(res);
   }
 };
+
