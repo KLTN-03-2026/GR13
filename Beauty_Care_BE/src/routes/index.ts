@@ -11,6 +11,7 @@ import bookingRouter from "./booking";
 import reviewRouter from "./review";
 import wishlistRouter from "./wishlist";
 import adminRouter from "./admin";
+import discountRouter from "./discount";
 
 const initRoutes = (app: express.Express) => {
   app.use("/api/v1/user", userRouter);
@@ -25,5 +26,6 @@ const initRoutes = (app: express.Express) => {
   app.use("/api/v1/review", reviewRouter);
   app.use("/api/v1/wishlist", wishlistRouter);
   app.use("/api/v1/admin", adminRouter);
+  app.use("/api/v1/discount", discountRouter);
 };
 export default initRoutes;

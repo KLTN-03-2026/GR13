@@ -2,10 +2,10 @@ import "./style.scss";
 import {
   InputCommonEmail,
   InputCommonPassword,
-} from "../../../Common/InputCommon";
+} from "../../Common/InputCommon";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { useLoginAdmin } from "../../../../hooks/AuthAdmin/index";
+import { useLoginAdmin } from "../../../hooks/AuthAdmin/index";
 
 
 
