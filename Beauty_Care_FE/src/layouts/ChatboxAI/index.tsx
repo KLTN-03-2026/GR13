@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import './style.scss';
 import Draggable from 'react-draggable';
+import FaceScanner from '../../components/Common/FaceScanner';
 
 const products = [
   { id: 1, name: 'Serum Phục Hồi', price: '₫650.000', img: 'https://i.pravatar.cc/220?img=56' },
@@ -26,6 +27,10 @@ const ChatboxAI: React.FC = () => {
   const [centerPos, setCenterPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [draggableKey, setDraggableKey] = useState(0);
   const nodeRef = useRef<HTMLDivElement | null>(null);
+  
+  const scannerRef = useRef<any>(null);
+  const [apiResult, setApiResult] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // sample scores for demo
   const scores = {
@@ -35,6 +40,25 @@ const ChatboxAI: React.FC = () => {
     lỗChânLông: 72,
     nếpNhăn: 12,
   };
+
+  const currentScores = apiResult?.scores ? {
+    mụnViêm: apiResult.scores.acne || 0,
+    mụnĐầuĐen: apiResult.scores.blackheads || 0,
+    thâmNám: apiResult.scores.dark_spots || 0,
+    lỗChânLông: apiResult.scores.pores || 0,
+    nếpNhăn: apiResult.scores.wrinkles || 0,
+  } : scores;
+
+  const totalScore = apiResult?.overall || 78;
+  const skinTypeLabel = apiResult?.advice_detail?.title || 'Da dầu';
+  const displayProducts = apiResult?.suggested_products?.length > 0 ? apiResult.suggested_products.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    price: `₫${(p.price || 0).toLocaleString()}`,
+    img: p.image_url || 'https://i.pravatar.cc/220?img=56',
+  })) : products;
+
+  const currentPreview = previewUrl || "https://i.pravatar.cc/420?img=66";
 
   // center the chatbox when opened
   useEffect(() => {
@@ -57,6 +81,15 @@ const ChatboxAI: React.FC = () => {
 
   return (
     <div className="chatbox-ai-root">
+      <FaceScanner
+        ref={scannerRef}
+        hideTrigger={true}
+        onResult={(data, url) => {
+          setApiResult(data);
+          setPreviewUrl(url);
+          setShowResult(true);
+        }}
+      />
       {/* Floating toggle button */}
       <Tooltip title="Beauty AI Consultant">
         <Button
@@ -104,14 +137,14 @@ const ChatboxAI: React.FC = () => {
                 <CameraOutlined className="action-icon" />
                 <div className="action-title">Chụp ảnh gương mặt</div>
                 <div className="action-desc">Hướng dẫn chụp trong điều kiện đủ sáng</div>
-                <Button type="primary" className="action-btn">BẮT ĐẦU</Button>
+                <Button type="primary" className="action-btn" onClick={() => scannerRef.current?.open()}>BẮT ĐẦU</Button>
               </Card>
 
               <Card className="action-card" variant="shadow">
                 <UploadOutlined className="action-icon" />
                 <div className="action-title">Tải ảnh từ máy</div>
                 <div className="action-desc">Đăng ảnh để nhận phân tích da</div>
-                <Button className="action-btn">TẢI LÊN</Button>
+                <Button className="action-btn" onClick={() => scannerRef.current?.triggerUpload()}>TẢI LÊN</Button>
               </Card>
             </div>
           )}
@@ -120,7 +153,7 @@ const ChatboxAI: React.FC = () => {
             <div className="phase phase-2">
               <div className="left">
                 <div className="photo-wrap">
-                  <img src="https://i.pravatar.cc/420?img=66" alt="skin" />
+                  <img src={currentPreview} alt="skin" />
                   <div className="scanning-line" />
                 </div>
               </div>
@@ -128,29 +161,29 @@ const ChatboxAI: React.FC = () => {
                 <div className="score-list">
                   <div className="score-row">
                     <div className="label">Mụn viêm</div>
-                    <Progress percent={scores.mụnViêm} strokeColor="#ff7a45" />
+                    <Progress percent={currentScores.mụnViêm} strokeColor="#ff7a45" />
                   </div>
                   <div className="score-row">
                     <div className="label">Mụn đầu đen</div>
-                    <Progress percent={scores.mụnĐầuĐen} strokeColor="#faad14" />
+                    <Progress percent={currentScores.mụnĐầuĐen} strokeColor="#faad14" />
                   </div>
                   <div className="score-row">
                     <div className="label">Thâm nám</div>
-                    <Progress percent={scores.thâmNám} strokeColor="#9254de" />
+                    <Progress percent={currentScores.thâmNám} strokeColor="#9254de" />
                   </div>
                   <div className="score-row">
                     <div className="label">Lỗ chân lông</div>
-                    <Progress percent={scores.lỗChânLông} strokeColor="#1890ff" />
+                    <Progress percent={currentScores.lỗChânLông} strokeColor="#1890ff" />
                   </div>
                   <div className="score-row">
                     <div className="label">Nếp nhăn</div>
-                    <Progress percent={scores.nếpNhăn} strokeColor="#52c41a" />
+                    <Progress percent={currentScores.nếpNhăn} strokeColor="#52c41a" />
                   </div>
                 </div>
 
                 <div className="summary">
-                  <div className="total">Tổng điểm: <span className="score">78</span></div>
-                  <Tag color="#f50" className="skin-type">Loại da: Da dầu</Tag>
+                  <div className="total">Tổng điểm: <span className="score">{totalScore}</span></div>
+                  <Tag color="#f50" className="skin-type">Loại da: {skinTypeLabel}</Tag>
                 </div>
               </div>
             </div>
@@ -160,7 +193,7 @@ const ChatboxAI: React.FC = () => {
             <div className="phase phase-3">
               <div className="recommend-title">Sản phẩm đề xuất</div>
               <div className="product-scroller">
-                {products.map((p) => (
+                {displayProducts.map((p) => (
                   <Card key={p.id} className="product-card" variant="shadow">
                     <img src={p.img} alt={p.name} />
                     <div className="prod-name">{p.name}</div>

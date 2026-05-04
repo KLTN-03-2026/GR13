@@ -15,6 +15,7 @@ import discountRouter from "./discount";
 import paymentRouter from "./payment";
 import conversationRouter from "./conversation";
 import messageRouter from "./message";
+import aiRouter from "./ai";
 
 const initRoutes = (app: express.Express) => {
   app.use("/api/v1/user", userRouter);
@@ -33,5 +34,6 @@ const initRoutes = (app: express.Express) => {
   app.use("/api/v1/payment", paymentRouter);
   app.use("/api/v1/conversation", conversationRouter);
   app.use("/api/v1/message", messageRouter);
+  app.use("/api/v1/ai", aiRouter);
 };
 export default initRoutes;
