@@ -83,17 +83,13 @@ class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
       foreignKey: "userId",
       as: "orders",
     });
-    User.hasMany(models.Booking, {
-      foreignKey: "userId",
-      as: "bookings",
-    });
     User.hasMany(models.Review, {
       foreignKey: "userId",
       as: "reviews",
     });
-    User.hasMany(models.Wishlist, {
+    User.hasMany(models.FavoriteProduct, {
       foreignKey: "userId",
-      as: "wishlists",
+      as: "favoriteProducts",
     });
   }
 }

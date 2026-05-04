@@ -7,11 +7,14 @@ import blogCategoryRouter from "./blog_category";
 import productRouter from "./product";
 import cartRouter from "./cart";
 import orderRouter from "./order";
-import bookingRouter from "./booking";
 import reviewRouter from "./review";
-import wishlistRouter from "./wishlist";
+import favoriteProductRouter from "./favorite_product";
+import skinAnalysisRouter from "./skin_analysis";
 import adminRouter from "./admin";
 import discountRouter from "./discount";
+import paymentRouter from "./payment";
+import conversationRouter from "./conversation";
+import messageRouter from "./message";
 
 const initRoutes = (app: express.Express) => {
   app.use("/api/v1/user", userRouter);
@@ -22,10 +25,13 @@ const initRoutes = (app: express.Express) => {
   app.use("/api/v1/product", productRouter);
   app.use("/api/v1/cart", cartRouter);
   app.use("/api/v1/order", orderRouter);
-  app.use("/api/v1/booking", bookingRouter);
   app.use("/api/v1/review", reviewRouter);
-  app.use("/api/v1/wishlist", wishlistRouter);
+  app.use("/api/v1/favorite-product", favoriteProductRouter);
+  app.use("/api/v1/skin-analysis", skinAnalysisRouter);
   app.use("/api/v1/admin", adminRouter);
   app.use("/api/v1/discount", discountRouter);
+  app.use("/api/v1/payment", paymentRouter);
+  app.use("/api/v1/conversation", conversationRouter);
+  app.use("/api/v1/message", messageRouter);
 };
 export default initRoutes;

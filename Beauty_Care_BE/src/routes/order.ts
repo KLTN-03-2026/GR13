@@ -8,12 +8,14 @@ const router = express.Router();
 router.use(verifyToken);
 
 router.get("/admin", isAdmin, controllers.adminGetOrders);
-router.get("/admin/:orderId", isAdmin, controllers.adminGetOrderDetail);
-router.put("/admin/:orderId/status", isAdmin, controllers.adminUpdateOrderStatus);
+
 
 router.get("/", controllers.getOrders);
 router.get("/:orderId", controllers.getOrderDetail);
 router.post("/checkout", controllers.createOrder);
 router.post("/cancel", controllers.cancelOrder);
+
+// Admin routes
+router.get("/admin/list", isAdmin, controllers.adminGetOrders);
 
 export default router;

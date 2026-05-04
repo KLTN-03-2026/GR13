@@ -1,15 +1,15 @@
 "use strict";
 import { QueryInterface } from "sequelize";
 
-export default {
+module.exports = {
   up: async (queryInterface: QueryInterface, Sequelize: any) => {
     return queryInterface.bulkInsert(
       "Orders",
       [
         {
           id: 1,
-          userId: 3, // Customer
-          totalAmount: 560000, // 280k * 2
+          userId: 3, 
+          totalAmount: 560000, 
           status: "completed",
           paymentMethod: "COD",
           shippingAddress: "123 Đường A, Quận B, TP.HCM",
@@ -20,7 +20,7 @@ export default {
         {
           id: 2,
           userId: 3,
-          totalAmount: 670000, // 420k + 250k
+          totalAmount: 670000, 
           status: "pending",
           paymentMethod: "VNPAY",
           shippingAddress: "456 Đường C, Quận D, Hà Nội",

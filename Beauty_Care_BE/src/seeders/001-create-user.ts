@@ -8,9 +8,9 @@ const hashPassword = (plainPassword: string) => {
   return `${salt}:${hashed}`;
 };
 
-export default {
+module.exports = {
   up: async (queryInterface: QueryInterface, Sequelize: any) => {
-    const passwordHash = hashPassword("Password@123");
+    const passwordHash = hashPassword("Password123@");
     return queryInterface.bulkInsert(
       "Users",
       [

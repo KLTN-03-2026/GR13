@@ -1,97 +1,86 @@
 "use strict";
+
 import { QueryInterface } from "sequelize";
 
-export default {
+module.exports = {
   up: async (queryInterface: QueryInterface, Sequelize: any) => {
-    return queryInterface.bulkInsert(
-      "Categories",
-      [
-        {
-          id: 1,
-          name: "Chăm sóc da mặt",
-          description: "Các sản phẩm chăm sóc da mặt chuyên sâu từ sữa rửa mặt, serum đến kem dưỡng.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234567/skincare_face.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 2,
-          name: "Chăm sóc cơ thể",
-          description: "Sản phẩm dưỡng thể, sữa tắm và các liệu pháp spa tại nhà.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234568/body_care.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 3,
-          name: "Trang điểm",
-          description: "Mỹ phẩm trang điểm cao cấp giúp tôn vinh vẻ đẹp tự nhiên.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234569/makeup.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 4,
-          name: "Tinh dầu & Nến thơm",
-          description: "Tạo không gian thư giãn với các loại tinh dầu thiên nhiên và nến thơm cao cấp.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234570/essential_oils.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 5,
-          name: "Chống nắng",
-          description: "Kem chống nắng bảo vệ da khỏi tia UV và ánh sáng xanh.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234575/sunscreen.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 6,
-          name: "Toner / Nước hoa hồng",
-          description: "Cân bằng pH, làm dịu và chuẩn bị da cho các bước dưỡng tiếp theo.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234576/toner.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 7,
-          name: "Mặt nạ",
-          description: "Mặt nạ giấy, mặt nạ đất sét giúp cấp ẩm và làm sạch sâu.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234577/mask.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 8,
-          name: "Chăm sóc tóc",
-          description: "Dầu gội, dầu xả, ủ tóc giúp phục hồi và nuôi dưỡng tóc.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234578/haircare.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 9,
-          name: "Phụ kiện làm đẹp",
-          description: "Bông tẩy trang, cọ trang điểm và phụ kiện chăm sóc cá nhân.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234579/accessories.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 10,
-          name: "Dụng cụ Spa tại nhà",
-          description: "Máy xông mặt, con lăn massage và các dụng cụ hỗ trợ spa tại nhà.",
-          image: "https://res.cloudinary.com/demo/image/upload/v1631234580/home_spa.jpg",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ],
-      { ignoreDuplicates: true } as any
-    );
+    return queryInterface.bulkInsert("Categories", [
+      {
+        id: 1,
+        name: "Sữa rửa mặt",
+        description: "Các sản phẩm làm sạch sâu, dịu nhẹ cho da",
+        image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 2,
+        name: "Tẩy trang",
+        description: "Nước tẩy trang, dầu tẩy trang giúp làm sạch lớp trang điểm",
+        image: "https://images.unsplash.com/photo-1601049541289-9b1b7abc74a4?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 3,
+        name: "Toner",
+        description: "Nước hoa hồng cân bằng độ pH và cấp ẩm",
+        image: "https://images.unsplash.com/photo-1615397323141-860882e3895e?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 4,
+        name: "Serum",
+        description: "Tinh chất đặc trị các vấn đề về da như mụn, thâm, lão hóa",
+        image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 5,
+        name: "Kem dưỡng ẩm",
+        description: "Cung cấp độ ẩm cần thiết, khóa ẩm và nuôi dưỡng làn da",
+        image: "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 6,
+        name: "Kem chống nắng",
+        description: "Bảo vệ da khỏi tác hại của tia UV và ánh sáng xanh",
+        image: "https://images.unsplash.com/photo-1599305090598-fe179d501227?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 7,
+        name: "Mặt nạ",
+        description: "Mặt nạ giấy, đất sét, mặt nạ ngủ cung cấp dưỡng chất tức thì",
+        image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 8,
+        name: "Tẩy tế bào chết",
+        description: "Loại bỏ lớp sừng chết, giúp da sáng mịn và hấp thụ dưỡng chất tốt hơn",
+        image: "https://images.unsplash.com/photo-1580870059089-4a00531a74d5?q=80&w=500&auto=format&fit=crop",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    ]);
   },
 
-  down: (queryInterface: QueryInterface, Sequelize: any) => {
-    return queryInterface.bulkDelete("Categories", {}, {});
+  down: async (queryInterface: QueryInterface, Sequelize: any) => {
+    return queryInterface.bulkDelete("Categories", null, {});
   },
 };

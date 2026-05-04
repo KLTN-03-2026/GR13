@@ -7,7 +7,6 @@ export const getDashboardStats = async () => {
       totalUsers,
       totalProducts,
       totalOrders,
-      totalBookings,
       ordersPending,
       ordersPaid,
       ordersShipping,
@@ -17,7 +16,6 @@ export const getDashboardStats = async () => {
       db.User.count(),
       db.Product.count(),
       db.Order.count(),
-      db.Booking.count(),
       db.Order.count({ where: { status: "pending" } }),
       db.Order.count({ where: { status: "paid" } }),
       db.Order.count({ where: { status: "shipping" } }),
@@ -26,7 +24,12 @@ export const getDashboardStats = async () => {
     ]);
 
     const revenueRow = await db.Order.findOne({
-      attributes: [[db.Sequelize.fn("SUM", db.Sequelize.col("totalAmount")), "totalRevenue"]],
+      attributes: [
+        [
+          db.Sequelize.fn("SUM", db.Sequelize.col("totalAmount")),
+          "totalRevenue",
+        ],
+      ],
       where: { status: { [Op.in]: ["paid", "shipping", "completed"] } },
       raw: true,
     });
@@ -40,7 +43,6 @@ export const getDashboardStats = async () => {
         totalUsers,
         totalProducts,
         totalOrders,
-        totalBookings,
         ordersByStatus: {
           pending: ordersPending,
           paid: ordersPaid,
@@ -56,4 +58,3 @@ export const getDashboardStats = async () => {
     return { err: 1, mess: "Có lỗi xảy ra khi lấy thống kê", data: null };
   }
 };
-

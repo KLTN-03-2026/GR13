@@ -206,6 +206,59 @@ export const cancelOrder = async (userId: number, orderId: number) => {
   }
 };
 
+export const getAllOrders = async () => {
+  try {
+    const orders = await db.Order.findAll({
+      include: [
+        { model: db.OrderItem, as: 'orderItems', include: [{ model: db.Product, as: 'productData' }] },
+        { model: db.User, as: 'userData', attributes: ['id', 'email', 'firstName', 'lastName'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    return { err: 0, mess: 'Lấy danh sách đơn hàng quản trị thành công', data: orders };
+  } catch (error) {
+    console.error(error);
+    return { err: 1, mess: 'Có lỗi xảy ra khi lấy danh sách đơn hàng' };
+  }
+};
+
+export const updateOrderStatus = async (orderId: number, status: string) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const order = await db.Order.findByPk(orderId, { transaction });
+    if (!order) {
+      await transaction.rollback();
+      return { err: 1, mess: 'Không tìm thấy đơn hàng' };
+    }
+
+    await order.update({ status }, { transaction });
+    await transaction.commit();
+
+    const updated = await db.Order.findOne({
+      where: { id: orderId },
+      include: [
+        {
+          model: db.User,
+          as: "userData",
+          attributes: ["id", "firstName", "lastName", "Email", "Phone", "role_code"],
+        },
+        {
+          model: db.OrderItem,
+          as: "orderItems",
+          include: [{ model: db.Product, as: "productData" }],
+        },
+      ],
+    });
+
+    return { err: 0, mess: "Cập nhật trạng thái đơn hàng thành công", data: updated };
+  } catch (error) {
+    await transaction.rollback();
+    console.error(error);
+    return { err: 1, mess: 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng' };
+  }
+  
+};
 export const adminGetOrders = async () => {
   try {
     const orders = await db.Order.findAll({
@@ -300,6 +353,7 @@ export const adminUpdateOrderStatus = async (
       return { err: 1, mess: "Không thể hủy đơn hàng đã hoàn thành" };
     }
 
+    // Nếu hủy đơn → hoàn lại stock
     if (order.status !== "cancelled" && status === "cancelled") {
       for (const item of order.orderItems) {
         await db.Product.increment(
@@ -309,29 +363,15 @@ export const adminUpdateOrderStatus = async (
       }
     }
 
-    await order.update({ status }, { transaction });
+    // 👉 CẬP NHẬT STATUS
+    order.status = status;
+    await order.save({ transaction });
+
     await transaction.commit();
+    return { err: 0, mess: "Cập nhật trạng thái thành công" };
 
-    const updated = await db.Order.findOne({
-      where: { id: orderId },
-      include: [
-        {
-          model: db.User,
-          as: "userData",
-          attributes: ["id", "firstName", "lastName", "Email", "Phone", "role_code"],
-        },
-        {
-          model: db.OrderItem,
-          as: "orderItems",
-          include: [{ model: db.Product, as: "productData" }],
-        },
-      ],
-    });
-
-    return { err: 0, mess: "Cập nhật trạng thái đơn hàng thành công", data: updated };
   } catch (error) {
     await transaction.rollback();
-    console.error(error);
-    return { err: 1, mess: "Có lỗi xảy ra khi cập nhật trạng thái đơn hàng" };
+    return { err: 1, mess: "Lỗi server", error };
   }
 };

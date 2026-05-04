@@ -16,6 +16,7 @@ class OrderItem extends Model<
   declare productId: number;
   declare quantity: number;
   declare price: number;
+  declare discountId: number | null;
 
   public static initModel(sequelize: Sequelize) {
     OrderItem.init(
@@ -41,6 +42,10 @@ class OrderItem extends Model<
           type: DataTypes.DECIMAL(10, 2),
           allowNull: false,
         },
+        discountId: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+        },
       },
       {
         sequelize,
@@ -59,6 +64,10 @@ class OrderItem extends Model<
     OrderItem.belongsTo(models.Product, {
       foreignKey: "productId",
       as: "productData",
+    });
+    OrderItem.belongsTo(models.Discount, {
+      foreignKey: "discountId",
+      as: "discountData",
     });
   }
 }

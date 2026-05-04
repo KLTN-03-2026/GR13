@@ -55,17 +55,17 @@ class Product
       foreignKey: "productId",
       as: "orderItems",
     });
-    Product.hasMany(models.Booking, {
-      foreignKey: "productId",
-      as: "bookings",
-    });
     Product.hasMany(models.Review, {
       foreignKey: "productId",
       as: "reviews",
     });
-    Product.hasMany(models.Wishlist, {
+    Product.hasMany(models.FavoriteProduct, {
       foreignKey: "productId",
-      as: "wishlists",
+      as: "favoriteProducts",
+    });
+    Product.hasMany(models.ProductRecommendation, {
+      foreignKey: "product_id",
+      as: "productRecommendations",
     });
   }
 

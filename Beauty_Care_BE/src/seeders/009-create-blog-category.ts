@@ -1,7 +1,7 @@
 "use strict";
 import { QueryInterface } from "sequelize";
 
-export default {
+module.exports = {
   up: async (queryInterface: QueryInterface, Sequelize: any) => {
     return queryInterface.bulkInsert("blog_categories", [
       {

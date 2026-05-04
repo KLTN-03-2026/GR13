@@ -15,6 +15,9 @@ class Order extends Model<InferAttributes<Order>, InferCreationAttributes<Order>
   declare paymentMethod: string;
   declare shippingAddress: string;
   declare phone: string;
+  declare paymentLinkId: CreationOptional<string | null>;
+  declare checkoutUrl: CreationOptional<string | null>;
+  declare orderCode: CreationOptional<number | null>;
 
   public static initModel(sequelize: Sequelize) {
     Order.init(
@@ -47,6 +50,18 @@ class Order extends Model<InferAttributes<Order>, InferCreationAttributes<Order>
         phone: {
           type: DataTypes.STRING,
           allowNull: false,
+        },
+        paymentLinkId: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        checkoutUrl: {
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
+        orderCode: {
+          type: DataTypes.BIGINT,
+          allowNull: true,
         },
       },
       {
