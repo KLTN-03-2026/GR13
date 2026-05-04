@@ -1,17 +1,27 @@
-$primary-pink: #D23175;
+$primary-color: #C2185B;
+$primary-pink: $primary-color;
+@use 'sass:color';
+$gold-soft: #C9A66B;
 $hover-dark: rgb(63, 20, 27);
-$transition-smooth: all 0.3s ease;
+$transition-smooth: all 0.28s ease;
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+$font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
 
 .header-layout-client {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   flex-direction: column;
-  transition: $transition-smooth;
-  background-color: white;
+  transition: background 220ms ease, box-shadow 220ms ease, height 220ms ease, padding 220ms ease;
+  background-color: rgba(255,255,255,0.98); /* default: visible white for readability */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  will-change: background, box-shadow;
 
   .header-container {
     max-width: 1400px;
@@ -22,6 +32,7 @@ $transition-smooth: all 0.3s ease;
     justify-content: space-between;
     align-items: center;
     min-height: 100px;
+    transition: min-height 220ms ease, padding 220ms ease;
   }
 
   .header-logo {
@@ -41,7 +52,7 @@ $transition-smooth: all 0.3s ease;
       font-family: "Georgia", serif;
       font-size: 2.5rem;
       font-weight: 500;
-      color: $primary-pink;
+      color: $primary-color;
       letter-spacing: 0.2px;
     }
   }
@@ -57,28 +68,38 @@ $transition-smooth: all 0.3s ease;
       position: relative;
       margin: 0;
       display: inline-block;
-      color: $primary-pink;
-      font-size: 1.1rem;
-      font-weight: 500;
+      color: #111; /* ensure high contrast */
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: $font-sans;
+      letter-spacing: 0.08em;
       cursor: pointer;
+      padding: 6px 2px;
+      transition: color 180ms ease, transform 180ms ease;
     }
 
     .nav-link::after {
       content: "";
       position: absolute;
       left: 50%;
-      bottom: -4px;
-      width: 100%;
+      bottom: -6px;
+      width: 60%;
       height: 2px;
-      background: $primary-pink;
-
+      background: $primary-color;
       transform: translateX(-50%) scaleX(0);
       transform-origin: center;
-      transition: transform 0.3s ease;
+      transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
+      opacity: 0.0;
     }
 
-    .nav-link:hover::after {
+    .nav-link:hover::after,
+    .nav-link.active::after {
       transform: translateX(-50%) scaleX(1);
+      opacity: 1;
+    }
+
+    .nav-link.active {
+      color: $primary-color;
     }
   }
 
@@ -87,6 +108,7 @@ $transition-smooth: all 0.3s ease;
     align-items: center;
     gap: 15px;
     flex-shrink: 0;
+    align-items: center;
 
     // 1. Cụm khi CHƯA đăng nhập (Auth Buttons)
     .auth-buttons {
@@ -95,9 +117,9 @@ $transition-smooth: all 0.3s ease;
 
       .auth-btn {
         outline: none;
-        background-color: #ffffff;
-        color: $primary-pink;
-        border: 1px solid transparent;
+        background-color: transparent;
+        color: $primary-color;
+        border: 1px solid rgba($primary-color, 0.12);
         padding: 10px 24px;
         border-radius: 10px;
         font-weight: 600;
@@ -107,18 +129,23 @@ $transition-smooth: all 0.3s ease;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
         &.login {
-          border: 1px solid #f0f0f0;
+          background: transparent;
+          color: $primary-color;
+          border: 1px solid rgba($primary-color, 0.14);
           &:hover {
-            border-color: $primary-pink;
-            background: #fff5f8;
+            background: rgba($primary-color, 0.04);
+            transform: translateY(-2px);
           }
         }
 
         &.register {
-          background-color: $primary-pink;
+          background-color: $primary-color;
           color: #fff;
+          box-shadow: 0 8px 30px rgba($primary-color, 0.12);
+          border: none;
           &:hover {
-            background-color: $hover-dark;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 46px rgba($primary-color, 0.16);
           }
         }
 
@@ -131,9 +158,9 @@ $transition-smooth: all 0.3s ease;
 
     // 2. Cụm khi ĐÃ đăng nhập (Luxury Logged In)
     .user-logged-in {
-      display: flex;
-      align-items: center;
-      gap: 25px; // Khoảng cách rộng rãi sang trọng
+    display: flex;
+    align-items: center;
+    gap: 22px; // refined spacing
 
       // Cụm Giỏ hàng
       .cart-wrapper {
@@ -142,27 +169,34 @@ $transition-smooth: all 0.3s ease;
         display: flex;
         align-items: center;
 
-        .action-icon {
-          font-size: 24px;
-          color: $primary-pink;
-          transition: transform 0.3s ease;
-        }
+          .action-icon {
+            font-size: 22px;
+            color: #6b6b6b;
+            transition: transform 0.22s ease, color 0.22s ease;
+          }
 
-        .cart-badge {
-          position: absolute;
-          top: -8px;
-          right: -10px;
-          background: #1a1a1a;
-          color: #fff;
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 50px;
-          font-weight: 700;
-          border: 2px solid #fff;
+        &:hover .action-icon {
+          transform: translateY(-3px) scale(1.06);
+          color: $primary-color;
+        }
+      }
+
+      .wishlist-wrapper {
+        position: relative;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        margin-right: 8px;
+
+        .action-icon {
+          font-size: 20px;
+          color: #6b6b6b;
+          transition: transform 0.22s ease, color 0.22s ease;
         }
 
         &:hover .action-icon {
-          transform: translateY(-2px) scale(1.1);
+          transform: translateY(-3px) scale(1.06);
+          color: $primary-color;
         }
       }
 
@@ -182,12 +216,12 @@ $transition-smooth: all 0.3s ease;
         }
 
         .avatar-wrapper {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           border-radius: 50%;
           overflow: hidden;
-          border: 2px solid #fff;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border: 2px solid rgba($primary-color, 0.12);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 
           img {
             width: 100%;
@@ -198,8 +232,8 @@ $transition-smooth: all 0.3s ease;
 
         .user-name {
           font-size: 14px;
-          font-weight: 700;
-          color: $primary-pink;
+          font-weight: 600;
+          color: #111;
           transition: color 0.3s;
         }
       }
@@ -234,16 +268,34 @@ $transition-smooth: all 0.3s ease;
       }
     }
   }
+
+  /* AntD badge refinement within header */
+  .header-actions .ant-badge-count {
+    background: $primary-color !important;
+    color: #fff !important;
+    font-size: 11px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    padding: 0 6px !important;
+    border-radius: 18px !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
 }
 
 .header-layout-client.scrolled {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   height: 80px;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+  padding-top: 6px;
 }
 
 .header-content-wrapper {
   width: 100%;
   padding-top: 100px;
+  overflow: hidden;
+
 }

@@ -1,4 +1,4 @@
-import LoginAdminComponent from "../../../../components/Auth/AuthAdmin/Login";
+import LoginAdminComponent from "../../../../components/Auth/AuthAdmin/";
 
 const LoginAdminPage = () => {
 

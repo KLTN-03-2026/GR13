@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
-import * as authApi from "../../api/auth";
+import * as authApi from "../../api/auth/index";
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -35,5 +35,7 @@ export const useLogin = () => {
     },
   });
 };
+
+
 
 export const useLoginAdmin = useLogin;

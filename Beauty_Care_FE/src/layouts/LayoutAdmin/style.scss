@@ -33,6 +33,16 @@
     width: 100%;
     transition: all 0.3s ease;
 
+    &.chat-page {
+      overflow: hidden;
+      
+      .content-inner {
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+    }
+
     .content-inner {
       background: #fff;
       padding: 24px;

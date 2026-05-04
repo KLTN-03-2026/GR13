@@ -1,4 +1,4 @@
-import LoginComponent from "../../../components/Client/Login/index.tsx";
+import LoginComponent from "../../../components/Auth/AuthClient/Login";
 const LoginPage = () => {
   return (
     <>

@@ -15,12 +15,51 @@ import {
   CheckCircleFilled,
 } from "@ant-design/icons";
 
+import { useEffect, useRef } from "react";
+
 const HomeComponent = () => {
+  const bgRef = useRef<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (!bgRef.current) return;
+      const scrolled = window.scrollY;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const move = Math.min(60, scrolled * 0.08);
+        bgRef.current!.style.transform = `scale(1.06) translateY(${move}px)`;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+
+    document.querySelectorAll(".fade-in-up").forEach((el) => observer.observe(el));
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, []);
+
   return (
     <div className="home-component">
       <section className="home-hero-v2">
         <div className="home-hero-v2__bg">
           <img
+            ref={bgRef}
             src={homeBanner}
             alt="Forest Sanctuary"
             className="home-hero-v2__bg-img"
@@ -28,7 +67,7 @@ const HomeComponent = () => {
           <div className="home-hero-v2__overlay"></div>
         </div>
 
-        <div className="home-container home-hero-v2__content">
+        <div className="home-container home-hero-v2__content fade-in-up">
           <div className="home-hero-v2__pill">
             <span className="dot"></span> BeautyCare • Công nghệ làm đẹp
           </div>
@@ -73,7 +112,7 @@ const HomeComponent = () => {
             </p>
           </div>
           <div className="home-grid home-grid--3">
-            <div className="home-card">
+            <div className="home-card fade-in-up home-card--glass">
               <div className="home-card__title">Skin Reset</div>
               <div className="img-skin-item">
                 <img src={imgSkin} alt="" className="img-skin" />
@@ -87,7 +126,7 @@ const HomeComponent = () => {
                 <span className="home-chip">Phù hợp da dầu</span>
               </div>
             </div>
-            <div className="home-card">
+            <div className="home-card fade-in-up home-card--glass">
               <div className="home-card__title">Glow & Hydrate</div>
               <div className="img-skin-item">
                 <img src={imgSkin} alt="" className="img-skin" />
@@ -100,7 +139,7 @@ const HomeComponent = () => {
                 <span className="home-chip">Da thiếu nước</span>
               </div>
             </div>
-            <div className="home-card">
+            <div className="home-card fade-in-up home-card--glass">
               <div className="home-card__title">Lift Therapy</div>
               <div className="img-skin-item">
                 <img src={imgSkin} alt="" className="img-skin" />
@@ -138,7 +177,7 @@ const HomeComponent = () => {
             </p>
             <div className="home-why__features">
               <div className="home-why-feature">
-                <div className="home-why-feature__icon">
+                <div className="home-why-feature__icon home-card__icon--circle">
                   <UserOutlined />
                 </div>
                 <div className="home-why-feature__text">
@@ -149,7 +188,7 @@ const HomeComponent = () => {
                 </div>
               </div>
               <div className="home-why-feature">
-                <div className="home-why-feature__icon">
+                <div className="home-why-feature__icon home-card__icon--circle">
                   <CheckCircleOutlined />
                 </div>
                 <div className="home-why-feature__text">
@@ -160,7 +199,7 @@ const HomeComponent = () => {
                 </div>
               </div>
               <div className="home-why-feature">
-                <div className="home-why-feature__icon">
+                <div className="home-why-feature__icon home-card__icon--circle">
                   <CrownOutlined />
                 </div>
                 <div className="home-why-feature__text">
@@ -171,7 +210,7 @@ const HomeComponent = () => {
                 </div>
               </div>
               <div className="home-why-feature">
-                <div className="home-why-feature__icon">
+                <div className="home-why-feature__icon home-card__icon--circle">
                   <HeartOutlined />
                 </div>
                 <div className="home-why-feature__text">
@@ -200,7 +239,7 @@ const HomeComponent = () => {
             </p>
           </div>
           <div className="home-steps">
-            <div className="home-step">
+            <div className="home-step fade-in-up">
               <div className="home-step__image-wrap">
                 <img
                   src="https://res.cloudinary.com/demo/image/upload/v1631234571/spa_skin_analysis.jpg"
@@ -229,7 +268,7 @@ const HomeComponent = () => {
               </div>
             </div>
 
-            <div className="home-step">
+            <div className="home-step fade-in-up">
               <div className="home-step__image-wrap">
                 <img
                   src="https://res.cloudinary.com/demo/image/upload/v1631234572/spa_cleansing.jpg"
@@ -258,7 +297,7 @@ const HomeComponent = () => {
               </div>
             </div>
 
-            <div className="home-step">
+            <div className="home-step fade-in-up">
               <div className="home-step__image-wrap">
                 <img
                   src="https://res.cloudinary.com/demo/image/upload/v1631234573/spa_therapy.jpg"
@@ -287,7 +326,7 @@ const HomeComponent = () => {
               </div>
             </div>
 
-            <div className="home-step">
+            <div className="home-step fade-in-up">
               <div className="home-step__image-wrap">
                 <img
                   src="https://res.cloudinary.com/demo/image/upload/v1631234574/spa_moisturize.jpg"
@@ -333,7 +372,7 @@ const HomeComponent = () => {
             </div>
           </div>
           <div className="home-grid home-grid--3 home-reviews__grid">
-            <article className="home-review">
+            <article className="home-review fade-in-up">
               <div className="home-review__top">
                 <div className="home-review__avatar">MA</div>
                 <div className="home-review__meta">
@@ -362,7 +401,7 @@ const HomeComponent = () => {
               </div>
             </article>
 
-            <article className="home-review">
+            <article className="home-review fade-in-up">
               <div className="home-review__top">
                 <div className="home-review__avatar">TL</div>
                 <div className="home-review__meta">
@@ -391,7 +430,7 @@ const HomeComponent = () => {
               </div>
             </article>
 
-            <article className="home-review">
+            <article className="home-review fade-in-up">
               <div className="home-review__top">
                 <div className="home-review__avatar">NT</div>
                 <div className="home-review__meta">
@@ -454,7 +493,7 @@ const HomeComponent = () => {
             <button className="home-btn home-btn--ghost">Xem tất cả</button>
           </div>
           <div className="home-grid home-grid--3">
-            <article className="home-blog-card">
+            <article className="home-blog-card fade-in-up">
               <div className="home-blog-card__image-wrap">
                 <img
                   src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=800"
@@ -478,7 +517,7 @@ const HomeComponent = () => {
               </div>
             </article>
 
-            <article className="home-blog-card">
+            <article className="home-blog-card fade-in-up">
               <div className="home-blog-card__image-wrap">
                 <img
                   src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&q=80&w=800"
@@ -502,7 +541,7 @@ const HomeComponent = () => {
               </div>
             </article>
 
-            <article className="home-blog-card">
+            <article className="home-blog-card fade-in-up">
               <div className="home-blog-card__image-wrap">
                 <img
                   src="https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&q=80&w=800"

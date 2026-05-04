@@ -1,0 +1,110 @@
+$primary-color: #C2185B;
+@use "sass:color";
+$text-dark: #1a1a1a;
+$glass-bg: rgba(255,255,255,0.6);
+$glass-border: rgba(255,255,255,0.4);
+$shadow: 0 10px 30px rgba(0,0,0,0.12);
+
+.chatbox-ai-root {
+  .chatbox-toggle {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    z-index: 1200;
+    background: linear-gradient(180deg, $primary-color, color.adjust($primary-color, $lightness: -6%));
+    border: none;
+    box-shadow: 0 8px 24px rgba(194,33,104,0.28);
+    transition: transform .28s ease, opacity .28s ease;
+    &:hover { transform: translateY(-3px); }
+  }
+
+  .chatbox-window {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 800px;
+    max-width: calc(100% - 56px);
+    height: 640px;
+    border-radius: 18px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    /* Only animate opacity & shadow to avoid transform transitions which interfere with dragging */
+    transition: opacity .32s cubic-bezier(.2,.9,.3,1), box-shadow .32s ease;
+    z-index: 1199;
+
+    &.visible {
+      opacity: 1;
+      pointer-events: auto;
+      box-shadow: $shadow;
+    }
+
+    background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.6));
+    backdrop-filter: blur(8px) saturate(120%);
+    border: 1px solid $glass-border;
+
+    .chatbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      cursor: move; /* drag handle */
+
+      .no-drag { cursor: default; }
+
+      .header-left { display: flex; align-items: center; gap: 12px; }
+      .header-icon { font-size: 20px; color: $primary-color; }
+      .header-title { font-weight: 700; color: $text-dark; font-size: 16px; }
+    }
+
+    .chatbox-body {
+      padding: 20px;
+      height: calc(100% - 72px);
+      display: flex;
+      flex-direction: column;
+
+      .phase-1 {
+        display: flex; gap: 18px; align-items: stretch; justify-content: center;
+
+        .action-card {
+          flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px;
+          border-radius: 14px; background: $glass-bg; border: 1px solid $glass-border; box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+          text-align: center;
+          .action-icon { font-size: 36px; color: $primary-color; }
+          .action-title { font-weight: 700; font-size: 18px; color: $text-dark; }
+          .action-desc { color: color.adjust(#000, $lightness: -35%); font-size: 13px; }
+          .action-btn { margin-top: 8px; border-radius: 30px; padding: 8px 22px; }
+        }
+      }
+
+      .phase-2 { display: flex; gap: 16px; height: 100%; }
+      .left { flex: 1; display:flex; align-items:center; justify-content:center; }
+      .right { flex: 1; display:flex; flex-direction:column; gap: 12px; }
+
+      .photo-wrap {
+        width: 92%; height: 420px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid rgba(0,0,0,0.05);
+        img { width: 100%; height: 100%; object-fit: cover; display:block; }
+        .scanning-line { position: absolute; left: -20%; right: -20%; height: 3px; background: linear-gradient(90deg, transparent, rgba($primary-color,0.9), transparent); top: 10%; animation: scan 3s linear infinite; }
+      }
+
+      @keyframes scan { 0%{ top: 0% } 50%{ top: 55% } 100%{ top: 100% } }
+
+      .score-list { display:flex; flex-direction:column; gap:10px; padding-right:10px; }
+      .score-row { display:flex; flex-direction:column; gap:6px; .label{font-weight:600;color:$text-dark;} }
+
+      .summary { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+      .total { font-size:18px; color:$text-dark; font-weight:700; }
+      .score { color: $primary-color; font-size:20px; margin-left:6px; }
+
+      .phase-3 { display:flex; flex-direction:column; gap:12px; }
+      .recommend-title { font-weight:700; font-size:16px; margin-bottom:6px; }
+      .product-scroller { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; }
+      .product-card { min-width:160px; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; align-items:center; background:$glass-bg; border:1px solid $glass-border; }
+      .product-card img { width:100%; height:100px; object-fit:cover; border-radius:8px; }
+      .prod-name{ font-weight:700; font-size:14px; text-align:center; }
+      .prod-price{ color:$primary-color; font-weight:700; }
+      .prod-actions{ display:flex; gap:8px; width:100%; justify-content:space-between; }
+    }
+  }
+}

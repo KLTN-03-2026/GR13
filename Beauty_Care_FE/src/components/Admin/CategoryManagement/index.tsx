@@ -7,7 +7,6 @@ import {
   Form,
   Image,
   Input,
-  InputNumber,
   Modal,
   Row,
   Select,
@@ -16,7 +15,6 @@ import {
   Table,
   Tag,
   Typography,
-  Upload,
   message,
   Spin,
 } from "antd";
@@ -260,7 +258,7 @@ const CategoryManagementComponent: React.FC = () => {
       ),
     },
     {
-      title: "Số SP",
+      title: "Số SP", 
       dataIndex: "productsCount",
       key: "productsCount",
       width: 90,

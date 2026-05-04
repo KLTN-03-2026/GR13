@@ -13,7 +13,7 @@ import {
   Typography,
   List,
   Card,
-  message,
+  message 
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -24,16 +24,14 @@ import {
   SearchOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  PlusOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
-  QuestionCircleOutlined,
   GlobalOutlined,
   ShoppingCartOutlined,
   CheckCircleOutlined,
-  CalendarOutlined,
+  DownOutlined,
 } from "@ant-design/icons";
-import logo from "../../assets/images/logo.png";
+  
 import "./style.scss";
 
 const { Header } = Layout;
@@ -74,25 +72,7 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
     return currentUser.avatar || currentUser.img || null;
   }, [currentUser]);
 
-  const handleQuickActionClick = ({ key }: { key: string }) => {
-    switch (key) {
-      case "new-product":
-        navigate("/admin/products?action=create");
-        break;
-      case "new-blog":
-        navigate("/admin/blogs?action=create");
-        break;
-      case "new-booking":
-        navigate("/admin/bookings?action=create");
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleOpenHelp = () => {
-    navigate("/admin/help");
-  };
+  
 
   const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key === "profile") {
@@ -111,64 +91,35 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
     }
   };
 
+
+  // Dữ liệu thông báo (Giữ nguyên hoặc cập nhật thêm icon màu Pastel)
   const notifications = [
-    {
-      id: 1,
-      title: "Thanh Thuý vừa đặt hàng",
-      time: "5 phút trước",
-      icon: <ShoppingCartOutlined style={{ color: "#1890ff" }} />,
-      status: "new",
-    },
-    {
-      id: 2,
-      title: "Đơn hàng #BC-001 giao thành công",
-      time: "15 phút trước",
-      icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
-      status: "success",
-    },
-    {
-      id: 3,
-      title: "Lịch hẹn mới: Nguyễn Văn A",
-      time: "1 giờ trước",
-      icon: <CalendarOutlined style={{ color: "#faad14" }} />,
-      status: "appointment",
-    },
-    {
-      id: 4,
-      title: "Bài viết của bạn đã được duyệt",
-      time: "3 giờ trước",
-      icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
-      status: "info",
-    },
-    {
-      id: 5,
-      title: "Có 2 đánh giá mới chưa phản hồi",
-      time: "5 giờ trước",
-      icon: <BellOutlined style={{ color: "#ff4d4f" }} />,
-      status: "alert",
-    },
+    { id: 1, title: "Thanh Thuý vừa đặt hàng", time: "5 phút trước", icon: <ShoppingCartOutlined />, color: "#e6f7ff" },
+    { id: 2, title: "Đơn hàng #BC-001 thành công", time: "15 phút trước", icon: <CheckCircleOutlined />, color: "#f6ffed" },
   ];
 
   const notificationContent = (
-    <Card
-      title="Thông báo mới"
-      extra={<a href="#">Xem tất cả</a>}
-      style={{ width: 350, boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.08)" }}
-      styles={{ body: { padding: 0 } }}
-    >
-      <List
-        dataSource={notifications}
-        renderItem={(item) => (
-          <List.Item className="notification-item" style={{ padding: "12px 16px", cursor: "pointer" }}>
-            <List.Item.Meta
-              avatar={<Avatar icon={item.icon} style={{ backgroundColor: "#f0f2f5" }} />}
-              title={<Text strong style={{ fontSize: 14 }}>{item.title}</Text>}
-              description={<Text type="secondary" style={{ fontSize: 12 }}>{item.time}</Text>}
-            />
-          </List.Item>
-        )}
-      />
-    </Card>
+    <div className="luxury-notification-dropdown">
+      <Card
+        title={<span className="card-title">Thông báo hệ thống</span>}
+        extra={<Button type="link" size="small">Đánh dấu đã đọc</Button>}
+        bordered={false}
+      >
+        <List
+          dataSource={notifications}
+          renderItem={(item) => (
+            <List.Item className="notification-item">
+              <List.Item.Meta
+                avatar={<Avatar src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" />}
+                title={<Text strong>{item.title}</Text>}
+                description={<Text type="secondary">{item.time}</Text>}
+              />
+            </List.Item>
+          )}
+        />
+        <div className="view-all-btn">Xem tất cả thông báo</div>
+      </Card>
+    </div>
   );
 
   const toggleFullscreen = () => {
@@ -176,123 +127,60 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
       document.documentElement.requestFullscreen();
       setIsFullscreen(true);
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
+      document.exitFullscreen();
+      setIsFullscreen(false);
     }
   };
 
   const userMenuItems: MenuProps["items"] = [
-    {
-      key: "profile",
-      label: "Thông tin cá nhân",
-      icon: <UserOutlined />,
-    },
-    {
-      key: "settings",
-      label: "Cài đặt",
-      icon: <SettingOutlined />,
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "logout",
-      label: "Đăng xuất",
-      icon: <LogoutOutlined />,
-      danger: true,
-    },
-  ];
-
-  const quickActionItems: MenuProps["items"] = [
-    {
-      key: "new-product",
-      label: "Thêm sản phẩm mới",
-      icon: <PlusOutlined />,
-    },
-    {
-      key: "new-blog",
-      label: "Viết bài mới",
-      icon: <PlusOutlined />,
-    },
-    {
-      key: "new-booking",
-      label: "Tạo lịch hẹn mới",
-      icon: <PlusOutlined />,
-    },
-  ];
-
-  const languageItems: MenuProps["items"] = [
-    { key: "vi", label: "Tiếng Việt", icon: <span>🇻🇳</span> },
-    { key: "en", label: "English", icon: <span>🇺🇸</span> },
+    { key: "profile", label: "Hồ sơ cá nhân", icon: <UserOutlined /> },
+    { key: "settings", label: "Cấu hình hệ thống", icon: <SettingOutlined /> },
+    { type: "divider" },
+    { key: "logout", label: "Đăng xuất tài khoản", icon: <LogoutOutlined />, danger: true },
   ];
 
   return (
-    <Header className="header-layout-admin">
-      <div className="header-left">
-        {setCollapsed && (
+    <Header className="luxury-admin-header">
+      <div className="header-container">
+        {/* Left Side */}
+        <div className="header-left">
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            className="collapse-btn"
+            onClick={() => setCollapsed?.(!collapsed)}
+            className="toggle-sidebar-btn"
           />
-        )}
-        <div className="logo-wrapper">
-          <img src={logo} alt="Logo" className="header-logo" />
-          <Typography.Title level={3} style={{ margin: 0 }} className="header-title">
-            Beauty Care
-          </Typography.Title>
+          <div className="breadcrumb-simple">
+            <Text type="secondary">Tổng quan</Text>
+            <Divider type="vertical" />
+            <Text strong>Dashboard</Text>
+          </div>
         </div>
-      </div>
 
-      <div className="header-right">
-        <Space size={0} split={<Divider type="vertical" />}>
-          <div className="header-search-wrapper">
-            <Input
-              prefix={<SearchOutlined style={{ color: "rgba(0,0,0,.45)" }} />}
-              placeholder="Tìm kiếm hệ thống..."
-              variant="borderless"
-              className="header-search"
-            />
+        {/* Right Side */}
+        <div className="header-right">
+          <div className="search-box-luxury">
+            <SearchOutlined className="search-icon" />
+            <Input placeholder="Tìm kiếm tài nguyên..." variant="borderless" />
           </div>
 
-          <Space size={16} align="center">
-            <Dropdown menu={{ items: quickActionItems, onClick: handleQuickActionClick }} trigger={["click"]}>
-              <Tooltip title="Thêm nhanh">
-                <Button type="text" icon={<PlusOutlined />} className="action-btn" />
-              </Tooltip>
-            </Dropdown>
+          <Space size={8}>
+            <Tooltip title="Ngôn ngữ">
+              <Button type="text" icon={<GlobalOutlined />} className="icon-btn-luxury" />
+            </Tooltip>
 
-            <Tooltip title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}>
-              <Button
-                type="text"
-                icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
+            <Tooltip title="Toàn màn hình">
+              <Button 
+                type="text" 
+                icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />} 
                 onClick={toggleFullscreen}
-                className="action-btn"
+                className="icon-btn-luxury"
               />
             </Tooltip>
 
-            <Tooltip title="Trợ giúp">
-              <Button type="text" icon={<QuestionCircleOutlined />} className="action-btn" onClick={handleOpenHelp} />
-            </Tooltip>
-
-            <Dropdown menu={{ items: languageItems }} trigger={["click"]}>
-              <Tooltip title="Ngôn ngữ">
-                <Button type="text" icon={<GlobalOutlined />} className="action-btn" />
-              </Tooltip>
-            </Dropdown>
-
             <Dropdown dropdownRender={() => notificationContent} trigger={["click"]} placement="bottomRight">
-              <Badge count={5} size="small" offset={[-2, 10]}>
-                <Tooltip title="Thông báo">
-                  <Button
-                    type="text"
-                    icon={<BellOutlined style={{ fontSize: "18px" }} />}
-                    className="action-btn"
-                  />
-                </Tooltip>
+              <Badge count={5} size="small" offset={[-4, 4]} color="#D23175">
+                <Button type="text" icon={<BellOutlined />} className="icon-btn-luxury" />
               </Badge>
             </Dropdown>
           </Space>
@@ -302,16 +190,24 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
             placement="bottomRight"
             trigger={["click"]}
           >
-            <div className="user-profile">
-              <Avatar
-                size="small"
-                src={avatarSrc || "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"}
-                icon={<UserOutlined />}
-              />
-              <span className="user-name">{displayName}</span>
+            <div className="luxury-user-profile">
+              <div className="avatar-container">
+                <Avatar
+                  size="small"
+                  src={avatarSrc || "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"}
+                  className="luxury-avatar"
+                  icon={<UserOutlined />}
+                />
+                <span className="status-indicator online"></span>
+              </div>
+              <div className="user-info">
+                <Text strong className="name">{displayName}</Text>
+                <Text type="secondary" className="role">{currentUser?.role_code === "R1" ? "Administrator" : "Staff"}</Text>
+              </div>
+              <DownOutlined className="arrow-icon" />
             </div>
           </Dropdown>
-        </Space>
+        </div>
       </div>
     </Header>
   );

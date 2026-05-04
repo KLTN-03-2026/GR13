@@ -1,4 +1,4 @@
-import RegisterComponent from "../../../components/Client/Register/index.tsx";
+import RegisterComponent from "../../../components/Auth/AuthClient/Register";
 const RegisterPage = () => {
   return (
     <>

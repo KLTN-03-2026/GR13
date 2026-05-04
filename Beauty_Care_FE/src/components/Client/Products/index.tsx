@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
 import { message } from "antd";
@@ -11,11 +11,12 @@ import {
   Rate,
   Select,
   Slider,
-  
+  Spin,
   Row,
   Col,
   Typography,
 } from "antd";
+import axios from "axios";
 import {
   FilterOutlined,
   HeartOutlined,
@@ -24,23 +25,15 @@ import {
 } from "@ant-design/icons";
 // Import trực tiếp file SCSS
 import "./style.scss";
-import product1 from "../../../assets/images/698617cdf791d6d2cdb0bcc0_skincare-routine-reset.webp";
-
-// Định nghĩa dữ liệu mẫu
-const PRODUCTS = [
-  { id: "p-1", name: "Serum Phục Hồi Skin Reset", image: product1, category: "Serum", skinTypes: ["Da nhạy cảm"], price: 790000, originalPrice: 990000, rating: 4.8, reviews: 1240, isNew: true, inStock: true },
-  { id: "p-2", name: "Kem Dưỡng Glow & Hydrate", image: product1, category: "Kem dưỡng", skinTypes: ["Da khô"], price: 690000, originalPrice: 850000, rating: 4.7, reviews: 980, inStock: true },
-  { id: "p-3", name: "Sữa Rửa Mặt Dịu Nhẹ pH 5.5", image: product1, category: "Làm sạch", skinTypes: ["Da nhạy cảm"], price: 320000, rating: 4.6, reviews: 1523, inStock: true },
-  { id: "p-4", name: "Toner Cân Bằng & Làm Dịu", image: product1, category: "Toner", skinTypes: ["Da hỗn hợp"], price: 420000, originalPrice: 520000, rating: 4.5, reviews: 640, inStock: true },
-  { id: "p-5", name: "Kem Chống Nắng SPF50+", image: product1, category: "Chống nắng", skinTypes: ["Da dầu"], price: 540000, originalPrice: 640000, rating: 4.9, reviews: 2311, inStock: true },
-  { id: "p-6", name: "Mặt Nạ Cấp Ẩm Đa Tầng", image: product1, category: "Mặt nạ", skinTypes: ["Da khô"], price: 220000, originalPrice: 300000, rating: 4.4, reviews: 510, inStock: false },
-];
+// Products will be fetched from API
 
 const ProductsComponent = () => {
   const [query, setQuery] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
   const [sortKey, setSortKey] = useState<string>("popular");
   const [page, setPage] = useState(1);
@@ -54,19 +47,58 @@ const ProductsComponent = () => {
     }
   };
 
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    axios
+      .get("http://localhost:8088/api/v1/product")
+      .then((res) => {
+        const data = res.data?.data ?? res.data;
+        const items = Array.isArray(data) ? data : [];
+          const mapped = items.map((p: any) => ({
+          id: p.id ?? p.productId ?? "",
+          name: p.name ?? p.productName ?? "",
+          image: p.image ?? p.thumbnail ?? "",
+          category: p.categoryData?.name ?? p.category ?? "",
+          price: Number(p.price ?? 0),
+          originalPrice: p.discountPrice ?? p.originalPrice ?? null,
+          rating: Number(p.rating ?? 4.5),
+          reviews: Number(p.reviews ?? 0),
+          isNew: Boolean(p.isNew ?? false),
+          inStock: Number(p.stock ?? 0) > 0,
+        }));
+        if (mounted) setProducts(mapped);
+        if (items.length === 0) message.info("Không tìm thấy sản phẩm");
+      })
+      .catch((err) => {
+        console.error("Failed to fetch products", err);
+        message.error("Không thể lấy danh sách sản phẩm");
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Logic Lọc sản phẩm
   const filtered = useMemo(() => {
-    return PRODUCTS.filter((p) => {
-      const matchQuery = p.name.toLowerCase().includes(query.toLowerCase());
-      const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
-      const matchPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
-      return matchQuery && matchCategory && matchPrice;
-    }).sort((a, b) => {
-      if (sortKey === "price-asc") return a.price - b.price;
-      if (sortKey === "price-desc") return b.price - a.price;
-      return b.rating - a.rating;
-    });
-  }, [query, selectedCategories, priceRange, sortKey]);
+    return products
+      .filter((p) => {
+        const name = (p.name ?? "").toString();
+        const price = Number(p.price ?? 0);
+        const matchQuery = name.toLowerCase().includes(query.toLowerCase());
+        const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
+        const matchPrice = price >= priceRange[0] && price <= priceRange[1];
+        return matchQuery && matchCategory && matchPrice;
+      })
+      .sort((a, b) => {
+        if (sortKey === "price-asc") return Number(a.price ?? 0) - Number(b.price ?? 0);
+        if (sortKey === "price-desc") return Number(b.price ?? 0) - Number(a.price ?? 0);
+        return Number(b.rating ?? 0) - Number(a.rating ?? 0);
+      });
+  }, [products, query, selectedCategories, priceRange, sortKey]);
 
   const pageSize = 9;
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -154,48 +186,56 @@ const ProductsComponent = () => {
           <aside className="sidebar-filters">{FilterPanel}</aside>
           
           <div className="results-area">
-            <div className="results-grid">
-              {pageItems.map((p) => (
-                <div
-                  key={p.id}
-                  className={`product-card ${!p.inStock ? 'out-of-stock' : ''}`}
-                  onClick={() => navigate(`/products/${p.id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="card-media">
-                    <img src={p.image} alt={p.name} />
-                    {p.isNew && <span className="tag-new">MỚI</span>}
-                    {!p.inStock && <div className="overlay-out">Hết hàng</div>}
-                    <button className="wish-btn"><HeartOutlined /></button>
-                  </div>
-                  <div className="card-body">
-                    <span className="card-cat">{p.category}</span>
-                    <h3 className="card-title">{p.name}</h3>
-                    <div className="card-rating">
-                      <Rate disabled defaultValue={p.rating} style={{ fontSize: 12 }} />
-                      <span>({p.reviews})</span>
+            {loading ? (
+              <div className="loading-center" style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <>
+                <div className="results-grid">
+                  {pageItems.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`product-card ${!p.inStock ? 'out-of-stock' : ''}`}
+                      onClick={() => navigate(`/products/${p.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className="card-media">
+                        <img src={p.image} alt={p.name} />
+                        {p.isNew && <span className="tag-new">MỚI</span>}
+                        {!p.inStock && <div className="overlay-out">Hết hàng</div>}
+                        <button className="wish-btn"><HeartOutlined /></button>
+                      </div>
+                      <div className="card-body">
+                        <span className="card-cat">{p.category}</span>
+                        <h3 className="card-title">{p.name}</h3>
+                        <div className="card-rating">
+                          <Rate disabled defaultValue={Number(p.rating ?? 0)} style={{ fontSize: 12 }} />
+                          <span>({p.reviews ?? 0})</span>
+                        </div>
+                        <div className="card-price">
+                          <span className="current-price">{Number(p.price ?? 0).toLocaleString()}đ</span>
+                          {p.originalPrice && <span className="old-price">{Number(p.originalPrice).toLocaleString()}đ</span>}
+                        </div>
+                        <button className="add-cart-btn" disabled={!p.inStock} onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}>
+                          <ShoppingCartOutlined /> THÊM VÀO GIỎ
+                        </button>
+                      </div>
                     </div>
-                    <div className="card-price">
-                      <span className="current-price">{p.price.toLocaleString()}đ</span>
-                      {p.originalPrice && <span className="old-price">{p.originalPrice.toLocaleString()}đ</span>}
-                    </div>
-                    <button className="add-cart-btn" disabled={!p.inStock} onClick={handleAddToCart}>
-                      <ShoppingCartOutlined /> THÊM VÀO GIỎ
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            
-            <div className="pagination-box">
-              <Pagination 
-                current={page} 
-                total={filtered.length} 
-                pageSize={pageSize} 
-                onChange={setPage} 
-                showSizeChanger={false}
-              />
-            </div>
+
+                <div className="pagination-box">
+                  <Pagination 
+                    current={page} 
+                    total={filtered.length} 
+                    pageSize={pageSize} 
+                    onChange={setPage} 
+                    showSizeChanger={false}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

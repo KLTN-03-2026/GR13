@@ -1,188 +1,267 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as cartApi from '../../../api/cart';
-import * as orderApi from '../../../api/order';
+import * as cartApi from "../../../api/cart";
+import * as orderApi from "../../../api/order";
+import * as paymentApi from "../../../api/payment";
+import { QRCodeCanvas } from "qrcode.react";
 import { 
   ArrowLeftOutlined, 
   LockOutlined, 
-  CreditCardOutlined, 
-  CheckCircleFilled 
+  CreditCardOutlined,
+  WalletOutlined
 } from '@ant-design/icons';
+import { message } from 'antd';
 import "./style.scss";
 
 const Checkout: React.FC = () => {
-  const [currentStep] = useState(1);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('COD');
 
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const { data: cartResp, isLoading: cartLoading } = useQuery({ queryKey: ['cart'], queryFn: () => cartApi.getCart() });
+  const { data: cartResp, isLoading: cartLoading } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => cartApi.getCart(),
+  });
   const cartItems: any[] = cartResp?.data?.cartItems ?? [];
 
-  const createOrderMutation = useMutation({ mutationFn: (payload: any) => orderApi.createOrder(payload), onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['cart'] });
-    navigate('/my-orders');
-  } });
+  const createOrderMutation = useMutation({
+    mutationFn: (payload: any) => orderApi.createOrder(payload),
+    onSuccess: async (res: any) => {
+      console.log("✅ Create Order Response:", res);
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      
+      const orderId = res?.orderId || res?.data?.orderId || res?.id;
+      
+      if (paymentMethod === "QR" || paymentMethod === "PAYOS") {
+        if (orderId) {
+          try {
+            console.log("📦 Creating payment link for orderId:", orderId);
+            const paymentRes: any = await paymentApi.createPaymentLink(orderId);
+            console.log("💳 Payment Link Response:", paymentRes);
+            
+            if (paymentRes?.err === 0 && paymentRes?.data?.checkoutUrl) {
+              console.log("🚀 Redirecting to checkout URL:", paymentRes.data.checkoutUrl);
+              window.location.href = paymentRes.data.checkoutUrl;
+            } else {
+              message.error(paymentRes?.mess || "Không thể tạo link thanh toán payOS");
+            }
+          } catch (error) {
+            console.error("❌ Payment Error:", error);
+            message.error("Lỗi khi tạo link thanh toán: " + (error as Error)?.message);
+          }
+        } else {
+          message.error("Không nhận được orderId từ server");
+        }
+      } else {
+        message.success("Đặt hàng thành công!");
+        navigate("/myorder");
+      }
+    },
+    onError: (error: any) => {
+      console.error("❌ Create Order Error:", error);
+      message.error("Lỗi tạo đơn hàng: " + (error?.message || "Vui lòng thử lại"));
+    },
+  });
+
+  const subtotal = cartItems.reduce((sum, item) => {
+    const price =
+      item?.productData?.discountPrice ||
+      item?.productData?.price ||
+      0;
+
+    return sum + price * (item?.quantity || 1);
+  }, 0);
+
+  const tax = subtotal * 0.08;
+  const totalAmount = subtotal + tax;
+
+  const handlePlaceOrder = () => {
+    if (!firstName || !lastName || !phone || !address) {
+      alert("Vui lòng nhập đầy đủ thông tin!");
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      alert("Giỏ hàng trống!");
+      return;
+    }
+
+    createOrderMutation.mutate({
+      shippingAddress: address,
+      phone,
+      paymentMethod,
+    });
+  };
 
   return (
     <div className="checkoutPage">
       <div className="container">
-        {/* THANH TIẾN TRÌNH LUXURY */}
+
+        {/* HEADER */}
         <header className="header">
           <div className="stepper">
-            <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
-              <span className="number">{currentStep > 1 ? <CheckCircleFilled /> : '1'}</span>
+            <div className="step active">
+              <span className="number">1</span>
               <span className="label">Thông Tin</span>
             </div>
             <div className="line"></div>
-            <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
+            <div className="step">
               <span className="number">2</span>
               <span className="label">Vận Chuyển</span>
             </div>
             <div className="line"></div>
-            <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+            <div className="step">
               <span className="number">3</span>
               <span className="label">Thanh Toán</span>
             </div>
           </div>
+
           <Link to="/cart" className="backLink">
             <ArrowLeftOutlined /> Quay lại giỏ hàng
           </Link>
         </header>
 
         <div className="layout">
-          {/* CỘT TRÁI - FORM NHẬP LIỆU */}
+
+          {/* LEFT */}
           <main className="leftColumn">
+
             <section className="section">
               <h2 className="sectionTitle">Địa Chỉ Giao Hàng</h2>
+
               <div className="formGrid">
-                  <div className="inputGroup">
-                    <label>Họ</label>
-                    <input type="text" placeholder="Điền thông tin cá nhân" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                  </div>
-                  <div className="inputGroup">
-                    <label>Tên</label>
-                    <input type="text" placeholder="Điền thông tin cá nhân" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                  </div>
+                <div className="inputGroup">
+                  <label>Họ</label>
+                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                </div>
+
+                <div className="inputGroup">
+                  <label>Tên</label>
+                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                </div>
+
                 <div className="inputGroup">
                   <label>Số điện thoại</label>
-                  <input type="tel" placeholder="+84 912 345 678" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
                 </div>
+
                 <div className="inputGroup">
-                  <label>Địa chỉ chi tiết</label>
-                  <input type="text" placeholder="Số nhà, tên đường, phường/xã..." value={address} onChange={(e) => setAddress(e.target.value)} />
-                </div>
-                <div className="row">
-                  <div className="inputGroup">
-                    <label>Tỉnh / Thành Phố</label>
-                    <select className="customSelect">
-                      <option>Hà Nội</option>
-                      <option>TP. Hồ Chí Minh</option>
-                      <option>Đà Nẵng</option>
-                    </select>
-                  </div>
-                  <div className="inputGroup">
-                    <label>Mã Bưu Chính</label>
-                    <input type="text" placeholder="100000" />
-                  </div>
+                  <label>Địa chỉ</label>
+                  <input value={address} onChange={(e) => setAddress(e.target.value)} />
                 </div>
               </div>
             </section>
 
             <section className="section">
               <h2 className="sectionTitle">Phương Thức Thanh Toán</h2>
+
               <div className="paymentOptions">
+
+                {/* CARD */}
+             
+
+                {/* COD */}
                 <label className="paymentItem">
-                  <input type="radio" name="payment" checked={paymentMethod === 'CARD'} onChange={() => setPaymentMethod('CARD')} />
+                  <input
+                    type="radio"
+                    checked={paymentMethod === 'COD'}
+                    onChange={() => setPaymentMethod('COD')}
+                  />
                   <div className="paymentContent">
-                    <CreditCardOutlined className="paymentIcon" />
-                    <div className="paymentText">
-                      <strong>Thẻ Tín Dụng / Ghi Nợ</strong>
-                      <span>Thanh toán an toàn qua cổng quốc tế</span>
-                    </div>
+                    💵 COD
                   </div>
                 </label>
+
+                {/* QR / PAYOS */}
                 <label className="paymentItem">
-                  <input type="radio" name="payment" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
+                  <input
+                    type="radio"
+                    checked={paymentMethod === 'PAYOS'}
+                    onChange={() => setPaymentMethod('PAYOS')}
+                  />
                   <div className="paymentContent">
-                    <div className="codIcon">💵</div>
-                    <div className="paymentText">
-                      <strong>Thanh Toán Khi Nhận Hàng (COD)</strong>
-                      <span>Kiểm tra hàng trước khi thanh toán</span>
-                    </div>
+                    <WalletOutlined />
+                    <span>Thanh toán PayOS</span>
                   </div>
                 </label>
+
               </div>
             </section>
 
-            <button className="completeBtn" onClick={() => {
-              if (!address || !phone) { alert('Vui lòng nhập đầy đủ thông tin giao hàng'); return; }
-              createOrderMutation.mutate({ shippingAddress: address, phone, paymentMethod });
-            }} disabled={createOrderMutation.status === 'pending'}>
-              {createOrderMutation.status === 'pending' ? 'Đang xử lý...' : 'XÁC NHẬN ĐẶT HÀNG'} <LockOutlined />
+            <button
+              className="completeBtn"
+              onClick={handlePlaceOrder}
+              disabled={createOrderMutation.isPending || cartLoading}
+            >
+              {createOrderMutation.isPending ? "Đang xử lý..." : "XÁC NHẬN ĐẶT HÀNG"} <LockOutlined />
             </button>
+
           </main>
 
-          {/* CỘT PHẢI - TÓM TẮT ĐƠN HÀNG */}
+          {/* RIGHT */}
           <aside className="rightColumn">
             <div className="orderSummary">
-              <h3 className="summaryTitle">Đơn Hàng Của Bạn</h3>
-              
+              <h3 className="summaryTitle">Đơn Hàng</h3>
+
               <div className="productList">
                 {cartLoading ? (
                   <div>Đang tải giỏ hàng...</div>
                 ) : (
-                  cartItems.map((item) => (
-                    <div className="productItem" key={item.id}>
+                  cartItems?.map((item) => (
+                    <div className="productItem" key={item?.id}>
                       <div className="imgBadge">
-                        <img src={item.productData?.image || 'https://placehold.co/120x160'} alt={item.productData?.name} />
-                        <span className="badge">{item.quantity}</span>
+                        <img src={item?.productData?.image} />
+                        <span className="badge">{item?.quantity}</span>
                       </div>
+
                       <div className="pInfo">
-                        <span className="pName">{item.productData?.name}</span>
-                        <span className="pDesc">{item.productData?.size || ''}</span>
+                        <span className="pName">{item?.productData?.name}</span>
                       </div>
-                      <div className="pPrice">${((item.productData?.discountPrice || item.productData?.price) || 0).toFixed(2)}</div>
+
+                      <div className="pPrice">
+                        {(
+                          item?.productData?.discountPrice ||
+                          item?.productData?.price ||
+                          0
+                        ).toLocaleString("vi-VN")}đ
+                      </div>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="promoCode">
-                <input type="text" placeholder="MÃ GIẢM GIÁ" />
-                <button>ÁP DỤNG</button>
-              </div>
-
               <div className="priceDetails">
                 <div className="priceRow">
-                  <span>Tổng phụ</span>
-                  <span>$83.00</span>
+                  <span>Tạm tính</span>
+                  <span>{subtotal.toLocaleString("vi-VN")}đ</span>
                 </div>
-                <div className="priceRow">
-                  <span>Phí vận chuyển</span>
-                  <span className="free">MIỄN PHÍ</span>
-                </div>
+
                 <div className="priceRow">
                   <span>Thuế (8%)</span>
-                  <span>$6.64</span>
+                  <span>{tax.toLocaleString("vi-VN")}đ</span>
                 </div>
+
                 <div className="totalRow">
-                  <span>Tổng thanh toán</span>
-                  <span className="totalAmount">$89.64</span>
+                  <span>Tổng</span>
+                  <span className="totalAmount">
+                    {totalAmount.toLocaleString("vi-VN")}đ
+                  </span>
                 </div>
               </div>
 
               <div className="guarantee">
-                <p><LockOutlined /> Mọi giao dịch đều được mã hóa và bảo mật tuyệt đối.</p>
+                <p><LockOutlined /> Thanh toán bảo mật</p>
               </div>
+
             </div>
           </aside>
+
         </div>
       </div>
     </div>

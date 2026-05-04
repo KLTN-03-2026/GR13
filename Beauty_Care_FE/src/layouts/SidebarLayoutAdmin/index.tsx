@@ -13,9 +13,9 @@ import {
   TeamOutlined,
   SafetyCertificateOutlined,
   AppstoreOutlined,
-  HeartOutlined,
   SettingOutlined,
   BarChartOutlined as AnalyticsOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import "./style.scss";
 
@@ -58,7 +58,7 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
       label: "Quản lý người dùng",
       children: [
         { key: "users-admin", icon: <SafetyCertificateOutlined />, label: "Quản trị viên" },
-        { key: "users-staff", icon: <TeamOutlined />, label: "Nhân viên" },
+        { key: "users-staff", icon: <TeamOutlined />, label: "Chuyên Gia  " },
         { key: "users-customers", icon: <UserOutlined />, label: "Khách hàng" },
       ],
     },
@@ -80,6 +80,11 @@ const SidebarLayoutAdmin: React.FC<SidebarLayoutAdminProps> = ({
       key: "bookings",
       icon: <CalendarOutlined />,
       label: "Lịch hẹn",
+    },
+    {
+      key: "chat",
+      icon: <MessageOutlined />,
+      label: "Tư vấn khách hàng",
     },
     {
       key: "content",

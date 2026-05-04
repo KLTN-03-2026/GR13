@@ -291,7 +291,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
       {/* Top statistics cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="user-stat-card">
+          <Card variant="shadow" className="user-stat-card">
             <Statistic
               title="Tổng người dùng"
               value={865}
@@ -300,7 +300,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="user-stat-card">
+          <Card variant="shadow" className="user-stat-card">
             <Statistic
               title="Khách hàng tiềm năng"
               value={42}
@@ -309,7 +309,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card bordered={false} className="user-stat-card">
+          <Card variant="shadow" className="user-stat-card">
             <Statistic
               title="Nhân viên"
               value={12}
@@ -338,7 +338,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
                 />
               </div>
             }
-            bordered={false}
+            variant="shadow"
           >
             <div style={{ height: 300, width: "100%" }}>
               <ResponsiveContainer>
@@ -356,7 +356,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title={<Space><PieChartOutlined /> Phân bổ vai trò</Space>} bordered={false}>
+          <Card title={<Space><PieChartOutlined /> Phân bổ vai trò</Space>} variant="shadow">
             <div style={{ height: 300, width: "100%" }}>
               <ResponsiveContainer>
                 <PieChart>
@@ -387,7 +387,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
             <TeamOutlined /> Danh sách người dùng
           </Space>
         }
-        bordered={false}
+        variant="shadow"
         extra={
           <Space size="middle">
             {!fixedRole && (

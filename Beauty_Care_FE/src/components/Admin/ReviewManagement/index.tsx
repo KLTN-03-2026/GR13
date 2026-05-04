@@ -271,7 +271,7 @@ const ReviewManagementComponent: React.FC = () => {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={6}>
-          <Card bordered={false} className="review-stat-card">
+          <Card variant="shadow" className="review-stat-card">
             <Statistic
               title="Tổng đánh giá"
               value={stats.total}
@@ -280,7 +280,7 @@ const ReviewManagementComponent: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card bordered={false} className="review-stat-card">
+          <Card variant="shadow" className="review-stat-card">
             <Statistic
               title="Điểm trung bình"
               value={stats.avg}
@@ -290,7 +290,7 @@ const ReviewManagementComponent: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card bordered={false} className="review-stat-card">
+          <Card variant="shadow" className="review-stat-card">
             <Statistic
               title="Chờ duyệt"
               value={stats.pending}
@@ -299,7 +299,7 @@ const ReviewManagementComponent: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={6}>
-          <Card bordered={false} className="review-stat-card">
+          <Card variant="shadow" className="review-stat-card">
             <Statistic
               title="Đánh giá tích cực"
               value={((reviews.filter(r => r.rating >= 4).length / (reviews.length || 1)) * 100).toFixed(0)}
@@ -312,7 +312,7 @@ const ReviewManagementComponent: React.FC = () => {
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col span={24}>
-          <Card title={<Space><BarChartOutlined /> Phân bổ số sao</Space>} bordered={false}>
+          <Card title={<Space><BarChartOutlined /> Phân bổ số sao</Space>} variant="shadow">
             <div style={{ height: 200, width: "100%" }}>
               <ResponsiveContainer>
                 <BarChart data={stats.ratingDist} layout="vertical">

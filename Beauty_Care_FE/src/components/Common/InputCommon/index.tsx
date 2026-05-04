@@ -83,7 +83,6 @@ export const InputCommonName = (props: InputCommonProps) => {
     style,
     onChange,
     onBlur,
-    required,
     isError,
     messageError,
   } = props;
@@ -220,7 +219,7 @@ export const InputCommonPassword = (props: InputCommonProps) => {
           className="password-toggle"
           onClick={() => setShowPassword(!showPassword)}
         >
-          {showPassword ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+          {showPassword ? < EyeInvisibleOutlined/> : <EyeOutlined />}
         </span>
       </div>
       {isError && messageError && (

@@ -17,7 +17,6 @@ import {
   Avatar,
 } from "antd";
 import {
-  SettingOutlined,
   GlobalOutlined,
   ClockCircleOutlined,
   CreditCardOutlined,
@@ -293,7 +292,7 @@ const SettingsManagementComponent: React.FC = () => {
     <div className="settings-management">
       <Title level={2}>Cài đặt hệ thống</Title>
 
-      <Card bordered={false} className="settings-card">
+      <Card variant="shadow" className="settings-card">
         <Tabs defaultActiveKey="1" tabPosition="left" items={items} />
       </Card>
     </div>

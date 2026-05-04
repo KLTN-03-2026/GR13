@@ -1,12 +1,7 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Typography, Card, Row, Col, Space, Table, Tag } from "antd";
 import {
-  BarChartOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
   ThunderboltOutlined,
-  ShoppingCartOutlined,
-  EyeOutlined,
   DollarOutlined,
   ClockCircleOutlined,
   HeartOutlined,
@@ -22,8 +17,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -176,9 +169,10 @@ const AnalyticsManagementComponent: React.FC = () => {
                     outerRadius={100}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+
+                    label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   >
-                    {spaServicesStats.map((entry, index) => (
+                    {spaServicesStats.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

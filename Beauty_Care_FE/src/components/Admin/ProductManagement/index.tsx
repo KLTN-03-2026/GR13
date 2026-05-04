@@ -12,7 +12,6 @@ import {
   Modal,
   Form,
   InputNumber,
-  Upload,
   message,
   Image,
   Tag,

@@ -9,7 +9,8 @@ export const API = axios.create({
 
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    // Try both "token" (legacy/admin) and "bc_token" (AuthContext)
+    const token = localStorage.getItem("token") || localStorage.getItem("bc_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,4 +30,22 @@ API.interceptors.response.use(
   }
 );
 
-export default API;
+// Helper for files using apiFetch as default export (backward compatibility)
+const apiFetch = async (url: string, options: any = {}) => {
+  const { method = 'GET', body, params } = options;
+  // Strip /api/v1 if it exists because baseURL already has it
+  const cleanUrl = url.replace(/^\/api\/v1/, '');
+
+  const config = {
+    method,
+    url: cleanUrl,
+    data: body ? (typeof body === 'string' ? JSON.parse(body) : body) : undefined,
+    params,
+    headers: options.headers,
+  };
+  const response = await API(config);
+  return response.data;
+};
+
+export default apiFetch;
+

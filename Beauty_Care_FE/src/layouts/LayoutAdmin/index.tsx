@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Layout } from "antd";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import HeaderLayoutAdmin from "../HeaderLayoutAdmin";
 import SidebarLayoutAdmin from "../SidebarLayoutAdmin";
 import "./style.scss";
@@ -9,6 +9,8 @@ const { Content } = Layout;
 
 const LayoutAdmin: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+  const isChatPage = location.pathname === "/admin/chat";
 
   return (
     <Layout className="layout-admin-container">
@@ -23,7 +25,7 @@ const LayoutAdmin: React.FC = () => {
         />
         
         {/* Content area */}
-        <Content className="layout-admin-content">
+        <Content className={`layout-admin-content ${isChatPage ? 'chat-page' : ''}`}>
           <div className="content-inner">
             <Outlet />
           </div>

@@ -11,10 +11,8 @@ import {
   Row,
   Select,
   Space,
-  Statistic,
   Table,
   Tag,
-  Tooltip as AntdTooltip,
   Typography,
   message,
   Avatar,
@@ -23,17 +21,15 @@ import {
 } from "antd";
 import {
   CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
+
   ClockCircleOutlined,
   SearchOutlined,
   UserOutlined,
   BarChartOutlined,
-  TeamOutlined,
   PieChartOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
+
 import {
   Bar,
   BarChart,
@@ -358,9 +354,11 @@ const BookingManagementComponent: React.FC = () => {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+
+                  
+                    label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   >
-                    {ageStats.map((entry, index) => (
+                    {ageStats.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

@@ -71,7 +71,7 @@ const FooterLayoutClient = () => {
         </div>
 
         <div className="footer-bottom">
-          <p>Copyright © 2024 Beauty Care. Thấu hiểu làn da - Nâng tầm vẻ đẹp.</p>
+          <p>Copyright © 2026 Beauty Care. Thấu hiểu làn da - Nâng tầm vẻ đẹp.</p>
         </div>
       </div>
     </footer>

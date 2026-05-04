@@ -1,7 +1,9 @@
 import HeaderLayoutClient from "../layouts/HeaderLayoutClient";
+import ErrorPage from "../components/Common/ErrorPage";
 import { createBrowserRouter } from "react-router-dom";
 import HomePage from "../pages/Client/Home";
 import ProductsPage from "../pages/Client/Products";
+import ProductDetailPage from "../pages/Client/ProductDetail";
 import LayoutAdmin from "../layouts/LayoutAdmin";
 import AdminOverviewPage from "../pages/Admin/OverviewManagement";
 import CategoryManagementPage from "../pages/Admin/CategoryManagement";
@@ -24,24 +26,34 @@ import UserManagementCustomersPage from "../pages/Admin/UserManagement/Customers
 import AuthAdminLayout from "../layouts/AuthAdminLayout";
 import LoginAdminPage from "../pages/Auth/AuthAdmin/LoginAdmin";
 import RequireAdminAuth from "../layouts/RequireAdminAuth";
-import ProductDetailPage from "../pages/Client/ProductDetail";
+import LoginPage from "../pages/Client/Login";
+import RegisterPage from "../pages/Client/Register";
+import ForgotPasswordPage from "../pages/Client/ForgotPW/ForgotPassword";
 import BlogPage from "../pages/Client/Blog";
 import BlogDetailPage from "../pages/Client/BlogDetail";
+import ProfilePage from "../pages/Client/Profile";
+import WishlistPage from "../pages/Client/Wishlist";
 import CartPage from "../pages/Client/Cart";
 import CheckoutPage from "../pages/Client/Checkout";
+import MyOrderPage from "../pages/Client/MyOrder";
+import ConsultationChatPage from "../pages/Client/ConsultationChat";
+import OrderSuccess from "../components/Client/OrderSuccess";
+import AuthClientLayout from "../layouts/AuthLayoutClient";
+import ChatManagementPage from "../pages/Admin/ChatManagement";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <HeaderLayoutClient />,
+    errorElement: <ErrorPage />,
     children: [
       {
+        index: true, // Thay path: "/" bằng index: true cho gọn
         element: <HomePage />,
-        path: "/",
       },
       {
-        element: <ProductsPage />,
         path: "products",
+        element: <ProductsPage />,
       },
       {
         path: "products/:id",
@@ -51,9 +63,22 @@ const router = createBrowserRouter([
         path: "blog",
         element: <BlogPage />,
       },
+      
       {
         path: "blog/:id",
         element: <BlogDetailPage />,
+      },
+      {
+        path: "consultation-chat",
+        element: <ConsultationChatPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+      },
+      {
+        path: "wishlist",
+        element: <WishlistPage />,
       },
       {
         path: "cart",
@@ -63,8 +88,37 @@ const router = createBrowserRouter([
         path: "checkout",
         element: <CheckoutPage />,
       },
+      {
+        path: "myorder",
+        element: <MyOrderPage />,
+      },
+      {
+        path: "order-success",
+        element: <OrderSuccess />,
+      },
     ],
   },
+
+  // NHÓM 2: CÁC TRANG AUTH CÓ LAYOUT CHUNG
+  {
+    element: <AuthClientLayout />,
+    children: [
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "register",
+        element: <RegisterPage />,
+      },
+      {
+        path: "forgot",
+        element: <ForgotPasswordPage />,
+      },
+    ],
+  },
+
+  // NHÓM 3: CÁC TRANG ADMIN
   {
     path: "/admin",
     element: (
@@ -114,6 +168,10 @@ const router = createBrowserRouter([
         element: <ReviewManagementPage />,
       },
       {
+        path: "chat",
+        element: <ChatManagementPage />,
+      },
+      {
         path: "analytics",
         element: <AnalyticsManagementPage />,
       },
@@ -160,6 +218,7 @@ const router = createBrowserRouter([
         element: <LoginAdminPage />,
       },
     ],
-  }
+  },
 ]);
+
 export default router;

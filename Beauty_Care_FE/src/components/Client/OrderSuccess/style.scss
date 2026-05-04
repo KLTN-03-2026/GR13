@@ -1,0 +1,109 @@
+.orderSuccessPage {
+  min-height: 100vh;
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .container {
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .loadingBox {
+    padding: 40px;
+    p {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #666;
+    }
+  }
+  
+  .successBox, .failedBox {
+    padding: 40px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  
+  .iconCircle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    
+    &.success {
+      background: #e6f7e6;
+      color: #52c41a;
+      font-size: 48px;
+    }
+    
+    &.failed {
+      background: #fff1f0;
+      color: #ff4d4f;
+      font-size: 48px;
+    }
+  }
+  
+  h1 {
+    font-size: 28px;
+    margin-bottom: 12px;
+    color: #1a1a1a;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  
+  .orderId {
+    font-size: 18px;
+    font-weight: 600;
+    color: #005baa;
+    margin-bottom: 32px;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    
+    .primaryBtn, .outlineBtn {
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .primaryBtn {
+      background: #005baa;
+      color: #fff;
+      border: none;
+      
+      &:hover {
+        background: #004a8a;
+      }
+    }
+    
+    .outlineBtn {
+      background: #fff;
+      color: #005baa;
+      border: 2px solid #005baa;
+      
+      &:hover {
+        background: #f0f8ff;
+      }
+    }
+  }
+}

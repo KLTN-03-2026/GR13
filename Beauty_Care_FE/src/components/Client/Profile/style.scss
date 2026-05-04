@@ -1,0 +1,96 @@
+$primary: #d23175;
+
+.profile-luxury {
+  background: #fafafa;
+  min-height: 100vh;
+  padding: 60px 0;
+
+  .container {
+    max-width: 1200px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 30px;
+  }
+
+  .sidebar {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+
+    .user-box {
+      text-align: center;
+      margin-bottom: 20px;
+
+      h3 {
+        margin-top: 10px;
+      }
+
+      p {
+        color: #888;
+        font-size: 13px;
+      }
+    }
+
+    .ant-menu {
+      border: none;
+
+      .ant-menu-item-selected {
+        background: rgba(210, 49, 117, 0.1);
+        color: $primary;
+      }
+    }
+  }
+
+  .content {
+    .card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+
+      h2 {
+        margin-bottom: 20px;
+      }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .save-btn {
+      background: linear-gradient(135deg, #ff6a88, $primary);
+      border: none;
+      height: 45px;
+      border-radius: 10px;
+    }
+  }
+
+  .coupon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .coupon-card {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px dashed #ffd6e7;
+    background: linear-gradient(135deg, #fff0f6, #fff);
+
+    h3 {
+      color: $primary;
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  margin-top: 100px;
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import {
   Badge,
@@ -32,6 +32,7 @@ import {
   SearchOutlined,
   SyncOutlined,
   TruckOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import {
   Bar,
@@ -49,14 +50,9 @@ const { Title, Text } = Typography;
 
 type Period = "week" | "month" | "year";
 
-type OrderStatus =
-  | "Chờ xác nhận"
-  | "Đang soạn hàng"
-  | "Đang giao"
-  | "Thành công"
-  | "Thất bại";
+type OrderStatus = "pending" | "paid" | "shipping" | "completed" | "cancelled";
 
-type PaymentStatus = "Đã thanh toán" | "Chưa thanh toán";
+type PaymentStatus = string;
 
 type OrderType = "Đơn thường" | "Đơn đặt biệt";
 
@@ -72,8 +68,9 @@ interface OrderItem {
   customerName: string;
   phone: string;
   address: string;
-  status: OrderStatus;
-  paymentStatus: PaymentStatus;
+  status: string;
+  paymentStatus: string;
+  paymentMethod: string;
   orderType: OrderType;
   createdAt: string;
   total: number;
@@ -81,26 +78,33 @@ interface OrderItem {
   lines: OrderItemLine[];
 }
 
-const statusBadge = (status: OrderStatus) => {
-  if (status === "Thành công") return <Badge status="success" text={status} />;
-  if (status === "Đang giao") return <Badge status="processing" text={status} />;
-  if (status === "Thất bại") return <Badge status="error" text={status} />;
-  if (status === "Đang soạn hàng") return <Badge status="warning" text={status} />;
-  return <Badge status="default" text={status} />;
+const statusBadge = (status: string) => {
+  const s = status?.toLowerCase();
+  if (s === "completed" || s === "thành công")
+    return <Badge status="success" text="Thành công" />;
+  if (s === "shipping" || s === "đang giao")
+    return <Badge status="processing" text="Đang giao" />;
+  if (s === "cancelled" || s === "thất bại")
+    return <Badge status="error" text="Đã hủy" />;
+  if (s === "paid" || s === "đang soạn hàng")
+    return <Badge status="warning" text="Đang soạn hàng" />;
+  return <Badge status="default" text="Chờ xác nhận" />;
 };
 
-const paymentTag = (payment: PaymentStatus) => {
+const paymentTag = (status: string) => {
+  const s = status?.toLowerCase();
+  const isPaid = s === "paid" || s === "shipping" || s === "completed";
   return (
-    <Tag color={payment === "Đã thanh toán" ? "green" : "red"}>{payment}</Tag>
+    <Tag color={isPaid ? "green" : "red"}>
+      {isPaid ? "Đã thanh toán" : "Chưa thanh toán"}
+    </Tag>
   );
 };
 
 const OrderManagementComponent: React.FC = () => {
   const [period, setPeriod] = useState<Period>("week");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
-  const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] = useState<string | "all">("all");
+  const [paymentFilter, setPaymentFilter] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -108,90 +112,91 @@ const OrderManagementComponent: React.FC = () => {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createForm] = Form.useForm();
+  const [orders, setOrders] = useState<OrderItem[]>([]);
 
-  const [orders, setOrders] = useState<OrderItem[]>([
-    {
-      id: 1,
-      code: "BC-OD-0001",
-      customerName: "Nguyễn Thị Lan",
-      phone: "0912345678",
-      address: "Q.1, TP.HCM",
-      status: "Chờ xác nhận",
-      paymentStatus: "Chưa thanh toán",
-      orderType: "Đơn thường",
-      createdAt: "Hôm nay 09:40",
-      total: 980000,
-      note: "Giao giờ hành chính",
-      lines: [
-        { name: "Sữa rửa mặt Cetaphil", qty: 1, price: 280000 },
-        { name: "Kem chống nắng La Roche-Posay", qty: 1, price: 700000 },
-      ],
-    },
-    {
-      id: 2,
-      code: "BC-OD-0002",
-      customerName: "Trần Minh Tâm",
-      phone: "0987654321",
-      address: "Q.7, TP.HCM",
-      status: "Đang soạn hàng",
-      paymentStatus: "Đã thanh toán",
-      orderType: "Đơn đặt biệt",
-      createdAt: "Hôm nay 11:05",
-      total: 820000,
-      lines: [{ name: "Serum B5 La Roche-Posay", qty: 1, price: 820000 }],
-    },
-    {
-      id: 3,
-      code: "BC-OD-0003",
-      customerName: "Lê Hồng Nhung",
-      phone: "0909090909",
-      address: "Thủ Đức, TP.HCM",
-      status: "Đang giao",
-      paymentStatus: "Chưa thanh toán",
-      orderType: "Đơn thường",
-      createdAt: "Hôm qua 16:20",
-      total: 560000,
-      lines: [{ name: "Nước tẩy trang Bioderma", qty: 2, price: 280000 }],
-    },
-    {
-      id: 4,
-      code: "BC-OD-0004",
-      customerName: "Phạm Minh D",
-      phone: "0911223344",
-      address: "Đà Nẵng",
-      status: "Thành công",
-      paymentStatus: "Đã thanh toán",
-      orderType: "Đơn thường",
-      createdAt: "3 ngày trước",
-      total: 1200000,
-      lines: [
-        { name: "Serum B5 The Ordinary", qty: 1, price: 450000 },
-        { name: "Kem dưỡng ẩm", qty: 1, price: 750000 },
-      ],
-    },
-    {
-      id: 5,
-      code: "BC-OD-0005",
-      customerName: "Nguyễn Văn A",
-      phone: "0900000000",
-      address: "Hà Nội",
-      status: "Thất bại",
-      paymentStatus: "Chưa thanh toán",
-      orderType: "Đơn đặt biệt",
-      createdAt: "1 tuần trước",
-      total: 380000,
-      note: "Sai địa chỉ giao",
-      lines: [{ name: "Sữa rửa mặt", qty: 1, price: 380000 }],
-    },
-  ]);
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await (
+        await import("../../../api/order")
+      ).getAllOrdersAdmin();
+      if (res?.err === 0) {
+        const transformedData = (res.data || []).map((order: any) => ({
+          id: order.id,
+          code: order.orderCode ? `#${order.orderCode}` : `BC-OD-${order.id}`,
+          customerName: order.userData
+            ? `${order.userData.firstName} ${order.userData.lastName}`
+            : "Khách hàng",
+          phone: order.phone || order.userData?.Phone || "N/A",
+          address: order.shippingAddress || "N/A",
+          status: order.status,
+          paymentStatus: order.status,
+          paymentMethod: order.paymentMethod,
+          orderType:
+            order.paymentMethod === "COD" ? "Đơn thường" : "Đơn đặt biệt",
+          createdAt: dayjs(order.createdAt).format("DD/MM/YYYY HH:mm"),
+          total: Number(order.totalAmount),
+          note: order.note || "",
+          lines:
+            order.orderItems?.map((item: any) => ({
+              name: item.productData?.name || "Sản phẩm",
+              qty: item.quantity,
+              price: Number(item.price),
+            })) || [],
+        }));
+        setOrders(transformedData);
+        // Tự động kiểm tra thanh toán cho các đơn hàng PAYOS đang pending
+        const pendingPayOSOrders = transformedData.filter(
+          (o: any) =>
+            o.status === "pending" &&
+            o.paymentMethod?.toUpperCase() === "PAYOS",
+        );
+
+        if (pendingPayOSOrders.length > 0) {
+          message.loading({
+            content: "Đang tự động kiểm tra trạng thái thanh toán...",
+            key: "autoVerify",
+          });
+
+          Promise.all(
+            pendingPayOSOrders.map((o: any) =>
+              import("../../../api/payment").then((api) =>
+                api.verifyPayment(o.id),
+              ),
+            ),
+          ).then((results) => {
+            const updatedCount = results.filter(
+              (r) => r?.err === 0 && r?.data?.status === "PAID",
+            ).length;
+            if (updatedCount > 0) {
+              message.success({
+                content: `Đã tự động cập nhật ${updatedCount} đơn hàng thanh toán thành công`,
+                key: "autoVerify",
+              });
+              // Refresh lại danh sách sau khi verify xong
+              fetchOrders();
+            } else {
+              message.destroy("autoVerify");
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const statusCounts = useMemo(() => {
-    const count = (s: OrderStatus) => orders.filter((o) => o.status === s).length;
+    const count = (s: string) =>
+      orders.filter((o) => o.status?.toLowerCase() === s.toLowerCase()).length;
     return {
-      success: count("Thành công"),
-      delivering: count("Đang giao"),
-      failed: count("Thất bại"),
-      packing: count("Đang soạn hàng"),
+      success: count("completed"),
+      delivering: count("shipping"),
+      failed: count("cancelled"),
+      packing: count("paid"),
     };
   }, [orders]);
 
@@ -212,41 +217,124 @@ const OrderManagementComponent: React.FC = () => {
       { name: "Tuần 4", success: 49, delivering: 32, failed: 4, packing: 19 },
     ];
     const year = [
-      { name: "Tháng 1", success: 150, delivering: 92, failed: 18, packing: 70 },
-      { name: "Tháng 2", success: 138, delivering: 88, failed: 22, packing: 65 },
-      { name: "Tháng 3", success: 165, delivering: 104, failed: 16, packing: 72 },
-      { name: "Tháng 4", success: 172, delivering: 110, failed: 20, packing: 78 },
-      { name: "Tháng 5", success: 160, delivering: 98, failed: 19, packing: 74 },
-      { name: "Tháng 6", success: 180, delivering: 120, failed: 15, packing: 80 },
+      {
+        name: "Tháng 1",
+        success: 150,
+        delivering: 92,
+        failed: 18,
+        packing: 70,
+      },
+      {
+        name: "Tháng 2",
+        success: 138,
+        delivering: 88,
+        failed: 22,
+        packing: 65,
+      },
+      {
+        name: "Tháng 3",
+        success: 165,
+        delivering: 104,
+        failed: 16,
+        packing: 72,
+      },
+      {
+        name: "Tháng 4",
+        success: 172,
+        delivering: 110,
+        failed: 20,
+        packing: 78,
+      },
+      {
+        name: "Tháng 5",
+        success: 160,
+        delivering: 98,
+        failed: 19,
+        packing: 74,
+      },
+      {
+        name: "Tháng 6",
+        success: 180,
+        delivering: 120,
+        failed: 15,
+        packing: 80,
+      },
     ];
     return { week, month, year } satisfies Record<Period, any[]>;
   }, []);
 
   const filteredOrders = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return orders.filter((o) => {
-      const okStatus = statusFilter === "all" ? true : o.status === statusFilter;
-      const okPayment =
-        paymentFilter === "all" ? true : o.paymentStatus === paymentFilter;
-      const okSearch =
-        !q ||
-        o.code.toLowerCase().includes(q) ||
-        o.customerName.toLowerCase().includes(q) ||
-        o.phone.toLowerCase().includes(q);
-      return okStatus && okPayment && okSearch;
-    });
-  }, [orders, paymentFilter, search, statusFilter]);
+    let data = [...orders];
+    if (statusFilter !== "all") {
+      data = data.filter(
+        (o) => o.status?.toLowerCase() === statusFilter.toLowerCase(),
+      );
+    }
+    if (paymentFilter !== "all") {
+      data = data.filter((o) => {
+        const s = o.status?.toLowerCase();
+        const isPaid = s === "paid" || s === "shipping" || s === "completed";
+        const target = paymentFilter === "Đã thanh toán";
+        return isPaid === target;
+      });
+    }
+    if (search) {
+      const s = search.toLowerCase();
+      data = data.filter(
+        (o) =>
+          o.code.toLowerCase().includes(s) ||
+          o.customerName.toLowerCase().includes(s) ||
+          o.phone.toLowerCase().includes(s),
+      );
+    }
+    return data;
+  }, [orders, statusFilter, paymentFilter, search]);
 
   const openDetails = (order: OrderItem) => {
     setSelectedOrder(order);
     setIsDetailsOpen(true);
   };
 
-  const updateStatus = (id: number, status: OrderStatus) => {
-    setOrders(
-      orders.map((o) => (o.id === id ? { ...o, status } : o)),
-    );
-    message.success("Đã cập nhật trạng thái đơn hàng");
+  const updateStatus = async (id: number, status: string) => {
+    try {
+      const res = await (
+        await import("../../../api/order")
+      ).updateOrderStatusAdmin(Number(id), status);
+      if (res?.err === 0) {
+        setOrders(
+          orders.map((o) =>
+            o.id === id ? { ...o, status: status, paymentStatus: status } : o,
+          ),
+        );
+        message.success("Đã cập nhật trạng thái đơn hàng");
+      } else {
+        message.error(res?.mess || "Lỗi cập nhật");
+      }
+    } catch (e) {
+      console.error(e);
+      message.error("Lỗi cập nhật");
+    }
+  };
+
+  const handleVerifyPayment = async (orderId: number) => {
+    try {
+      const res = await (
+        await import("../../../api/payment")
+      ).verifyPayment(orderId);
+      if (res?.err === 0) {
+        if (res.data?.status === "PAID") {
+          message.success("Thanh toán đã được xác nhận thành công!");
+        } else {
+          message.info(`Trạng thái thanh toán hiện tại: ${res.data?.status}`);
+        }
+        fetchOrders();
+      } else {
+        message.error(res?.mess || "Kiểm tra thanh toán thất bại");
+      }
+    } catch (e) {
+      console.error(e);
+      message.error("Có lỗi xảy ra khi kiểm tra thanh toán");
+    }
   };
 
   const deleteOrder = (id: number) => {
@@ -268,8 +356,9 @@ const OrderManagementComponent: React.FC = () => {
     createForm.setFieldsValue({
       code: `BC-OD-${String(Date.now()).slice(-4)}`,
       orderType: "Đơn thường",
-      paymentStatus: "Chưa thanh toán",
-      status: "Chờ xác nhận",
+      paymentStatus: "pending",
+      paymentMethod: "COD",
+      status: "pending",
       createdAt: dayjs(),
     });
     setIsCreateOpen(true);
@@ -286,6 +375,7 @@ const OrderManagementComponent: React.FC = () => {
         address: values.address,
         orderType: values.orderType,
         paymentStatus: values.paymentStatus,
+        paymentMethod: values.paymentMethod,
         status: values.status,
         createdAt: values.createdAt.format("DD/MM/YYYY HH:mm"),
         total: values.total,
@@ -324,14 +414,14 @@ const OrderManagementComponent: React.FC = () => {
       dataIndex: "status",
       key: "status",
       width: 160,
-      render: (s: OrderStatus) => statusBadge(s),
+      render: (s: string) => statusBadge(s),
     },
     {
       title: "Thanh toán",
-      dataIndex: "paymentStatus",
+      dataIndex: "status",
       key: "paymentStatus",
       width: 150,
-      render: (p: PaymentStatus) => paymentTag(p),
+      render: (s: string) => paymentTag(s),
     },
     {
       title: "Loại",
@@ -347,8 +437,15 @@ const OrderManagementComponent: React.FC = () => {
       dataIndex: "total",
       key: "total",
       width: 140,
-      sorter: (a: OrderItem, b: OrderItem) => a.total - b.total,
-      render: (v: number) => <Text strong>{v.toLocaleString()}đ</Text>,
+      sorter: (a: OrderItem, b: OrderItem) => (a.total || 0) - (b.total || 0),
+      render: (v: number) => (
+        <Text strong>
+          {new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          }).format(Number(v || 0))}
+        </Text>
+      ),
     },
     {
       title: "Thời gian",
@@ -367,50 +464,56 @@ const OrderManagementComponent: React.FC = () => {
             <Button icon={<EyeOutlined />} onClick={() => openDetails(r)} />
           </AntdTooltip>
 
-          {r.status === "Chờ xác nhận" && (
+          {r.paymentMethod === "PAYOS" && r.status === "pending" && (
+            <AntdTooltip title="Kiểm tra thanh toán">
+              <Button
+                icon={<ReloadOutlined style={{ color: "#1890ff" }} />}
+                onClick={() => handleVerifyPayment(r.id)}
+              />
+            </AntdTooltip>
+          )}
+
+          {r.status === "pending" && (
             <Button
               type="primary"
               icon={<CheckCircleOutlined />}
-              onClick={() => updateStatus(r.id, "Đang soạn hàng")}
+              onClick={() => updateStatus(r.id, "paid")}
             >
               Duyệt
             </Button>
           )}
 
-          {r.status === "Đang soạn hàng" && (
+          {r.status === "paid" && (
             <Button
               icon={<InboxOutlined />}
-              onClick={() => updateStatus(r.id, "Đang giao")}
+              onClick={() => updateStatus(r.id, "shipping")}
             >
               Bàn giao
             </Button>
           )}
 
-          {r.status === "Đang giao" && (
+          {r.status === "shipping" && (
             <Dropdown
               trigger={["click"]}
               placement="bottomRight"
               menu={{
                 items: [
                   {
-                    key: "success",
+                    key: "completed",
                     label: "Giao thành công",
                     icon: <TruckOutlined />,
+                    onClick: () => updateStatus(r.id, "completed"),
                   },
                   {
-                    key: "failed",
+                    key: "cancelled",
                     label: "Giao thất bại",
                     icon: <CloseCircleOutlined />,
-                    danger: true,
+                    onClick: () => updateStatus(r.id, "cancelled"),
                   },
                 ],
-                onClick: ({ key }) => {
-                  if (key === "success") updateStatus(r.id, "Thành công");
-                  if (key === "failed") updateStatus(r.id, "Thất bại");
-                },
               }}
             >
-              <Button icon={<TruckOutlined />}>Cập nhật</Button>
+              <Button icon={<SyncOutlined />}>Cập nhật vận chuyển</Button>
             </Dropdown>
           )}
 
@@ -505,10 +608,30 @@ const OrderManagementComponent: React.FC = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="packing" fill="#faad14" name="Đang soạn hàng" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="delivering" fill="#1890ff" name="Đang giao" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="success" fill="#52c41a" name="Thành công" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="failed" fill="#f5222d" name="Thất bại" radius={[6, 6, 0, 0]} />
+                  <Bar
+                    dataKey="packing"
+                    fill="#faad14"
+                    name="Đang soạn hàng"
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="delivering"
+                    fill="#1890ff"
+                    name="Đang giao"
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="success"
+                    fill="#52c41a"
+                    name="Thành công"
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="failed"
+                    fill="#f5222d"
+                    name="Thất bại"
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -527,11 +650,11 @@ const OrderManagementComponent: React.FC = () => {
               style={{ width: 170 }}
               options={[
                 { value: "all", label: "Tất cả trạng thái" },
-                { value: "Chờ xác nhận", label: "Chờ xác nhận" },
-                { value: "Đang soạn hàng", label: "Đang soạn hàng" },
-                { value: "Đang giao", label: "Đang giao" },
-                { value: "Thành công", label: "Thành công" },
-                { value: "Thất bại", label: "Thất bại" },
+                { value: "pending", label: "Chờ xác nhận" },
+                { value: "paid", label: "Đang soạn hàng" },
+                { value: "shipping", label: "Đang giao" },
+                { value: "completed", label: "Thành công" },
+                { value: "cancelled", label: "Thất bại" },
               ]}
             />
             <Select
@@ -598,12 +721,23 @@ const OrderManagementComponent: React.FC = () => {
                 {paymentTag(selectedOrder.paymentStatus)}
               </Descriptions.Item>
               <Descriptions.Item label="Loại đơn">
-                <Tag color={selectedOrder.orderType === "Đơn đặt biệt" ? "purple" : "default"}>
+                <Tag
+                  color={
+                    selectedOrder.orderType === "Đơn đặt biệt"
+                      ? "purple"
+                      : "default"
+                  }
+                >
                   {selectedOrder.orderType}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Tổng tiền">
-                <Text strong>{selectedOrder.total.toLocaleString()}đ</Text>
+              <Descriptions.Item label="Tổng tiền" span={2}>
+                <Text type="danger" strong style={{ fontSize: 18 }}>
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(Number(selectedOrder.total || 0))}
+                </Text>
               </Descriptions.Item>
             </Descriptions>
 
@@ -620,7 +754,9 @@ const OrderManagementComponent: React.FC = () => {
               Sản phẩm trong đơn
             </Title>
             {selectedOrder.lines.length === 0 ? (
-              <Text type="secondary">Đơn này được tạo thủ công (chưa có dòng sản phẩm).</Text>
+              <Text type="secondary">
+                Đơn này được tạo thủ công (chưa có dòng sản phẩm).
+              </Text>
             ) : (
               <Table
                 size="small"
@@ -628,21 +764,39 @@ const OrderManagementComponent: React.FC = () => {
                 rowKey={(r) => r.name}
                 dataSource={selectedOrder.lines}
                 columns={[
-                  { title: "Sản phẩm", dataIndex: "name", key: "name", ellipsis: true },
+                  {
+                    title: "Sản phẩm",
+                    dataIndex: "name",
+                    key: "name",
+                    ellipsis: true,
+                  },
                   { title: "SL", dataIndex: "qty", key: "qty", width: 80 },
                   {
                     title: "Đơn giá",
                     dataIndex: "price",
                     key: "price",
                     width: 140,
-                    render: (v: number) => `${v.toLocaleString()}đ`,
+                    render: (v: number) => (
+                      <Text>
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(Number(v || 0))}
+                      </Text>
+                    ),
                   },
                   {
                     title: "Thành tiền",
                     key: "lineTotal",
                     width: 140,
-                    render: (_: unknown, r: OrderItemLine) =>
-                      `${(r.qty * r.price).toLocaleString()}đ`,
+                    render: (_: unknown, r: OrderItemLine) => (
+                      <Text strong>
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(Number((r.qty || 0) * (r.price || 0)))}
+                      </Text>
+                    ),
                   },
                 ]}
               />
@@ -725,7 +879,7 @@ const OrderManagementComponent: React.FC = () => {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={12}>
               <Form.Item name="orderType" label="Loại đơn">
                 <Select
                   options={[
@@ -735,25 +889,38 @@ const OrderManagementComponent: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={8}>
-              <Form.Item name="paymentStatus" label="Thanh toán">
+            <Col span={12}>
+              <Form.Item name="paymentMethod" label="Phương thức thanh toán">
                 <Select
                   options={[
-                    { value: "Chưa thanh toán", label: "Chưa thanh toán" },
-                    { value: "Đã thanh toán", label: "Đã thanh toán" },
+                    { value: "COD", label: "Tiền mặt (COD)" },
+                    { value: "PAYOS", label: "Chuyển khoản (PayOS)" },
                   ]}
                 />
               </Form.Item>
             </Col>
-            <Col span={8}>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="paymentStatus" label="Thanh toán">
+                <Select
+                  options={[
+                    { value: "pending", label: "Chưa thanh toán" },
+                    { value: "paid", label: "Đã thanh toán" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
               <Form.Item name="status" label="Trạng thái">
                 <Select
                   options={[
-                    { value: "Chờ xác nhận", label: "Chờ xác nhận" },
-                    { value: "Đang soạn hàng", label: "Đang soạn hàng" },
-                    { value: "Đang giao", label: "Đang giao" },
-                    { value: "Thành công", label: "Thành công" },
-                    { value: "Thất bại", label: "Thất bại" },
+                    { value: "pending", label: "Chờ xác nhận" },
+                    { value: "paid", label: "Đang soạn hàng" },
+                    { value: "shipping", label: "Đang giao" },
+                    { value: "completed", label: "Thành công" },
+                    { value: "cancelled", label: "Thất bại" },
                   ]}
                 />
               </Form.Item>
@@ -764,8 +931,8 @@ const OrderManagementComponent: React.FC = () => {
             <Input placeholder="Tuỳ chọn" />
           </Form.Item>
           <Text type="secondary">
-            Không có chức năng sửa nội dung đơn (sản phẩm trong đơn). Bạn chỉ duyệt
-            và cập nhật trạng thái/ thanh toán.
+            Không có chức năng sửa nội dung đơn (sản phẩm trong đơn). Bạn chỉ
+            duyệt và cập nhật trạng thái/ thanh toán.
           </Text>
         </Form>
       </Modal>

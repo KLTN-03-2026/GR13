@@ -308,3 +308,29 @@ $transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   .layout { grid-template-columns: 1fr; gap: 40px; }
   .orderSummary { position: static; }
 }
+.qrBox {
+  margin-top: 30px;
+  text-align: center;
+  padding: 25px;
+  border: 1px dashed #ddd;
+  border-radius: 16px;
+  background: #fff;
+
+  h3 {
+    margin-bottom: 15px;
+    color: #C2185B;
+  }
+
+  canvas {
+    margin: 15px 0;
+  }
+
+  p {
+    font-weight: 600;
+    margin-bottom: 15px;
+  }
+
+  button {
+    width: 100%;
+  }
+}

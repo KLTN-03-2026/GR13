@@ -19,6 +19,7 @@ import {
   Upload,
   Statistic,
   Spin,
+  DatePicker,
 } from "antd";
 import {
   EditOutlined,
@@ -33,6 +34,7 @@ import {
   ClockCircleOutlined,
   BarChartOutlined,
 } from "@ant-design/icons";
+import dayjs from "dayjs";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import "./style.scss";
@@ -65,7 +67,12 @@ const BlogManagementComponent: React.FC = () => {
   const [editingBlog, setEditingBlog] = useState<IBlog | null>(null);
   const [search, setSearch] = useState("");
   const [fileList, setFileList] = useState<any[]>([]);
-  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const [period, setPeriod] = useState<"week" | "month" | "year" | "custom">(
+    "week"
+  );
+  const [customDateRange, setCustomDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
   const [form] = Form.useForm();
 
   // Queries & Mutations
@@ -120,7 +127,14 @@ const BlogManagementComponent: React.FC = () => {
       { name: "Tháng 5", published: 48, draft: 14, archived: 9 },
       { name: "Tháng 6", published: 55, draft: 11, archived: 11 },
     ];
-    return { week, month, year };
+    const custom = [
+      { name: "15/04", published: 3, draft: 1, archived: 0 },
+      { name: "16/04", published: 2, draft: 2, archived: 1 },
+      { name: "17/04", published: 4, draft: 0, archived: 1 },
+      { name: "18/04", published: 1, draft: 1, archived: 2 },
+      { name: "19/04", published: 5, draft: 1, archived: 0 },
+    ];
+    return { week, month, year, custom };
   }, []);
 
   const handleAdd = () => {
@@ -342,16 +356,27 @@ const BlogManagementComponent: React.FC = () => {
                 <Space>
                   <BarChartOutlined /> Thống kê bài viết theo thời gian
                 </Space>
-                <Select
-                  value={period}
-                  onChange={(v) => setPeriod(v)}
-                  style={{ width: 140 }}
-                  options={[
-                    { value: "week", label: "Xem Tuần" },
-                    { value: "month", label: "Xem Tháng" },
-                    { value: "year", label: "Xem Năm" },
-                  ]}
-                />
+                <Space>
+                  <Select
+                    value={period}
+                    onChange={(v) => setPeriod(v as any)}
+                    style={{ width: 140 }}
+                    options={[
+                      { value: "week", label: "Xem Tuần" },
+                      { value: "month", label: "Xem Tháng" },
+                      { value: "year", label: "Xem Năm" },
+                      { value: "custom", label: "Tùy chọn" },
+                    ]}
+                  />
+                  {period === "custom" && (
+                    <DatePicker.RangePicker
+                      value={customDateRange}
+                      onChange={(dates) => setCustomDateRange(dates)}
+                      style={{ width: 250 }}
+                      format="DD/MM/YYYY"
+                    />
+                  )}
+                </Space>
               </div>
             }
             bordered={false}
