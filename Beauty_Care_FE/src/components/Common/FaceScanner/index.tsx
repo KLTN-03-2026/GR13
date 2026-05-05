@@ -239,7 +239,7 @@ const FaceScanner = React.forwardRef<any, FaceScannerProps>((props, ref) => {
         // immediately call analyze to enrich with advice and products
         try {
           setAnalyzeLoading(true);
-          const ares = await API.post('/ai/analyze', { aiResult: aiRaw });
+          const ares = await API.post('/ai/analyze', { aiResult: aiRaw, skinImage: aiRaw.skinImage });
           if (ares.data?.err === 1) {
             throw new Error(ares.data.mess || 'Analyze returned err: 1');
           }
@@ -358,7 +358,7 @@ const FaceScanner = React.forwardRef<any, FaceScannerProps>((props, ref) => {
       const aiRaw = res.data;
       try {
         setAnalyzeLoading(true);
-        const ares = await API.post('/ai/analyze', { aiResult: aiRaw });
+        const ares = await API.post('/ai/analyze', { aiResult: aiRaw, skinImage: aiRaw.skinImage });
         if (ares.data?.err === 1) {
           throw new Error(ares.data.mess || 'Analyze returned err: 1');
         }

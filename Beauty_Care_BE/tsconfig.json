@@ -16,8 +16,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
 
-    // 👇 thêm dòng này để tắt warning TS6
-  //  "ignoreDeprecations": "6.0"
   },
   "include": ["**/*.ts", "src/config/config.js"],
   "exclude": ["node_modules"]

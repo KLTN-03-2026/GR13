@@ -27,14 +27,26 @@ export default {
       detected_skin_type: {
         type: Sequelize.STRING,
       },
-      pore_level: {
-        type: Sequelize.STRING,
+      acne_score: {
+        type: Sequelize.INTEGER,
       },
-      absorption_level: {
-        type: Sequelize.STRING,
+      blackheads_score: {
+        type: Sequelize.INTEGER,
       },
-      acne_area: {
-        type: Sequelize.STRING,
+      dark_spots_score: {
+        type: Sequelize.INTEGER,
+      },
+      pores_score: {
+        type: Sequelize.INTEGER,
+      },
+      wrinkles_score: {
+        type: Sequelize.INTEGER,
+      },
+      overall_score: {
+        type: Sequelize.INTEGER,
+      },
+      advice_id: {
+        type: Sequelize.INTEGER,
       },
       analysis_date: {
         type: Sequelize.DATE,

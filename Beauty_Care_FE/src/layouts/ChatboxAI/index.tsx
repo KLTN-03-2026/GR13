@@ -8,14 +8,17 @@ import {
   CloseOutlined,
   ShoppingCartOutlined,
   DollarOutlined,
+  HistoryOutlined,
+  ArrowLeftOutlined,
 } from '@ant-design/icons';
 import './style.scss';
 import Draggable from 'react-draggable';
 import { Link, useNavigate } from 'react-router-dom';
 import FaceScanner from '../../components/Common/FaceScanner';
 import { addToCart } from '../../api/cart';
-import { message } from 'antd';
+import { message, Spin, Empty } from 'antd';
 import { useAuth } from '../../hooks/useAuth';
+import { API } from '../../api/config';
 
 const products = [
   { id: 1, name: 'Serum Phục Hồi', price: '₫650.000', img: 'https://i.pravatar.cc/220?img=56' },
@@ -37,6 +40,10 @@ const ChatboxAI: React.FC = () => {
   const scannerRef = useRef<any>(null);
   const [apiResult, setApiResult] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // sample scores for demo
   const scores = {
@@ -92,6 +99,35 @@ const ChatboxAI: React.FC = () => {
       console.error('Buy now failed', err);
       message.error('Đã xảy ra lỗi. Vui lòng thử lại sau.');
     }
+  };
+
+  const fetchHistory = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const res = await API.get('/ai/history');
+      if (res.data?.err === 0) {
+        setHistoryList(res.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch history failed', err);
+      message.error('Không thể tải lịch sử soi da');
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleSelectHistory = (item: any) => {
+    setApiResult({
+      scores: item.scores,
+      overall: item.overall,
+      advice_detail: item.advice_detail,
+      suggested_products: item.suggested_products || []
+    });
+    setPreviewUrl(item.skin_image);
+    setShowResult(true);
+    setShowRecommend(true);
+    setShowHistory(false);
   };
 
   // center the chatbox when opened
@@ -154,24 +190,71 @@ const ChatboxAI: React.FC = () => {
           </div>
           <div className="header-right">
             <Space>
-              <Button size="small" className="no-drag" onClick={() => {
-                if (showResult || showRecommend) {
+              {user && !showHistory && !showResult && !showRecommend && (
+                <Button 
+                  size="small" 
+                  icon={<HistoryOutlined />} 
+                  className="no-drag"
+                  onClick={() => {
+                    setShowHistory(true);
+                    fetchHistory();
+                  }}
+                >
+                  Lịch sử
+                </Button>
+              )}
+              {showHistory && (
+                <Button 
+                  size="small" 
+                  icon={<ArrowLeftOutlined />} 
+                  className="no-drag"
+                  onClick={() => setShowHistory(false)}
+                >
+                  Quay lại
+                </Button>
+              )}
+              {(showResult || showRecommend) && (
+                <Button size="small" className="no-drag" onClick={() => {
                   setShowResult(false);
                   setShowRecommend(false);
-                } else {
-                  setShowResult(true);
-                  setShowRecommend(true);
-                }
-              }}>
-                {showResult || showRecommend ? 'Soi da lại' : 'Hiện kết quả'}
-              </Button>
+                  setShowHistory(false);
+                }}>
+                  Soi da lại
+                </Button>
+              )}
               <Button type="text" className="no-drag" icon={<CloseOutlined />} onClick={() => setOpen(false)} />
             </Space>
           </div>
         </div>
 
         <div className="chatbox-body">
-          {!showResult && !showRecommend && (
+          {showHistory && (
+            <div className="phase phase-history scrollable-body">
+              <div className="history-header">Lịch sử soi da của bạn</div>
+              {loadingHistory ? (
+                <div className="loading-wrap"><Spin tip="Đang tải..." /></div>
+              ) : historyList.length > 0 ? (
+                <div className="history-list">
+                  {historyList.map((item) => (
+                    <div key={item.id} className="history-item" onClick={() => handleSelectHistory(item)}>
+                      <div className="history-img">
+                        <img src={item.skin_image || 'https://via.placeholder.com/60'} alt="skin" />
+                      </div>
+                      <div className="history-info">
+                        <div className="history-date">{new Date(item.analysis_date).toLocaleString('vi-VN')}</div>
+                        <div className="history-type">Loại da: {item.detected_skin_type}</div>
+                        <div className="history-score">Tổng điểm: {item.overall}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Empty description="Bạn chưa có lịch sử soi da nào" style={{ marginTop: 40 }} />
+              )}
+            </div>
+          )}
+
+          {!showHistory && !showResult && !showRecommend && (
             <div className="phase phase-1">
               <Card className="action-card" variant="shadow">
                 <CameraOutlined className="action-icon" />
@@ -227,6 +310,22 @@ const ChatboxAI: React.FC = () => {
                       <div className="total">Tổng điểm: <span className="score">{totalScore}</span></div>
                       <Tag color="#f50" className="skin-type">Loại da: {skinTypeLabel}</Tag>
                     </div>
+
+                    {apiResult?.advice_detail && (
+                      <div className="routine-section">
+                        <div className="routine-title">Quy trình gợi ý</div>
+                        <div className="routine-grid">
+                          <div className="routine-card morning">
+                            <div className="r-label">BUỔI SÁNG</div>
+                            <div className="r-content">{apiResult.advice_detail.morning_routine}</div>
+                          </div>
+                          <div className="routine-card evening">
+                            <div className="r-label">BUỔI TỐI</div>
+                            <div className="r-content">{apiResult.advice_detail.evening_routine}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

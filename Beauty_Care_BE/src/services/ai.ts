@@ -31,10 +31,13 @@ export async function forwardToAiApi(fileBuffer: Buffer, filename: string, mimeT
   return res.json();
 }
 
-export async function processAiResult(aiResult: any, userId?: number | null) {
-  // try to extract advice id and skin scores from common keys
-  const adviceId = aiResult?.advice_id ?? aiResult?.adviceId ?? aiResult?.advice ?? aiResult?.advice_group;
-  const skinScores = aiResult?.skin_scores ?? aiResult?.scores ?? aiResult?.metrics ?? aiResult?.result ?? aiResult;
+export async function processAiResult(aiResult: any, userId?: number | null, skinImage?: string | null) {
+  // try to extract advice id and skin scores from common keys, checking nested 'data' if present
+  const inner = aiResult?.data ?? aiResult;
+
+  const adviceId = inner?.advice_id ?? inner?.adviceId ?? inner?.advice ?? inner?.advice_group ?? aiResult?.advice_id;
+  const skinScores = inner?.skin_scores ?? inner?.scores ?? inner?.metrics ?? inner?.result ?? inner;
+  const overallScore = inner?.overallScore ?? inner?.overall ?? skinScores?.overall ?? aiResult?.overall ?? 0;
 
   if (!adviceId) {
     throw new Error("Không tìm thấy advice_id trong kết quả AI");
@@ -44,42 +47,43 @@ export async function processAiResult(aiResult: any, userId?: number | null) {
   const finalAdviceId = Number(adviceId);
   const advice = await db.ProductRecommendation?.findByPk(finalAdviceId);
 
-  // Fetch products that match advice_group. Use raw query to be tolerant to model differences.
+  // Fetch products that match advice_id.
   let products: any[] = [];
   try {
     const replacements = { adviceId: finalAdviceId };
-    const sql = 'SELECT * FROM "Products" WHERE advice_id = :adviceId AND (status IS NULL OR status = \'' + "active" + "')";
-    // Some DBs might not have advice_group column; try safely
-      const q = `SELECT * FROM "Products" WHERE advice_id = :adviceId AND (status = 'active')`;
-      products = await db.sequelize.query(q, { replacements, type: db.Sequelize.QueryTypes.SELECT });
-    } catch (err) {
-      // fallback: try using Product model findAll with where literal
-      try {
-        products = await db.Product.findAll({ where: db.Sequelize.literal(`advice_id = ${Number(adviceId)}`) });
+    const q = `SELECT * FROM "Products" WHERE advice_id = :adviceId AND (status = 'active' OR status IS NULL)`;
+    products = await db.sequelize.query(q, { replacements, type: db.Sequelize.QueryTypes.SELECT });
+  } catch (err) {
+    try {
+      products = await db.Product.findAll({ where: { advice_id: finalAdviceId } });
     } catch (e) {
       products = [];
     }
   }
 
-  // Build history payload
-  const payload = {
-    userId: userId ?? null,
-    adviceId: finalAdviceId,
-    skinScores,
-    adviceTitle: advice?.title ?? null,
-    adviceDescription: advice?.description ?? null,
-    morningRoutine: advice?.morning_routine ?? null,
-    eveningRoutine: advice?.evening_routine ?? null,
-    products,
-  };
-
-  // Save history
+  // Save history if userId is provided
   let history: any = null;
-  try {
-    history = await db.SkinHistory.create(payload as any);
-  } catch (err) {
-    // If create fails, still return combined data
-    history = null;
+  if (userId) {
+    const historyPayload = {
+      user_id: userId,
+      skin_image: skinImage || "",
+      detected_skin_type: advice?.title || "Unknown",
+      acne_score: skinScores?.acne || 0,
+      blackheads_score: skinScores?.blackheads || 0,
+      dark_spots_score: skinScores?.dark_spots || 0,
+      pores_score: skinScores?.pores || 0,
+      wrinkles_score: skinScores?.wrinkles || 0,
+      overall_score: overallScore,
+      advice_id: finalAdviceId,
+      analysis_date: new Date(),
+    };
+
+    try {
+      history = await db.SkinAnalysisHistory.create(historyPayload);
+    } catch (err) {
+      console.error("Save history failed:", err);
+      history = null;
+    }
   }
 
   // Return combined JSON suitable for frontend
@@ -87,15 +91,18 @@ export async function processAiResult(aiResult: any, userId?: number | null) {
     err: 0,
     data: {
       history: history ? { id: history.id, createdAt: history.createdAt } : null,
-      advice: {
-        id: finalAdviceId,
-        title: advice?.title ?? null,
-        description: advice?.description ?? null,
-        morning_routine: advice?.morning_routine ?? null,
-        evening_routine: advice?.evening_routine ?? null,
-      },
-      products,
-      skinScores,
+      advice_detail: advice
+        ? {
+            id: advice.id,
+            title: advice.title,
+            description: advice.description,
+            morning_routine: advice.morning_routine,
+            evening_routine: advice.evening_routine,
+          }
+        : null,
+      suggested_products: products,
+      scores: skinScores,
+      overall: overallScore,
     },
   };
 }

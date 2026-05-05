@@ -47,3 +47,7 @@ build/
 *.njsproj
 *.sln
 *.sw?
+
+# Chặn các ảnh soi da tạm thời
+src/public/images/skin-*.jpg
+src/public/images/skin-*.png
