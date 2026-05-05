@@ -33,13 +33,13 @@ export async function analyze(req: Request, res: Response) {
     const finalId = parseInt(adviceId);
     if (isNaN(finalId)) throw new Error('ID vẫn là NaN');
 
-    // Flexible model lookup to avoid undefined errors
-    const AdviceModel = (db as any).Advice_Storage || (db as any).AdviceStorage || (db as any).Advice || (db as any)['Advice_Storage'] || (db as any)['AdviceStorage'] || (db as any)['Advice'];
-    const ProductModel = (db as any).Products || (db as any).Product || (db as any)['Products'] || (db as any)['Product'];
+    // Use ProductRecommendation as the primary model for advice
+    const AdviceModel = db.ProductRecommendation;
+    const ProductModel = db.Product;
 
     if (!AdviceModel || !ProductModel) {
       console.error('Required models not found', { hasAdvice: !!AdviceModel, hasProduct: !!ProductModel });
-      return res.json({ err: 1, mess: 'Required models not found in DB layer', availableModels: Object.keys(db) });
+      return res.json({ err: 1, mess: 'Các model cần thiết (ProductRecommendation/Product) không tìm thấy trong DB' });
     }
 
     // Query safely (in parallel) after confirming models exist
@@ -48,7 +48,7 @@ export async function analyze(req: Request, res: Response) {
     try {
       [adviceDetail, products] = await Promise.all([
         AdviceModel.findByPk(Number(finalId)),
-        ProductModel.findAll({ where: { advice_group: Number(finalId) } }),
+        ProductModel.findAll({ where: { advice_id: Number(finalId) } }),
       ]);
       // intentionally no debug logs in production
     } catch (e) {

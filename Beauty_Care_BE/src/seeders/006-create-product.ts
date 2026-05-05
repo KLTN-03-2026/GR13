@@ -31,6 +31,7 @@ module.exports = {
         categoryId: 2,
         brand: "Bioderma",
         status: "active",
+        advice_id: 1,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -47,6 +48,7 @@ module.exports = {
         categoryId: 1,
         brand: "Cerave",
         status: "active",
+        advice_id: 2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -63,6 +65,7 @@ module.exports = {
         categoryId: 4,
         brand: "La Roche-Posay",
         status: "active",
+        advice_id: 3,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -79,6 +82,7 @@ module.exports = {
         categoryId: 6,
         brand: "Anessa",
         status: "active",
+        advice_id: 4,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -95,6 +99,7 @@ module.exports = {
         categoryId: 8,
         brand: "Paula's Choice",
         status: "active",
+        advice_id: 5,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -111,6 +116,7 @@ module.exports = {
         categoryId: 1,
         brand: "Senka",
         status: "active",
+        advice_id: 6,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -127,6 +133,7 @@ module.exports = {
         categoryId: 6,
         brand: "Vichy",
         status: "active",
+        advice_id: 7,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -143,6 +150,7 @@ module.exports = {
         categoryId: 3,
         brand: "Hada Labo",
         status: "active",
+        advice_id: 8,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -159,6 +167,7 @@ module.exports = {
         categoryId: 2,
         brand: "Eucerin",
         status: "active",
+        advice_id: 9,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -175,6 +184,7 @@ module.exports = {
         categoryId: 4,
         brand: "COSRX",
         status: "active",
+        advice_id: 10,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -191,6 +201,7 @@ module.exports = {
         categoryId: 1,
         brand: "Cetaphil",
         status: "active",
+        advice_id: 1,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -207,6 +218,7 @@ module.exports = {
         categoryId: 5,
         brand: "Laneige",
         status: "active",
+        advice_id: 2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -223,6 +235,7 @@ module.exports = {
         categoryId: 2,
         brand: "Simple",
         status: "active",
+        advice_id: 3,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -239,6 +252,7 @@ module.exports = {
         categoryId: 7,
         brand: "Innisfree",
         status: "active",
+        advice_id: 4,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -255,6 +269,7 @@ module.exports = {
         categoryId: 5,
         brand: "L'Oreal",
         status: "active",
+        advice_id: 5,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -271,6 +286,7 @@ module.exports = {
         categoryId: 2,
         brand: "Garnier",
         status: "active",
+        advice_id: 6,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -287,6 +303,7 @@ module.exports = {
         categoryId: 4,
         brand: "Klairs",
         status: "active",
+        advice_id: 7,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -303,6 +320,7 @@ module.exports = {
         categoryId: 3,
         brand: "Some By Mi",
         status: "active",
+        advice_id: 8,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -319,6 +337,7 @@ module.exports = {
         categoryId: 6,
         brand: "Naruko",
         status: "active",
+        advice_id: 9,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -335,6 +354,7 @@ module.exports = {
         categoryId: 8,
         brand: "Kiehl's",
         status: "active",
+        advice_id: 10,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -351,6 +371,7 @@ module.exports = {
         categoryId: 6,
         brand: "Anessa",
         status: "active",
+        advice_id: 1,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -367,6 +388,7 @@ module.exports = {
         categoryId: 8,
         brand: "Paula's Choice",
         status: "active",
+        advice_id: 2,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -383,6 +405,7 @@ module.exports = {
         categoryId: 7,
         brand: "Bioderma",
         status: "active",
+        advice_id: 3,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -399,6 +422,7 @@ module.exports = {
         categoryId: 5,
         brand: "La Roche-Posay",
         status: "active",
+        advice_id: 4,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -415,6 +439,7 @@ module.exports = {
         categoryId: 2,
         brand: "L'Oreal",
         status: "active",
+        advice_id: 5,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -431,6 +456,7 @@ module.exports = {
         categoryId: 1,
         brand: "Vichy",
         status: "active",
+        advice_id: 6,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -447,6 +473,7 @@ module.exports = {
         categoryId: 3,
         brand: "Cerave",
         status: "active",
+        advice_id: 7,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -463,6 +490,7 @@ module.exports = {
         categoryId: 7,
         brand: "Innisfree",
         status: "active",
+        advice_id: 8,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -479,6 +507,7 @@ module.exports = {
         categoryId: 4,
         brand: "Eucerin",
         status: "active",
+        advice_id: 9,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -495,6 +524,7 @@ module.exports = {
         categoryId: 3,
         brand: "Hada Labo",
         status: "active",
+        advice_id: 10,
         createdAt: new Date(),
         updatedAt: new Date()
       }

@@ -11,7 +11,11 @@ import {
 } from '@ant-design/icons';
 import './style.scss';
 import Draggable from 'react-draggable';
+import { Link, useNavigate } from 'react-router-dom';
 import FaceScanner from '../../components/Common/FaceScanner';
+import { addToCart } from '../../api/cart';
+import { message } from 'antd';
+import { useAuth } from '../../hooks/useAuth';
 
 const products = [
   { id: 1, name: 'Serum Phục Hồi', price: '₫650.000', img: 'https://i.pravatar.cc/220?img=56' },
@@ -21,6 +25,8 @@ const products = [
 ];
 
 const ChatboxAI: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [showRecommend, setShowRecommend] = useState(false);
@@ -54,11 +60,39 @@ const ChatboxAI: React.FC = () => {
   const displayProducts = apiResult?.suggested_products?.length > 0 ? apiResult.suggested_products.map((p: any) => ({
     id: p.id,
     name: p.name,
-    price: `₫${(p.price || 0).toLocaleString()}`,
-    img: p.image_url || 'https://i.pravatar.cc/220?img=56',
+    price: `${(p.price || 0).toLocaleString()}đ`,
+    img: p.image || p.image_url || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=200',
   })) : products;
 
   const currentPreview = previewUrl || "https://i.pravatar.cc/420?img=66";
+
+  const handleAddToCart = async (productId: number) => {
+    if (!user) {
+      message.error('Bạn phải đăng nhập để thêm sản phẩm vào giỏ hàng');
+      return;
+    }
+    try {
+      await addToCart(productId, 1);
+      message.success('Đã thêm sản phẩm vào giỏ hàng!');
+    } catch (err: any) {
+      console.error('Add to cart failed', err);
+      message.error('Không thể thêm vào giỏ hàng. Vui lòng thử lại sau.');
+    }
+  };
+
+  const handleBuyNow = async (productId: number) => {
+    if (!user) {
+      message.error('Bạn phải đăng nhập để mua hàng');
+      return;
+    }
+    try {
+      await addToCart(productId, 1);
+      navigate('/cart');
+    } catch (err: any) {
+      console.error('Buy now failed', err);
+      message.error('Đã xảy ra lỗi. Vui lòng thử lại sau.');
+    }
+  };
 
   // center the chatbox when opened
   useEffect(() => {
@@ -88,6 +122,7 @@ const ChatboxAI: React.FC = () => {
           setApiResult(data);
           setPreviewUrl(url);
           setShowResult(true);
+          setShowRecommend(true);
         }}
       />
       {/* Floating toggle button */}
@@ -119,11 +154,16 @@ const ChatboxAI: React.FC = () => {
           </div>
           <div className="header-right">
             <Space>
-              <Button size="small" className="no-drag" onClick={() => setShowResult((s) => !s)}>
-                Demo Result
-              </Button>
-              <Button size="small" className="no-drag" onClick={() => setShowRecommend((s) => !s)}>
-                Recommendations
+              <Button size="small" className="no-drag" onClick={() => {
+                if (showResult || showRecommend) {
+                  setShowResult(false);
+                  setShowRecommend(false);
+                } else {
+                  setShowResult(true);
+                  setShowRecommend(true);
+                }
+              }}>
+                {showResult || showRecommend ? 'Soi da lại' : 'Hiện kết quả'}
               </Button>
               <Button type="text" className="no-drag" icon={<CloseOutlined />} onClick={() => setOpen(false)} />
             </Space>
@@ -149,62 +189,80 @@ const ChatboxAI: React.FC = () => {
             </div>
           )}
 
-          {showResult && (
-            <div className="phase phase-2">
-              <div className="left">
-                <div className="photo-wrap">
-                  <img src={currentPreview} alt="skin" />
-                  <div className="scanning-line" />
-                </div>
-              </div>
-              <div className="right">
-                <div className="score-list">
-                  <div className="score-row">
-                    <div className="label">Mụn viêm</div>
-                    <Progress percent={currentScores.mụnViêm} strokeColor="#ff7a45" />
-                  </div>
-                  <div className="score-row">
-                    <div className="label">Mụn đầu đen</div>
-                    <Progress percent={currentScores.mụnĐầuĐen} strokeColor="#faad14" />
-                  </div>
-                  <div className="score-row">
-                    <div className="label">Thâm nám</div>
-                    <Progress percent={currentScores.thâmNám} strokeColor="#9254de" />
-                  </div>
-                  <div className="score-row">
-                    <div className="label">Lỗ chân lông</div>
-                    <Progress percent={currentScores.lỗChânLông} strokeColor="#1890ff" />
-                  </div>
-                  <div className="score-row">
-                    <div className="label">Nếp nhăn</div>
-                    <Progress percent={currentScores.nếpNhăn} strokeColor="#52c41a" />
-                  </div>
-                </div>
-
-                <div className="summary">
-                  <div className="total">Tổng điểm: <span className="score">{totalScore}</span></div>
-                  <Tag color="#f50" className="skin-type">Loại da: {skinTypeLabel}</Tag>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showRecommend && (
-            <div className="phase phase-3">
-              <div className="recommend-title">Sản phẩm đề xuất</div>
-              <div className="product-scroller">
-                {displayProducts.map((p) => (
-                  <Card key={p.id} className="product-card" variant="shadow">
-                    <img src={p.img} alt={p.name} />
-                    <div className="prod-name">{p.name}</div>
-                    <div className="prod-price"><DollarOutlined /> {p.price}</div>
-                    <div className="prod-actions">
-                      <Button size="small" icon={<ShoppingCartOutlined />}>Giỏ hàng</Button>
-                      <Button size="small" type="primary">Mua ngay</Button>
+          {(showResult || showRecommend) && (
+            <div className="results-container scrollable-body">
+              {showResult && (
+                <div className="phase phase-2">
+                  <div className="left">
+                    <div className="photo-wrap">
+                      <img src={currentPreview} alt="skin" />
+                      <div className="scanning-line" />
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                  <div className="right">
+                    <div className="score-list">
+                      <div className="score-row">
+                        <div className="label">Mụn viêm</div>
+                        <Progress percent={currentScores.mụnViêm} strokeColor="#ff7a45" />
+                      </div>
+                      <div className="score-row">
+                        <div className="label">Mụn đầu đen</div>
+                        <Progress percent={currentScores.mụnĐầuĐen} strokeColor="#faad14" />
+                      </div>
+                      <div className="score-row">
+                        <div className="label">Thâm nám</div>
+                        <Progress percent={currentScores.thâmNám} strokeColor="#9254de" />
+                      </div>
+                      <div className="score-row">
+                        <div className="label">Lỗ chân lông</div>
+                        <Progress percent={currentScores.lỗChânLông} strokeColor="#1890ff" />
+                      </div>
+                      <div className="score-row">
+                        <div className="label">Nếp nhăn</div>
+                        <Progress percent={currentScores.nếpNhăn} strokeColor="#52c41a" />
+                      </div>
+                    </div>
+
+                    <div className="summary">
+                      <div className="total">Tổng điểm: <span className="score">{totalScore}</span></div>
+                      <Tag color="#f50" className="skin-type">Loại da: {skinTypeLabel}</Tag>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showRecommend && (
+                <div className="phase phase-3">
+                  <div className="recommend-title">Sản phẩm đề xuất cho bạn</div>
+                  <div className="product-grid">
+                    {displayProducts.map((p) => (
+                      <Card key={p.id} className="product-card no-drag" variant="shadow">
+                        <Link to={`/products/${p.id}`} className="product-link">
+                          <img src={p.img} alt={p.name} />
+                          <div className="prod-name">{p.name}</div>
+                          <div className="prod-price"><DollarOutlined /> {p.price}</div>
+                        </Link>
+                        <div className="prod-actions">
+                          <Button 
+                            size="small" 
+                            icon={<ShoppingCartOutlined />} 
+                            onClick={(e) => { e.preventDefault(); handleAddToCart(p.id); }}
+                          >
+                            Giỏ hàng
+                          </Button>
+                          <Button 
+                            size="small" 
+                            type="primary" 
+                            onClick={(e) => { e.preventDefault(); handleBuyNow(p.id); }}
+                          >
+                            Mua ngay
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

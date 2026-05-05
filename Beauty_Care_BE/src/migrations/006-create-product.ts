@@ -1,6 +1,6 @@
 "use strict";
 
-import { QueryInterface } from "sequelize";
+import { QueryInterface, DataTypes } from "sequelize";
 
 export default {
   async up(queryInterface: QueryInterface, Sequelize: any) {
@@ -55,6 +55,11 @@ export default {
       },
       brand: {
         type: Sequelize.STRING,
+        allowNull: true,
+      },
+      // Đã cập nhật thành advice_id
+      advice_id: {
+        type: Sequelize.INTEGER,
         allowNull: true,
       },
       status: {

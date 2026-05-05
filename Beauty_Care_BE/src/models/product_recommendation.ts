@@ -9,10 +9,11 @@ import {
 
 class ProductRecommendation extends Model<InferAttributes<ProductRecommendation>, InferCreationAttributes<ProductRecommendation>> {
   declare id: CreationOptional<number>;
-  declare skin_analysis_id: number;
-  declare product_id: number;
-  declare morning_routine: boolean;
-  declare evening_routine: boolean;
+  declare title: string;
+  declare description: string;
+  declare morning_routine: string | null;
+  declare evening_routine: string | null;
+  declare skin_analysis_id: number | null;
 
   public static initModel(sequelize: Sequelize) {
     ProductRecommendation.init(
@@ -22,28 +23,33 @@ class ProductRecommendation extends Model<InferAttributes<ProductRecommendation>
           autoIncrement: true,
           primaryKey: true,
         },
-        skin_analysis_id: {
-          type: DataTypes.INTEGER,
+        title: {
+          type: DataTypes.STRING,
           allowNull: false,
         },
-        product_id: {
-          type: DataTypes.INTEGER,
+        description: {
+          type: DataTypes.TEXT,
           allowNull: false,
         },
         morning_routine: {
-          type: DataTypes.BOOLEAN,
-          defaultValue: false,
+          type: DataTypes.TEXT,
+          allowNull: true,
         },
         evening_routine: {
-          type: DataTypes.BOOLEAN,
-          defaultValue: false,
+          type: DataTypes.TEXT,
+          allowNull: true,
+        },
+        skin_analysis_id: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
         },
       },
       {
         sequelize,
         modelName: "ProductRecommendation",
         tableName: "ProductRecommendations",
-      },
+        timestamps: true,
+      }
     );
     return ProductRecommendation;
   }
@@ -51,13 +57,15 @@ class ProductRecommendation extends Model<InferAttributes<ProductRecommendation>
   static associate(models: any) {
     ProductRecommendation.belongsTo(models.SkinAnalysisHistory, {
       foreignKey: "skin_analysis_id",
-      as: "skinAnalysis",
+      as: "skinAnalysisHistory",
     });
-    ProductRecommendation.belongsTo(models.Product, {
-      foreignKey: "product_id",
-      as: "productData",
+
+    ProductRecommendation.hasMany(models.Product, {
+      foreignKey: "advice_id",
+      as: "products",
     });
   }
 }
 
 export default ProductRecommendation;
+

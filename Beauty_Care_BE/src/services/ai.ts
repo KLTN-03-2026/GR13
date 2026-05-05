@@ -41,20 +41,21 @@ export async function processAiResult(aiResult: any, userId?: number | null) {
   }
 
   // Fetch advice details
-  const advice = await db.AdviceStorage?.findByPk(adviceId);
+  const finalAdviceId = Number(adviceId);
+  const advice = await db.ProductRecommendation?.findByPk(finalAdviceId);
 
   // Fetch products that match advice_group. Use raw query to be tolerant to model differences.
   let products: any[] = [];
   try {
-    const replacements = { adviceId };
-    const sql = 'SELECT * FROM "Products" WHERE advice_group = :adviceId AND (status IS NULL OR status = \'' + "active" + "')";
+    const replacements = { adviceId: finalAdviceId };
+    const sql = 'SELECT * FROM "Products" WHERE advice_id = :adviceId AND (status IS NULL OR status = \'' + "active" + "')";
     // Some DBs might not have advice_group column; try safely
-    const q = `SELECT * FROM "Products" WHERE advice_group = :adviceId AND (status = 'active')`;
-    products = await db.sequelize.query(q, { replacements, type: db.Sequelize.QueryTypes.SELECT });
-  } catch (err) {
-    // fallback: try using Product model findAll with where literal
-    try {
-      products = await db.Product.findAll({ where: db.Sequelize.literal(`advice_group = ${Number(adviceId)}`) });
+      const q = `SELECT * FROM "Products" WHERE advice_id = :adviceId AND (status = 'active')`;
+      products = await db.sequelize.query(q, { replacements, type: db.Sequelize.QueryTypes.SELECT });
+    } catch (err) {
+      // fallback: try using Product model findAll with where literal
+      try {
+        products = await db.Product.findAll({ where: db.Sequelize.literal(`advice_id = ${Number(adviceId)}`) });
     } catch (e) {
       products = [];
     }
@@ -63,7 +64,7 @@ export async function processAiResult(aiResult: any, userId?: number | null) {
   // Build history payload
   const payload = {
     userId: userId ?? null,
-    adviceId: Number(adviceId),
+    adviceId: finalAdviceId,
     skinScores,
     adviceTitle: advice?.title ?? null,
     adviceDescription: advice?.description ?? null,
@@ -87,7 +88,7 @@ export async function processAiResult(aiResult: any, userId?: number | null) {
     data: {
       history: history ? { id: history.id, createdAt: history.createdAt } : null,
       advice: {
-        id: Number(adviceId),
+        id: finalAdviceId,
         title: advice?.title ?? null,
         description: advice?.description ?? null,
         morning_routine: advice?.morning_routine ?? null,

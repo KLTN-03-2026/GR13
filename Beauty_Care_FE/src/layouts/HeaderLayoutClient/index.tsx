@@ -7,6 +7,7 @@ import { Badge } from "antd";
 import { ShoppingCartOutlined, HeartOutlined } from "@ant-design/icons";
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/images/logo.png';
+import ChatboxAI from "../ChatboxAI";
 interface UserInfo {
   name: string;
   avatar?: string;
@@ -142,7 +143,7 @@ const HeaderLayoutClient = () => {
         <Outlet />
       </div>
       {location.pathname !== '/consultation-chat' && <FooterLayoutClient />}
-
+      <ChatboxAI />
     </>
   );
 };
