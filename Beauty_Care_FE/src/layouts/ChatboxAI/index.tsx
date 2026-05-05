@@ -190,7 +190,7 @@ const ChatboxAI: React.FC = () => {
           </div>
           <div className="header-right">
             <Space>
-              {user && !showHistory && !showResult && !showRecommend && (
+              {user && !showHistory && (
                 <Button 
                   size="small" 
                   icon={<HistoryOutlined />} 
@@ -213,11 +213,10 @@ const ChatboxAI: React.FC = () => {
                   Quay lại
                 </Button>
               )}
-              {(showResult || showRecommend) && (
+              {(showResult || showRecommend) && !showHistory && (
                 <Button size="small" className="no-drag" onClick={() => {
                   setShowResult(false);
                   setShowRecommend(false);
-                  setShowHistory(false);
                 }}>
                   Soi da lại
                 </Button>
@@ -272,97 +271,103 @@ const ChatboxAI: React.FC = () => {
             </div>
           )}
 
-          {(showResult || showRecommend) && (
-            <div className="results-container scrollable-body">
-              {showResult && (
-                <div className="phase phase-2">
-                  <div className="left">
-                    <div className="photo-wrap">
-                      <img src={currentPreview} alt="skin" />
-                      <div className="scanning-line" />
-                    </div>
-                  </div>
-                  <div className="right">
-                    <div className="score-list">
-                      <div className="score-row">
-                        <div className="label">Mụn viêm</div>
-                        <Progress percent={currentScores.mụnViêm} strokeColor="#ff7a45" />
-                      </div>
-                      <div className="score-row">
-                        <div className="label">Mụn đầu đen</div>
-                        <Progress percent={currentScores.mụnĐầuĐen} strokeColor="#faad14" />
-                      </div>
-                      <div className="score-row">
-                        <div className="label">Thâm nám</div>
-                        <Progress percent={currentScores.thâmNám} strokeColor="#9254de" />
-                      </div>
-                      <div className="score-row">
-                        <div className="label">Lỗ chân lông</div>
-                        <Progress percent={currentScores.lỗChânLông} strokeColor="#1890ff" />
-                      </div>
-                      <div className="score-row">
-                        <div className="label">Nếp nhăn</div>
-                        <Progress percent={currentScores.nếpNhăn} strokeColor="#52c41a" />
-                      </div>
-                    </div>
-
-                    <div className="summary">
-                      <div className="total">Tổng điểm: <span className="score">{totalScore}</span></div>
-                      <Tag color="#f50" className="skin-type">Loại da: {skinTypeLabel}</Tag>
-                    </div>
-
-                    {apiResult?.advice_detail && (
-                      <div className="routine-section">
-                        <div className="routine-title">Quy trình gợi ý</div>
-                        <div className="routine-grid">
-                          <div className="routine-card morning">
-                            <div className="r-label">BUỔI SÁNG</div>
-                            <div className="r-content">{apiResult.advice_detail.morning_routine}</div>
-                          </div>
-                          <div className="routine-card evening">
-                            <div className="r-label">BUỔI TỐI</div>
-                            <div className="r-content">{apiResult.advice_detail.evening_routine}</div>
-                          </div>
+          {(showResult || showRecommend) && !showHistory && (
+              <div className="analysis-dashboard">
+                <div className="main-content">
+                  {showResult && (
+                    <div className="analysis-top-row">
+                      <div className="photo-panel">
+                        <div className="photo-wrap">
+                          <img src={currentPreview} alt="skin" onError={(e) => { (e.target as any).src = "https://via.placeholder.com/400x500?text=Skin+Analysis"; }} />
+                          <div className="scanning-line" />
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {showRecommend && (
-                <div className="phase phase-3">
-                  <div className="recommend-title">Sản phẩm đề xuất cho bạn</div>
-                  <div className="product-grid">
-                    {displayProducts.map((p) => (
-                      <Card key={p.id} className="product-card no-drag" variant="shadow">
-                        <Link to={`/products/${p.id}`} className="product-link">
-                          <img src={p.img} alt={p.name} />
-                          <div className="prod-name">{p.name}</div>
-                          <div className="prod-price"><DollarOutlined /> {p.price}</div>
-                        </Link>
-                        <div className="prod-actions">
-                          <Button 
-                            size="small" 
-                            icon={<ShoppingCartOutlined />} 
-                            onClick={(e) => { e.preventDefault(); handleAddToCart(p.id); }}
-                          >
-                            Giỏ hàng
-                          </Button>
-                          <Button 
-                            size="small" 
-                            type="primary" 
-                            onClick={(e) => { e.preventDefault(); handleBuyNow(p.id); }}
-                          >
-                            Mua ngay
-                          </Button>
+                      <div className="metrics-panel">
+                        <div className="score-list">
+                          <div className="score-row">
+                            <div className="label">Mụn viêm</div>
+                            <Progress percent={currentScores.mụnViêm} strokeColor="#ff7a45" size="small" format={(p) => `${p}/100`} />
+                          </div>
+                          <div className="score-row">
+                            <div className="label">Mụn đầu đen</div>
+                            <Progress percent={currentScores.mụnĐầuĐen} strokeColor="#faad14" size="small" format={(p) => `${p}/100`} />
+                          </div>
+                          <div className="score-row">
+                            <div className="label">Thâm nám</div>
+                            <Progress percent={currentScores.thâmNám} strokeColor="#9254de" size="small" format={(p) => `${p}/100`} />
+                          </div>
+                          <div className="score-row">
+                            <div className="label">Lỗ chân lông</div>
+                            <Progress percent={currentScores.lỗChânLông} strokeColor="#1890ff" size="small" format={(p) => `${p}/100`} />
+                          </div>
+                          <div className="score-row">
+                            <div className="label">Nếp nhăn</div>
+                            <Progress percent={currentScores.nếpNhăn} strokeColor="#52c41a" size="small" format={(p) => `${p}/100`} />
+                          </div>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
+
+                        <div className="compact-summary">
+                          <div className="score-info">
+                            <span className="label">Tổng điểm:</span>
+                            <span className="value">{totalScore}/100</span>
+                          </div>
+                          <Tag color="#f50" className="skin-tag">{skinTypeLabel}</Tag>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {showResult && apiResult?.advice_detail && (
+                    <div className="routine-panel">
+                      <div className="panel-title">Quy trình gợi ý</div>
+                      <div className="routine-flex">
+                        <div className="routine-card morning">
+                          <div className="r-label"><span className="r-icon">☀️</span> BUỔI SÁNG</div>
+                          <div className="r-content">{apiResult.advice_detail.morning_routine}</div>
+                        </div>
+                        <div className="routine-card evening">
+                          <div className="r-label"><span className="r-icon">🌙</span> BUỔI TỐI</div>
+                          <div className="r-content">{apiResult.advice_detail.evening_routine}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {showRecommend && (
+                  <div className="side-recommend">
+                    <div className="panel-title">Sản phẩm đề xuất</div>
+                    <div className="product-vertical-list">
+                      {displayProducts.map((p) => (
+                        <Card key={p.id} className="product-item-card no-drag" variant="shadow">
+                          <Link to={`/products/${p.id}`} className="p-link">
+                            <img src={p.img} alt={p.name} onError={(e) => { (e.target as any).src = "https://via.placeholder.com/100"; }} />
+                            <div className="p-info">
+                              <div className="p-name">{p.name}</div>
+                              <div className="p-price">{p.price}</div>
+                            </div>
+                          </Link>
+                          <div className="p-actions">
+                            <Button 
+                              size="small" 
+                              type="text"
+                              icon={<ShoppingCartOutlined />} 
+                              onClick={(e) => { e.preventDefault(); handleAddToCart(p.id); }}
+                            />
+                            <Button 
+                              size="small" 
+                              type="primary" 
+                              onClick={(e) => { e.preventDefault(); handleBuyNow(p.id); }}
+                            >
+                              Mua
+                            </Button>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
           )}
         </div>
         </div>
