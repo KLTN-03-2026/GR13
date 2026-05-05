@@ -14,7 +14,7 @@ export async function forwardToAiApi(fileBuffer: Buffer, filename: string, mimeT
 
   const body = Buffer.concat([headerBuf, fileBuffer, footerBuf]);
 
-  const res = await fetch("http://127.0.0.1:5000/api/ai/upload", {
+  const res = await fetch("https://ai.gmaii.pro.vn/api/ai/upload", {
     method: "POST",
     headers: {
       "Content-Type": `multipart/form-data; boundary=${boundary}`,
