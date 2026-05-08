@@ -1,0 +1,254 @@
+// Khai báo biến để tái sử dụng (Đặc quyền của SCSS)
+$primary-pink: #E91E63;
+$bg-light: #F9FAFB;
+$border-color: #eee;
+$text-secondary: #666;
+$font-serif: 'Playfair Display', serif;
+$transition: all 0.3s ease;
+
+.authPage {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  // Thêm vào trong .authPage hoặc ở ngoài cùng
+.backHome {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+  z-index: 10;
+  text-decoration: none;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 50px;
+  background: #fff;
+  border: 1px solid #eee;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #E91E63;
+    border-color: #E91E63;
+    background: #FFF5F7;
+    transform: translateX(-5px);
+  }
+}
+
+// Điều chỉnh mobile để nút không bị đè lên chữ khác
+@media (max-width: 992px) {
+  .backHome {
+    top: 20px;
+    right: 20px;
+    font-size: 12px;
+  }
+}
+
+  /* CÁNH TRÁI - HÌNH ẢNH */
+  .imageSidebar {
+    flex: 1;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 60px;
+
+    // Lớp phủ tối nhẹ để nổi bật chữ
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.3));
+    }
+
+    .overlayContent {
+      color: #fff;
+      z-index: 2;
+      position: relative;
+
+      .logoGroup {
+        font-family: $font-serif;
+        font-size: 28px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .slogan {
+        font-size: 18px;
+        font-weight: 300;
+        line-height: 1.5;
+        max-width: 400px;
+        opacity: 0.9;
+      }
+    }
+  }
+
+  /* CÁNH PHẢI - FORM */
+  .formContent {
+    flex: 1;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 10%;
+    overflow-y: auto;
+
+    .headerLinks {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 60px;
+      color: $text-secondary;
+    }
+
+    .formWrapper {
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+
+      .title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        line-height: 1.2;
+        color: #1a1a1a;
+      }
+
+      .desc {
+        color: $text-secondary;
+        font-size: 15px;
+        margin-bottom: 40px;
+      }
+    }
+  }
+
+  /* FORM ELEMENTS */
+  .inputGroup {
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 20px;
+      border-radius: 12px;
+      border: 1px solid $border-color;
+      background-color: $bg-light;
+      font-size: 14px;
+      transition: $transition;
+
+      &:focus {
+        border-color: $primary-pink;
+        background-color: #fff;
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(233, 30, 99, 0.05);
+      }
+    }
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .submitBtn {
+    width: 100%;
+    background-color: $primary-pink;
+    color: #fff;
+    padding: 16px;
+    border-radius: 50px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+  }
+
+  .divider {
+    text-align: center;
+    margin: 30px 0;
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 0; width: 100%; height: 1px;
+      background: $border-color;
+      z-index: 1;
+    }
+
+    span {
+      background: #fff;
+      padding: 0 15px;
+      position: relative;
+      z-index: 2;
+      font-size: 13px;
+      color: #999;
+    }
+  }
+
+  .socialBtns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+
+    .socialBtn {
+      padding: 12px;
+      border: 1px solid $border-color;
+      border-radius: 50px;
+      background: #fff;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: $transition;
+
+      &:hover {
+        background-color: $bg-light;
+      }
+    }
+  }
+
+  .linkRed {
+    color: $primary-pink;
+    font-weight: 600;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* RESPONSIVE CHO MOBILE */
+@media (max-width: 992px) {
+  .authPage {
+    .imageSidebar {
+      display: none; // Ẩn ảnh trên mobile để tối ưu diện tích
+    }
+    .formContent {
+      padding: 40px 20px;
+    }
+  }
+}
