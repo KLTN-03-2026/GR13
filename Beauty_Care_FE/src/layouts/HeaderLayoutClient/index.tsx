@@ -1,97 +1,118 @@
 import "./style.scss";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import FooterLayoutClient from "../FooterLayoutClient";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Badge } from "antd";
-import { ShoppingCartOutlined, HeartOutlined } from "@ant-design/icons";
+import { Badge, message } from "antd";
+import { ShoppingCartOutlined, HeartOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/images/logo.png';
-interface UserInfo {
-  name: string;
-  avatar?: string;
-}
+import ChatboxAI from "../ChatboxAI";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { API } from "../../api/config";
+import LoadingPage from "../Common/LoadingPage";
+import * as wishlistApi from "../../api/wishlist";
+import * as cartApi from "../../api/cart";
+
 
 const HeaderLayoutClient = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState<UserInfo | null>(null);
   const { token } = useAuth();
-  const [wishlistCount, setWishlistCount] = useState<number>(0);
-  const [cartCount, setCartCount] = useState<number>(0);
-  const [scrolled, setScrolled] = useState(false);
+  const queryClient = useQueryClient();
 
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const prevPathRef = useRef<string | null>(null);
+  const isHomePage = location.pathname === '/';
+
+  // Trigger loading screen on specific route transitions
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const currentPath = location.pathname;
+    const prevPath = prevPathRef.current;
+
+    const loadingRoutes = ['/login', '/register', '/forgot', '/cart', '/wishlist', '/myorder', '/profile'];
+    const authRoutes = ['/login', '/register', '/forgot'];
+    
+    const isTarget = loadingRoutes.some(route => currentPath.startsWith(route));
+    const isProductDetail = /^\/products?\/.+/.test(currentPath);
+    
+    const isAuthToAuth = prevPath && authRoutes.some(route => prevPath.startsWith(route)) && authRoutes.some(route => currentPath.startsWith(route));
+    const isFromOrToHome = currentPath === '/' || prevPath === '/';
+
+    const shouldShowLoading = (isTarget || isProductDetail) && !(isAuthToAuth || isFromOrToHome);
+
+    if (shouldShowLoading || !prevPath) {
+      setIsPageLoading(true);
+      const timer = setTimeout(() => {
+        setIsPageLoading(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 1000);
+
+      prevPathRef.current = currentPath;
+      return () => clearTimeout(timer);
+    } else {
+      setIsPageLoading(false);
+      window.scrollTo(0, 0);
     }
-  }, []);
 
-  useEffect(() => {
-    const handler = () => {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) setUser(JSON.parse(storedUser));
-      else setUser(null);
-    };
-    window.addEventListener('authChanged', handler);
-    return () => window.removeEventListener('authChanged', handler);
-  }, []);
+    prevPathRef.current = currentPath;
+  }, [location.pathname]);
 
-  // Toggle glass/sticky state when scrolling
-  useEffect(() => {
-    const onScroll = () => {
-      if (window.scrollY > 16) setScrolled(true);
-      else setScrolled(false);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // Fetch Wishlist count using standard API to share cache
+  const { data: wishlistData } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: () => wishlistApi.getWishlist(),
+    enabled: !!token,
+  });
 
-  // Fetch wishlist/cart counts for current user
-  useEffect(() => {
-    let mounted = true;
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  // Fetch Cart count using standard API to share cache
+  const { data: cartData } = useQuery({
+    queryKey: ['cart'],
+    queryFn: () => cartApi.getCart(),
+    enabled: !!token,
+  });
 
-    const fetchCounts = async () => {
-      try {
-        if (!token) {
-          if (mounted) {
-            setWishlistCount(0);
-            setCartCount(0);
-          }
-          return;
-        }
-        const [wRes, cRes] = await Promise.all([
-          axios.get("http://localhost:8088/api/v1/wishlist/count", { headers }),
-          axios.get("http://localhost:8088/api/v1/cart/count", { headers }),
-        ]);
-        if (!mounted) return;
-        const w = Number(wRes.data?.data ?? wRes.data ?? 0) || 0;
-        const c = Number(cRes.data?.data ?? cRes.data ?? 0) || 0;
-        setWishlistCount(w);
-        setCartCount(c);
-      } catch (err) {
-        console.error('Failed to fetch counts', err);
-        if (mounted) { setWishlistCount(0); setCartCount(0); }
-      }
-    };
+  // Fetch user profile
+  const { data: userProfile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const res = await API.get("/user/current");
+      return res.data?.data || res.data;
+    },
+    enabled: !!token,
+  });
 
-    fetchCounts();
-    return () => { mounted = false; };
-  }, [token]);
+  // Safely extract counts
+  const wData = wishlistData?.data ?? wishlistData;
+  const wItems = Array.isArray(wData?.items) ? wData.items : (Array.isArray(wData) ? wData : []);
+  const wishlistCount = wItems.length;
+
+  const cData = cartData?.data ?? cartData;
+  const cItems = Array.isArray(cData?.cartItems) ? cData.cartItems : (Array.isArray(cData) ? cData : []);
+  const cartCount = cItems.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0);
+
+  const user = userProfile ? {
+    name: userProfile.firstName ? `${userProfile.firstName} ${userProfile.lastName}` : (userProfile.name || "User"),
+    avatar: userProfile.avatar || userProfile.Avatar
+  } : null;
+
+  const handleLogout = () => {
+    localStorage.clear();
+    queryClient.clear();
+    window.dispatchEvent(new Event('authChanged'));
+    message.success("Đã đăng xuất");
+    navigate("/");
+    window.location.reload();
+  };
 
   return (
     <>
-      <div className={`header-layout-client ${scrolled ? 'scrolled' : ''}`}>
+      <LoadingPage isLoading={isPageLoading} />
+      
+      <div className={`header-layout-client ${isHomePage ? 'is-home' : 'is-internal'}`}>
         <div className="header-container">
-          <div className="header-logo" onClick={() => navigate("/")}> 
-            <img
-              src={logo}
-              alt="logo header"
-              className="logo-img"
-            ></img>
+          <div className="header-logo" onClick={() => navigate("/")}>
+            <img src={logo} alt="logo header" className="logo-img" />
             <span className="logo-text-fancy">Beauty Care</span>
           </div>
 
@@ -103,31 +124,26 @@ const HeaderLayoutClient = () => {
           </nav>
 
           <div className="header-actions">
-            {user ? (
+            {token && user ? (
               <div className="user-logged-in">
-                <div className="wishlist-wrapper" onClick={() => (token ? navigate('/wishlist') : navigate('/login'))} aria-label="Wishlist">
-                  <Badge count={wishlistCount} overflowCount={99} offset={[0, -6]}>
-                    <HeartOutlined className="action-icon" />
-                  </Badge>
+                <div className="wishlist-wrapper" onClick={() => (token ? navigate('/wishlist') : navigate('/login'))}>
+                  <Badge count={wishlistCount} offset={[0, -6]}><HeartOutlined className="action-icon" /></Badge>
                 </div>
 
-                <div className="cart-wrapper" onClick={() => (token ? navigate('/cart') : navigate('/login'))} aria-label="Cart">
-                  <Badge count={cartCount} overflowCount={99} offset={[0, -6]}>
-                    <ShoppingCartOutlined className="action-icon" />
-                  </Badge>
+                <div className="cart-wrapper" onClick={() => (token ? navigate('/cart') : navigate('/login'))}>
+                  <Badge count={cartCount} offset={[0, -6]}><ShoppingCartOutlined className="action-icon" /></Badge>
                 </div>
 
                 <div className="user-profile-section" onClick={() => navigate("/profile")}>
                   <div className="avatar-wrapper">
-                    <img 
-                      src={user.avatar || "https://i.pravatar.cc/150?u=beauty"} 
-                      alt="Avatar" 
-                    />
+                    <img src={user.avatar || "https://i.pravatar.cc/150?u=beauty"} alt="Avatar" />
                   </div>
                   <span className="user-name">{user.name}</span>
                 </div>
                 
-                {/* Nút Đăng xuất đã được xóa tại đây */}
+                <button className="logout-btn-minimal" onClick={handleLogout}>
+                  <LogoutOutlined /> <span>Đăng xuất</span>
+                </button>
               </div>
             ) : (
               <div className="auth-buttons">
@@ -138,11 +154,13 @@ const HeaderLayoutClient = () => {
           </div>
         </div>
       </div>
+      
       <div className="header-content-wrapper">
         <Outlet />
       </div>
-      {location.pathname !== '/consultation-chat' && <FooterLayoutClient />}
-
+      
+      {!isHomePage && location.pathname !== '/consultation-chat' && <FooterLayoutClient />}
+      <ChatboxAI />
     </>
   );
 };

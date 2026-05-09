@@ -109,3 +109,28 @@ export const getConversationById = async (id: number) => {
     throw error;
   }
 };
+
+export const getAllConversations = async () => {
+  try {
+    const conversations = await db.Conversation.findAll({
+      include: [
+        { model: db.User, as: "userData" },
+        { model: db.User, as: "expertData" },
+        {
+          model: db.Message,
+          as: "messages",
+          limit: 1,
+          order: [["createdAt", "DESC"]],
+        },
+      ],
+      order: [["updatedAt", "DESC"]],
+    });
+    return {
+      err: 0,
+      mes: "Lấy tất cả cuộc trò chuyện thành công",
+      data: conversations,
+    };
+  } catch (error) {
+    throw error;
+  }
+};

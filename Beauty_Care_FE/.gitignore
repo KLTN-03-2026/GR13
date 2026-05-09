@@ -25,3 +25,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Uploads and temporary images
+uploads/*
+!uploads/.gitkeep
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+**/skin-*.jpg
+**/skin-*.png

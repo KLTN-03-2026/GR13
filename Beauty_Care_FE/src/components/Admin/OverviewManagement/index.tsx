@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { 
   Typography, 
@@ -14,7 +15,8 @@ import {
   Tag,
   Divider,
   Select,
-  message
+  message,
+  DatePicker
 } from "antd";
 import { 
   UserOutlined, 
@@ -44,139 +46,41 @@ import {
   Bar
 } from "recharts";
 import "./style.scss";
-import { useGetDashboardStats } from "../../../hooks/admin";
+import { useGetDashboardStats, useGetAnalyticsStats } from "../../../hooks/admin";
 
 const { Title, Text } = Typography;
 const AdminOverviewComponent: React.FC = () => {
   const navigate = useNavigate();
-  const [importExportPeriod, setImportExportPeriod] = useState<"week" | "month" | "year">("week");
-  const { data: dashboardRes, isLoading, isError } = useGetDashboardStats();
+  const [importExportPeriod, setImportExportPeriod] = useState<"week" | "month" | "year" | "custom">("week");
+  const [customDateRange, setCustomDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
+  const { data: dashboardRes, isLoading: isLoadingDashboard, isError: isErrorDashboard } = useGetDashboardStats() as any;
+  const { data: analyticsRes, isLoading: isLoadingAnalytics, isError: isErrorAnalytics } = useGetAnalyticsStats() as any;
+
+  const isLoading = isLoadingDashboard || isLoadingAnalytics;
 
   useEffect(() => {
-    if (isError) message.error("Không thể tải thống kê dashboard");
-  }, [isError]);
+    if (isErrorDashboard || isErrorAnalytics) message.error("Không thể tải thống kê");
+  }, [isErrorDashboard, isErrorAnalytics]);
 
-  const dashboard = dashboardRes?.data;
+  const dashboard = (dashboardRes as any)?.data;
+  const analytics = (analyticsRes as any)?.data;
   const totalRevenue = useMemo(() => {
     const n = Number(dashboard?.totalRevenue ?? 0);
     return Number.isFinite(n) ? n : 0;
   }, [dashboard?.totalRevenue]);
 
-  // Mock data for Import/Export Chart
-  const importExportData = {
-    week: [
-      { name: "T2", import: 40, export: 24 },
-      { name: "T3", import: 30, export: 13 },
-      { name: "T4", import: 20, export: 58 },
-      { name: "T5", import: 27, export: 39 },
-      { name: "T6", import: 18, export: 48 },
-      { name: "T7", import: 23, export: 38 },
-      { name: "CN", import: 34, export: 43 },
-    ],
-    month: [
-      { name: "Tuần 1", import: 140, export: 124 },
-      { name: "Tuần 2", import: 130, export: 113 },
-      { name: "Tuần 3", import: 120, export: 158 },
-      { name: "Tuần 4", import: 127, export: 139 },
-    ],
-    year: [
-      { name: "Tháng 1", import: 400, export: 240 },
-      { name: "Tháng 2", import: 300, export: 130 },
-      { name: "Tháng 3", import: 200, export: 580 },
-      { name: "Tháng 4", import: 278, export: 390 },
-      { name: "Tháng 5", import: 189, export: 480 },
-      { name: "Tháng 6", import: 239, export: 380 },
-    ],
-  };
-
-  // Mock data for Revenue Chart
-  const revenueData = [
-    { name: "T2", revenue: 4000, orders: 24 },
-    { name: "T3", revenue: 3000, orders: 13 },
-    { name: "T4", revenue: 2000, orders: 98 },
-    { name: "T5", revenue: 2780, orders: 39 },
-    { name: "T6", revenue: 1890, orders: 48 },
-    { name: "T7", revenue: 2390, orders: 38 },
-    { name: "CN", revenue: 3490, orders: 43 },
-  ];
-
-  // Mock data for Category Distribution
-  const categoryData = [
-    { name: "Làm sạch", value: 400 },
-    { name: "Chống nắng", value: 300 },
-    { name: "Tinh chất", value: 300 },
-    { name: "Trang điểm", value: 200 },
-  ];
+  const revenueData = analytics?.revenueData || [];
+  const categoryData = analytics?.categoryData || [];
+  const topProducts = analytics?.topProducts || [];
+  const potentialCustomers = analytics?.potentialCustomers || [];
+  
+  // Mock fallback for Import/Export Data since the backend structure might be empty or missing
+  const defaultImportExport = { week: [], month: [], year: [], custom: [] };
+  const importExportData = analytics?.importExportData || defaultImportExport;
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
-
-  // Mock data for Top Products
-  const topProducts = [
-    {
-      key: "1",
-      name: "Sữa rửa mặt Cetaphil",
-      category: "Làm sạch",
-      sales: 450,
-      stock: 120,
-      revenue: "67,500,000đ",
-      status: "Bán chạy",
-    },
-    {
-      key: "2",
-      name: "Kem chống nắng La Roche-Posay",
-      category: "Chống nắng",
-      sales: 380,
-      stock: 45,
-      revenue: "182,400,000đ",
-      status: "Bán chạy",
-    },
-    {
-      key: "3",
-      name: "Serum B5 The Ordinary",
-      category: "Tinh chất",
-      sales: 310,
-      stock: 80,
-      revenue: "93,000,000đ",
-      status: "Ổn định",
-    },
-    {
-      key: "4",
-      name: "Nước tẩy trang Bioderma",
-      category: "Làm sạch",
-      sales: 290,
-      stock: 150,
-      revenue: "110,200,000đ",
-      status: "Ổn định",
-    },
-  ];
-
-  // Mock data for Potential Customers
-  const potentialCustomers = [
-    {
-      key: "1",
-      name: "Nguyễn Thị Lan",
-      orders: 15,
-      totalSpent: "25,400,000đ",
-      lastOrder: "2 giờ trước",
-      level: "VIP",
-    },
-    {
-      key: "2",
-      name: "Trần Minh Tâm",
-      orders: 12,
-      totalSpent: "18,200,000đ",
-      lastOrder: "1 ngày trước",
-      level: "VIP",
-    },
-    {
-      key: "3",
-      name: "Lê Hồng Nhung",
-      orders: 8,
-      totalSpent: "12,500,000đ",
-      lastOrder: "3 ngày trước",
-      level: "Thân thiết",
-    },
-  ];
 
   const columnsProducts = [
     {
@@ -195,7 +99,7 @@ const AdminOverviewComponent: React.FC = () => {
       title: "Đã bán",
       dataIndex: "sales",
       key: "sales",
-      sorter: (a: any, b: any) => a.sales - b.sales,
+      sorter: (a: { sales: number }, b: { sales: number }) => a.sales - b.sales,
       render: (sales: number) => <Tag color="blue">{sales}</Tag>,
     },
     {
@@ -384,7 +288,7 @@ const AdminOverviewComponent: React.FC = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {categoryData.map((_entry, index) => (
+                    {categoryData.map((_entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -404,16 +308,27 @@ const AdminOverviewComponent: React.FC = () => {
             title={
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <Space><SwapOutlined /> Thống kê Nhập - Xuất hàng hóa</Space>
-                <Select
-                  value={importExportPeriod}
-                  onChange={(value) => setImportExportPeriod(value)}
-                  style={{ width: 120 }}
-                  options={[
-                    { value: 'week', label: 'Xem Tuần' },
-                    { value: 'month', label: 'Xem Tháng' },
-                    { value: 'year', label: 'Xem Năm' },
-                  ]}
-                />
+                <Space>
+                  <Select
+                    value={importExportPeriod}
+                    onChange={(value) => setImportExportPeriod(value)}
+                    style={{ width: 140 }}
+                    options={[
+                      { value: 'week', label: 'Xem Tuần' },
+                      { value: 'month', label: 'Xem Tháng' },
+                      { value: 'year', label: 'Xem Năm' },
+                      { value: 'custom', label: 'Tùy chọn' },
+                    ]}
+                  />
+                  {importExportPeriod === "custom" && (
+                    <DatePicker.RangePicker
+                      value={customDateRange}
+                      onChange={(dates) => setCustomDateRange(dates)}
+                      style={{ width: 250 }}
+                      format="DD/MM/YYYY"
+                    />
+                  )}
+                </Space>
               </div>
             } 
             bordered={false}

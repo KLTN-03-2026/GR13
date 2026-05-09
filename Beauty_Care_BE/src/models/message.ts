@@ -11,7 +11,7 @@ class Message extends Model<InferAttributes<Message>, InferCreationAttributes<Me
   declare id: CreationOptional<number>;
   declare conversation_id: number;
   declare sender_id: number;
-  declare message_type: "text" | "image";
+  declare message_type: "text" | "image" | "file" | "sticker";
   declare content: string;
   declare is_read: boolean;
 
@@ -32,7 +32,7 @@ class Message extends Model<InferAttributes<Message>, InferCreationAttributes<Me
           allowNull: false,
         },
         message_type: {
-          type: DataTypes.ENUM("text", "image"),
+          type: DataTypes.ENUM("text", "image", "file", "sticker"),
           defaultValue: "text",
         },
         content: {

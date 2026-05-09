@@ -1,6 +1,6 @@
 "use strict";
 
-import { QueryInterface } from "sequelize";
+import { QueryInterface, DataTypes } from "sequelize";
 
 export default {
   async up(queryInterface: QueryInterface, Sequelize: any) {
@@ -9,45 +9,43 @@ export default {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
+      },
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+      morning_routine: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      evening_routine: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
       skin_analysis_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
+        type: DataTypes.INTEGER,
+        allowNull: true,
         references: {
           model: "SkinAnalysisHistories",
           key: "id",
         },
         onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
-      product_id: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        references: {
-          model: "Products",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
-      morning_routine: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
-      },
-      evening_routine: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: false,
+        onDelete: "SET NULL",
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.fn("NOW"),
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.fn("NOW"),
+        type: DataTypes.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
   },

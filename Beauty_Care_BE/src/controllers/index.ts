@@ -13,3 +13,6 @@ export * from "./discount";
 export * from "./payment";
 export * from "./conversation";
 export * from "./message";
+export * from "./booking";
+export * from "./wishlist";
+export * from "./blog_category";

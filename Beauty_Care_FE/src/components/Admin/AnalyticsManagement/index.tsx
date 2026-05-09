@@ -1,5 +1,5 @@
-import React from "react";
-import { Typography, Card, Row, Col, Space, Table, Tag } from "antd";
+import React, { useMemo } from "react";
+import { Typography, Card, Row, Col, Space, Table, Tag, Statistic } from "antd";
 import {
   ThunderboltOutlined,
   DollarOutlined,
@@ -7,7 +7,12 @@ import {
   HeartOutlined,
   StarOutlined,
   TeamOutlined,
+  UserOutlined,
+  ShoppingOutlined,
+  OrderedListOutlined,
+  ArrowUpOutlined
 } from "@ant-design/icons";
+import { useGetDashboardStats, useGetAnalyticsStats } from "../../../hooks/admin";
 import {
   BarChart,
   Bar,
@@ -28,65 +33,89 @@ import "./style.scss";
 const { Title, Text } = Typography;
 
 const AnalyticsManagementComponent: React.FC = () => {
-  // 1. Dữ liệu Sản phẩm được Quan tâm (Nhấp vào vs Thêm vào giỏ)
-  const productInteractions = [
-    { name: "Sữa rửa mặt Cetaphil", clicks: 450, adds: 120 },
-    { name: "Kem chống nắng LRP", clicks: 380, adds: 95 },
-    { name: "Serum B5 LRP", clicks: 310, adds: 80 },
-    { name: "Tẩy trang Bioderma", clicks: 290, adds: 110 },
-    { name: "Kem dưỡng ẩm", clicks: 250, adds: 60 },
-  ];
+  const { data: dashboardRes, isLoading: isLoadingDashboard } = useGetDashboardStats() as any;
+  const { data: analyticsRes, isLoading: isLoadingAnalytics } = useGetAnalyticsStats() as any;
 
-  // 2. Dữ liệu Phân tích Khung giá (Mua nhiều, ít, không mua)
-  const priceRangeData = [
-    { range: "0 - 200k", many: 150, little: 45, none: 20 },
-    { range: "200k - 500k", many: 280, little: 60, none: 15 },
-    { range: "500k - 1tr", many: 120, little: 80, none: 40 },
-    { range: "Trên 1tr", many: 40, little: 30, none: 55 },
-  ];
+  const dashboard = (dashboardRes as any)?.data;
+  const analytics = (analyticsRes as any)?.data;
 
-  // 3. Dữ liệu Khung giờ mua hàng (Peak Hours)
-  const peakHoursData = [
-    { hour: "00:00", orders: 5 },
-    { hour: "04:00", orders: 12 },
-    { hour: "08:00", orders: 85 },
-    { hour: "12:00", orders: 65 },
-    { hour: "16:00", orders: 110 },
-    { hour: "20:00", orders: 95 },
-    { hour: "23:59", orders: 40 },
-  ];
+  const isLoading = isLoadingDashboard || isLoadingAnalytics;
 
-  // 4. Top Sản phẩm Yêu thích Thịnh hành
-  const trendingFavorites = [
-    { name: "Serum B5 The Ordinary", likes: 1250 },
-    { name: "Kem chống nắng LRP", likes: 980 },
-    { name: "Sữa rửa mặt Cetaphil", likes: 850 },
-    { name: "Tẩy trang Bioderma", likes: 720 },
-    { name: "Mặt nạ ngủ Laneige", likes: 640 },
-  ];
+  const totalRevenue = useMemo(() => {
+    const n = Number(dashboard?.totalRevenue ?? 0);
+    return Number.isFinite(n) ? n : 0;
+  }, [dashboard?.totalRevenue]);
 
-  // 5. Top Dịch vụ Spa Thịnh hành
-  const spaServicesStats = [
-    { name: "Chăm sóc da mặt chuyên sâu", value: 45 },
-    { name: "Massage body đá nóng", value: 25 },
-    { name: "Gội đầu dưỡng sinh", value: 15 },
-    { name: "Triệt lông vĩnh viễn", value: 10 },
-    { name: "Nâng cơ trẻ hóa", value: 5 },
-  ];
-
-  // 6. Danh sách Nhân viên được yêu thích cao
-  const topStaffs = [
-    { key: "1", name: "Trần Minh Tâm", specialty: "Chuyên viên Da liễu", rating: 4.9, reviews: 150 },
-    { key: "2", name: "Nguyễn Lan Anh", specialty: "Kỹ thuật viên Massage", rating: 4.8, reviews: 120 },
-    { key: "3", name: "Lê Mai Chi", specialty: "Kỹ thuật viên Spa", rating: 4.7, reviews: 95 },
-    { key: "4", name: "Phạm Quốc Đạt", specialty: "Chuyên viên Tư vấn", rating: 4.6, reviews: 80 },
-  ];
+  const productInteractions = analytics?.productInteractions || [];
+  const priceRangeData = analytics?.priceRangeData || [];
+  const peakHoursData = analytics?.peakHoursData || [];
+  const trendingFavorites = analytics?.trendingFavorites || [];
+  const spaServicesStats = analytics?.spaServicesStats || [];
+  const topStaffs = analytics?.topStaffs || [];
 
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
   return (
     <div className="analytics-management">
       <Title level={2}>Phân tích hành vi người dùng</Title>
+
+      {/* Thống kê tổng quan từ dữ liệu thật */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="stat-card" loading={isLoading}>
+            <Statistic
+              title="Tổng doanh thu"
+              value={totalRevenue}
+              precision={0}
+              prefix={<DollarOutlined />}
+              suffix="đ"
+              valueStyle={{ color: "#722ed1" }}
+            />
+            <div className="stat-footer" style={{ marginTop: 8 }}>
+              <Text type="success"><ArrowUpOutlined /> Dữ liệu thực tế</Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="stat-card" loading={isLoading}>
+            <Statistic
+              title="Đơn hàng thành công"
+              value={dashboard?.ordersByStatus?.completed ?? 0}
+              prefix={<OrderedListOutlined />}
+              valueStyle={{ color: "#1890ff" }}
+            />
+            <div className="stat-footer" style={{ marginTop: 8 }}>
+              <Text type="success"><ArrowUpOutlined /> Dữ liệu thực tế</Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="stat-card" loading={isLoading}>
+            <Statistic
+              title="Sản phẩm hệ thống"
+              value={dashboard?.totalProducts ?? 0}
+              prefix={<ShoppingOutlined />}
+              valueStyle={{ color: "#cf1322" }}
+            />
+            <div className="stat-footer" style={{ marginTop: 8 }}>
+              <Text type="secondary">Tổng sản phẩm</Text>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card bordered={false} className="stat-card" loading={isLoading}>
+            <Statistic
+              title="Người dùng"
+              value={dashboard?.totalUsers ?? 0}
+              prefix={<UserOutlined />}
+              valueStyle={{ color: "#3f8600" }}
+            />
+            <div className="stat-footer" style={{ marginTop: 8 }}>
+              <Text type="success"><ArrowUpOutlined /> Tài khoản đăng ký</Text>
+            </div>
+          </Card>
+        </Col>
+      </Row>
 
       <Row gutter={[16, 16]}>
         {/* Hàng 1: Sản phẩm & Khung giá */}
@@ -170,9 +199,9 @@ const AnalyticsManagementComponent: React.FC = () => {
                     paddingAngle={5}
                     dataKey="value"
 
-                    label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
+                    label={({ name, percent }: { name?: string; percent?: number }) => `${name || ''} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                   >
-                    {spaServicesStats.map((_, index) => (
+                    {spaServicesStats.map((_: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

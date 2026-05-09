@@ -36,6 +36,7 @@ export interface IProduct {
   categoryId: number;
   brand?: string | null;
   status: "active" | "inactive";
+  advice_id?: number | null;
   createdAt?: string;
   updatedAt?: string;
   categoryData?: {

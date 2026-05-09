@@ -113,6 +113,7 @@ const RegisterComponent = () => {
               onChange={handleChange}
               isError={!!errors.firstName}
               messageError={errors.firstName}
+              style={{color:"black"}}
             />
             <InputCommonName
               label="Tên"
@@ -123,6 +124,7 @@ const RegisterComponent = () => {
               onChange={handleChange}
               isError={!!errors.lastName}
               messageError={errors.lastName}
+              style={{color:"black"}}
             />
           </div>
 
@@ -135,6 +137,7 @@ const RegisterComponent = () => {
             onChange={handleChange}
             isError={!!errors.email}
             messageError={errors.email}
+            style={{color:"black"}}
           />
 
           <InputCommonPassword
@@ -146,6 +149,7 @@ const RegisterComponent = () => {
             onChange={handleChange}
             isError={!!errors.password}
             messageError={errors.password}
+            style={{color:"black"}}
           />
 
           <InputCommonPassword
@@ -157,6 +161,7 @@ const RegisterComponent = () => {
             onChange={handleChange}
             isError={!!errors.confirmPassword}
             messageError={errors.confirmPassword}
+            style={{color:"black"}}
           />
           <span className="form-register">
             Đã có tài khoản?{" "}

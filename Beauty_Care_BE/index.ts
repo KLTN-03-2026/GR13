@@ -3,7 +3,6 @@ import express from "express";
 import cors from "cors";
 import initRoutes from "./src/routes";
 import { initSocket } from "./src/socket";
-
 const app = express();
 const server = require("http").createServer(app);
 
@@ -18,6 +17,7 @@ app.use(
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use("/uploads", express.static("uploads"));
 initRoutes(app);
 
 const io = initSocket(server);

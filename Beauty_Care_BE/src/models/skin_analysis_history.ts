@@ -12,9 +12,13 @@ class SkinAnalysisHistory extends Model<InferAttributes<SkinAnalysisHistory>, In
   declare user_id: number;
   declare skin_image: string;
   declare detected_skin_type: string;
-  declare pore_level: string;
-  declare absorption_level: string;
-  declare acne_area: string;
+  declare acne_score: number;
+  declare blackheads_score: number;
+  declare dark_spots_score: number;
+  declare pores_score: number;
+  declare wrinkles_score: number;
+  declare overall_score: number;
+  declare advice_id: number;
   declare analysis_date: Date;
 
   public static initModel(sequelize: Sequelize) {
@@ -36,14 +40,26 @@ class SkinAnalysisHistory extends Model<InferAttributes<SkinAnalysisHistory>, In
         detected_skin_type: {
           type: DataTypes.STRING,
         },
-        pore_level: {
-          type: DataTypes.STRING,
+        acne_score: {
+          type: DataTypes.INTEGER,
         },
-        absorption_level: {
-          type: DataTypes.STRING,
+        blackheads_score: {
+          type: DataTypes.INTEGER,
         },
-        acne_area: {
-          type: DataTypes.STRING,
+        dark_spots_score: {
+          type: DataTypes.INTEGER,
+        },
+        pores_score: {
+          type: DataTypes.INTEGER,
+        },
+        wrinkles_score: {
+          type: DataTypes.INTEGER,
+        },
+        overall_score: {
+          type: DataTypes.INTEGER,
+        },
+        advice_id: {
+          type: DataTypes.INTEGER,
         },
         analysis_date: {
           type: DataTypes.DATE,
@@ -64,13 +80,9 @@ class SkinAnalysisHistory extends Model<InferAttributes<SkinAnalysisHistory>, In
       foreignKey: "user_id",
       as: "userData",
     });
-    SkinAnalysisHistory.hasOne(models.AnalysisFeedback, {
-      foreignKey: "skin_analysis_id",
-      as: "feedback",
-    });
-    SkinAnalysisHistory.hasMany(models.ProductRecommendation, {
-      foreignKey: "skin_analysis_id",
-      as: "productRecommendations",
+    SkinAnalysisHistory.belongsTo(models.ProductRecommendation, {
+      foreignKey: "advice_id",
+      as: "advice",
     });
   }
 }

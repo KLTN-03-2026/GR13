@@ -11,3 +11,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   }
 };
 
+export const getAnalyticsStats = async (req: Request, res: Response) => {
+  try {
+    const response = await services.getAnalyticsStats();
+    return res.status(200).json(response);
+  } catch (error) {
+    return InternalServerError(res);
+  }
+};

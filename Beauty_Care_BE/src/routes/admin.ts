@@ -9,6 +9,7 @@ router.use(verifyToken);
 router.use(isAdmin);
 
 router.get("/dashboard", controllers.getDashboardStats);
+router.get("/analytics", controllers.getAnalyticsStats);
 
 export default router;
 

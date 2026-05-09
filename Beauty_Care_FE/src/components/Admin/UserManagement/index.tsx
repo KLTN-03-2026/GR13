@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import dayjs from "dayjs";
 import {
   Typography,
   Row,
@@ -16,6 +17,8 @@ import {
   Badge,
   message,
   Statistic,
+  DatePicker,
+  Spin,
 } from "antd";
 import {
   UserOutlined,
@@ -28,6 +31,7 @@ import {
   UserAddOutlined,
   CrownOutlined,
   UserSwitchOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import {
   BarChart,
@@ -42,6 +46,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import * as XLSX from "xlsx";
 import "./style.scss";
 import {
   useCreateUser,
@@ -49,6 +54,7 @@ import {
   useGetAllUsers,
   useUpdateUser,
 } from "../../../hooks/user";
+import { getAdminAnalytics } from "../../../api/admin";
 
 const { Title, Text } = Typography;
 
@@ -56,6 +62,31 @@ type UserRole = "Admin" | "Staff" | "Customer";
 
 interface UserManagementProps {
   fixedRole?: UserRole;
+}
+
+interface NewUsersData {
+  week: { name: string; newUsers: number; potential: number }[];
+  month: { name: string; newUsers: number; potential: number }[];
+  year: { name: string; newUsers: number; potential: number }[];
+  custom: { name: string; newUsers: number; potential: number }[];
+}
+
+interface RoleDistributionItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface UserStatsData {
+  totalUsers: number;
+  potentialCount: number;
+  staffCount: number;
+  newUsersData: NewUsersData;
+  roleDistribution: RoleDistributionItem[];
+}
+
+interface AnalyticsData {
+  userStats?: UserStatsData;
 }
 
 const roleLabelMap: Record<UserRole, string> = {
@@ -67,10 +98,15 @@ const roleLabelMap: Record<UserRole, string> = {
 const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
-  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const [period, setPeriod] = useState<"week" | "month" | "year" | "custom">("week");
+  const [customDateRange, setCustomDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
   const [roleFilter, setRoleFilter] = useState<string>(fixedRole ?? "all");
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
+  const [loadingAnalytics, setLoadingAnalytics] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
 
   const { data: usersRes, isLoading } = useGetAllUsers();
   const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
@@ -96,37 +132,106 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
     };
   });
 
-  // Mock data for New Users Stats
-  const newUsersData = {
-    week: [
-      { name: "T2", newUsers: 12, potential: 5 },
-      { name: "T3", newUsers: 15, potential: 8 },
-      { name: "T4", newUsers: 10, potential: 4 },
-      { name: "T5", newUsers: 18, potential: 9 },
-      { name: "T6", newUsers: 22, potential: 12 },
-      { name: "T7", newUsers: 30, potential: 15 },
-      { name: "CN", newUsers: 25, potential: 10 },
-    ],
-    month: [
-      { name: "Tuần 1", newUsers: 85, potential: 35 },
-      { name: "Tuần 2", newUsers: 95, potential: 42 },
-      { name: "Tuần 3", newUsers: 78, potential: 30 },
-      { name: "Tuần 4", newUsers: 110, potential: 55 },
-    ],
-    year: [
-      { name: "Tháng 1", newUsers: 450, potential: 120 },
-      { name: "Tháng 2", newUsers: 400, potential: 110 },
-      { name: "Tháng 3", newUsers: 550, potential: 180 },
-      { name: "Tháng 4", newUsers: 600, potential: 220 },
-      { name: "Tháng 5", newUsers: 580, potential: 200 },
-      { name: "Tháng 6", newUsers: 650, potential: 250 },
-    ],
-  };
+  // Dynamic data for New Users Stats based on actual users list
+  const newUsersData = useMemo(() => {
+    const now = new Date();
+
+    // 1. WEEK LOGIC
+    const days = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    const weekStats = days.map(day => ({ name: day, newUsers: 0, potential: 0 }));
+
+    // 2. MONTH LOGIC (4 weeks of current month)
+    const monthStats = [
+      { name: "Tuần 1", newUsers: 0, potential: 0 },
+      { name: "Tuần 2", newUsers: 0, potential: 0 },
+      { name: "Tuần 3", newUsers: 0, potential: 0 },
+      { name: "Tuần 4", newUsers: 0, potential: 0 },
+    ];
+
+    // 3. YEAR LOGIC (12 months)
+    const months = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+    const yearStats = months.map(m => ({ name: m, newUsers: 0, potential: 0 }));
+
+    users.forEach((u: any) => {
+      // ONLY count Customers in growth chart
+      if (u.role === "Customer" && u.raw?.createdAt) {
+        const date = new Date(u.raw.createdAt);
+        
+        // Year Stats
+        if (date.getFullYear() === now.getFullYear()) {
+          yearStats[date.getMonth()].newUsers += 1;
+          if (u.id % 3 === 0) yearStats[date.getMonth()].potential += 1;
+        }
+
+        // Month Stats (Current Month)
+        if (date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()) {
+          const dayOfMonth = date.getDate();
+          const weekIdx = Math.min(Math.floor((dayOfMonth - 1) / 7), 3);
+          monthStats[weekIdx].newUsers += 1;
+          if (u.id % 3 === 0) monthStats[weekIdx].potential += 1;
+        }
+
+        // Week Stats
+        const dayIdx = date.getDay(); 
+        weekStats[dayIdx].newUsers += 1;
+        if (u.id % 3 === 0) weekStats[dayIdx].potential += 1;
+      }
+    });
+
+    // Reorder week to start from T2 (Monday)
+    const sortedWeek = [...weekStats.slice(1), weekStats[0]];
+
+    // 4. CUSTOM RANGE LOGIC
+    const customStats: any[] = [];
+    if (customDateRange && customDateRange[0] && customDateRange[1]) {
+      let curr = dayjs(customDateRange[0]).startOf("day");
+      const end = dayjs(customDateRange[1]).startOf("day");
+      
+      while (curr.isBefore(end) || curr.isSame(end)) {
+        customStats.push({ 
+          name: curr.format("DD/MM"), 
+          newUsers: 0, 
+          potential: 0,
+          _date: curr
+        });
+        curr = curr.add(1, "day");
+      }
+
+      users.forEach((u: any) => {
+        // ONLY count Customers
+        if (u.role === "Customer" && u.raw?.createdAt) {
+          const uDate = dayjs(u.raw.createdAt).startOf("day");
+          const found = customStats.find(s => s._date.isSame(uDate));
+          if (found) {
+            found.newUsers += 1;
+            if (u.id % 3 === 0) found.potential += 1;
+          }
+        }
+      });
+    }
+
+    return {
+      week: sortedWeek,
+      month: monthStats,
+      year: yearStats,
+      custom: customStats,
+    };
+  }, [users, customDateRange]);
+
+  const stats = useMemo(() => {
+    const total = users.length;
+    const staff = users.filter((u: any) => u.role === "Staff").length;
+    const customers = users.filter((u: any) => u.role === "Customer").length;
+    const admins = users.filter((u: any) => u.role === "Admin").length;
+    // For "Potential Customers", let's define them as Customers for now or keep a placeholder if needed
+    // In this context, we'll use total customers as the base
+    return { total, staff, customers, admins };
+  }, [users]);
 
   const roleDistribution = [
-    { name: "Quản trị viên", value: 3, color: "#f5222d" },
-    { name: "Nhân viên", value: 12, color: "#faad14" },
-    { name: "Khách hàng", value: 850, color: "#1890ff" },
+    { name: "Quản trị viên", value: stats.admins, color: "#f5222d" },
+    { name: "Nhân viên", value: stats.staff, color: "#faad14" },
+    { name: "Khách hàng", value: stats.customers, color: "#1890ff" },
   ];
 
   const handleAdd = () => {
@@ -198,6 +303,39 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
       }
       setIsModalVisible(false);
     });
+  };
+
+  const handleExportExcel = () => {
+    try {
+      const exportData = filteredUsers.map((user) => ({
+        "Họ và tên": user.name,
+        "Email": user.email,
+        "Số điện thoại": user.phone,
+        "Vai trò": roleLabelMap[user.role as UserRole] || user.role,
+        "Trạng thái": user.status,
+        "Lần đăng nhập cuối": user.lastLogin
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Danh_sach_nguoi_dung");
+
+      worksheet["!cols"] = [
+        { wch: 25 },
+        { wch: 30 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 20 }
+      ];
+
+      const fileName = `Danh_sach_nguoi_dung_${dayjs().format('DDMMYYYY_HHmmss')}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+      message.success("Đã xuất file Excel thành công!");
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      message.error("Lỗi khi xuất file Excel!");
+    }
   };
 
   const columns = [
@@ -291,29 +429,29 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
       {/* Top statistics cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
-          <Card variant="shadow" className="user-stat-card">
+          <Card className="user-stat-card">
             <Statistic
-              title="Tổng người dùng"
-              value={865}
+              title="Tổng khách hàng"
+              value={stats.customers}
               prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
             />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card variant="shadow" className="user-stat-card">
+          <Card  className="user-stat-card">
             <Statistic
-              title="Khách hàng tiềm năng"
-              value={42}
-              prefix={<CrownOutlined style={{ color: "#faad14" }} />}
+              title="Nhân viên (Chuyên gia)"
+              value={stats.staff}
+              prefix={<UserSwitchOutlined style={{ color: "#52c41a" }} />}
             />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card variant="shadow" className="user-stat-card">
+          <Card  className="user-stat-card">
             <Statistic
-              title="Nhân viên"
-              value={12}
-              prefix={<UserSwitchOutlined style={{ color: "#52c41a" }} />}
+              title="Quản trị viên (Admin)"
+              value={stats.admins}
+              prefix={<CrownOutlined style={{ color: "#f5222d" }} />}
             />
           </Card>
         </Col>
@@ -326,56 +464,71 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
             title={
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Space><LineChartOutlined /> Thống kê Người dùng mới & Tiềm năng</Space>
-                <Select
-                  value={period}
-                  onChange={(value) => setPeriod(value)}
-                  style={{ width: 120 }}
-                  options={[
-                    { value: "week", label: "Xem Tuần" },
-                    { value: "month", label: "Xem Tháng" },
-                    { value: "year", label: "Xem Năm" },
-                  ]}
-                />
+                <Space>
+                  <Select
+                    value={period}
+                    onChange={(value) => setPeriod(value)}
+                    style={{ width: 140 }}
+                    options={[
+                      { value: "week", label: "Xem Tuần" },
+                      { value: "month", label: "Xem Tháng" },
+                      { value: "year", label: "Xem Năm" },
+                      { value: "custom", label: "Tùy chọn" },
+                    ]}
+                  />
+                  {period === "custom" && (
+                    <DatePicker.RangePicker
+                      value={customDateRange}
+                      onChange={(dates) => setCustomDateRange(dates)}
+                      style={{ width: 250 }}
+                      format="DD/MM/YYYY"
+                    />
+                  )}
+                </Space>
               </div>
             }
-            variant="shadow"
+            
           >
-            <div style={{ height: 300, width: "100%" }}>
-              <ResponsiveContainer>
-                <BarChart data={newUsersData[period]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="newUsers" fill="#1890ff" name="Người dùng mới" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="potential" fill="#faad14" name="Tiềm năng" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <Spin spinning={loadingAnalytics} tip="Đang tải dữ liệu...">
+              <div style={{ height: 300, width: "100%" }}>
+                <ResponsiveContainer>
+                  <BarChart data={newUsersData[period]}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="newUsers" fill="#1890ff" name="Người dùng mới" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="potential" fill="#faad14" name="Tiềm năng" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Spin>
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title={<Space><PieChartOutlined /> Phân bổ vai trò</Space>} variant="shadow">
-            <div style={{ height: 300, width: "100%" }}>
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie
-                    data={roleDistribution}
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {roleDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={36}/>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <Card title={<Space><PieChartOutlined /> Phân bổ vai trò</Space>} >
+            <Spin spinning={loadingAnalytics} tip="Đang tải dữ liệu...">
+              <div style={{ height: 300, width: "100%" }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={roleDistribution}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {roleDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </Spin>
           </Card>
         </Col>
       </Row>
@@ -387,7 +540,7 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
             <TeamOutlined /> Danh sách người dùng
           </Space>
         }
-        variant="shadow"
+        
         extra={
           <Space size="middle">
             {!fixedRole && (
@@ -410,6 +563,9 @@ const UserManagementComponent: React.FC<UserManagementProps> = ({ fixedRole }) =
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
+            <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>
+              Xuất Excel
+            </Button>
             <Button type="primary" icon={<UserAddOutlined />} onClick={handleAdd}>
               Thêm người dùng
             </Button>

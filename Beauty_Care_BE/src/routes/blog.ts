@@ -5,6 +5,7 @@ import { isAdmin } from "../middlewares/verify_roles";
 
 const router = express.Router();
 
+router.get("/", blogController.getBlogs);
 router.get("/all", blogController.getBlogs);
 router.get("/slug/:slug", blogController.getBlogBySlug);
 router.get("/:id", blogController.getBlog);

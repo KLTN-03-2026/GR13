@@ -1,0 +1,144 @@
+.bc-open-btn {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ff6b81;
+  color: #fff;
+  border: none;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+.bc-face-scanner {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+}
+
+.bc-face-scanner--large {
+  width: 720px;
+  height: 560px;
+  background: rgba(20,20,20,0.95);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* When results are shown, present a light result panel instead of the dark scanner */
+.bc-face-scanner--large.result-mode {
+  background: #ffffff;
+  color: #111;
+}
+
+.bc-face-scanner--large.result-mode .bc-media-wrap {
+  display: none;
+}
+
+.bc-face-scanner--large.result-mode .bc-topbar .bc-close {
+  color: #111;
+  border-color: rgba(0,0,0,0.08);
+}
+
+.bc-face-scanner--large.result-mode .bc-status {
+  color: #444;
+}
+
+.bc-topbar { display:flex; justify-content:space-between; align-items:center; }
+.bc-topbar { user-select: none; }
+.bc-close { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.15); padding:6px 10px; border-radius:6px; cursor:pointer }
+.bc-drag-handle { flex: 1; cursor: grab; height: 36px; }
+.bc-drag-handle:active { cursor: grabbing; }
+
+.bc-media-wrap { position: relative; width: 100%; height: 420px; display:flex; justify-content:center; align-items:center; background: #000; }
+.bc-video, .bc-canvas { width: 100%; height: 100%; border-radius:6px; position:absolute; object-fit:cover }
+.bc-video { z-index: 1; background: transparent; }
+.bc-canvas { z-index: 2; pointer-events: none; background: transparent; }
+
+.bc-controls--large { display:flex; gap:12px; align-items:center; justify-content:flex-start }
+.bc-btn--large, .bc-upload--large { background:#ff6b81; color:#fff; border:none; padding:10px 14px; border-radius:8px; cursor:pointer }
+.bc-btn--large:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+.bc-upload--large input[type=file] { display:none }
+.bc-status { color:#fff; font-size:14px; margin-left:6px }
+
+.kyc-instruction {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+  z-index: 3;
+  text-align: center;
+  width: 80%;
+  max-width: 400px;
+}
+
+.premium-loading-container {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #000;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.captured-preview-img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: 0.35;
+}
+.scanning-laser {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 4px;
+  background: #52c41a;
+  box-shadow: 0 0 25px 10px rgba(82, 196, 26, 0.6);
+  animation: scan-laser 2s infinite ease-in-out alternate;
+  z-index: 5;
+}
+@keyframes scan-laser {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+.loading-overlay {
+  position: relative;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(12px);
+  padding: 30px 40px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.premium-spinner {
+  width: 50px; height: 50px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-top-color: #52c41a;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

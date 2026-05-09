@@ -50,3 +50,15 @@ export const getConversationById = async (req: any, res: any) => {
     });
   }
 };
+
+export const getAllConversations = async (req: any, res: any) => {
+  try {
+    const response = await conversationService.getAllConversations();
+    return res.status(200).json(response);
+  } catch (error: any) {
+    return res.status(500).json({
+      err: -1,
+      mes: "Fail at conversation controller: " + error.message,
+    });
+  }
+};

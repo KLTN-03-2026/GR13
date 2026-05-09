@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import dayjs from "dayjs";
 import { useSearchParams } from "react-router-dom";
 import {
   Typography,
@@ -18,6 +19,7 @@ import {
   Select,
   Badge,
   Spin,
+  DatePicker,
 } from "antd";
 import {
   PlusOutlined,
@@ -25,6 +27,7 @@ import {
   DeleteOutlined,
   SearchOutlined,
   BarChartOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import {
   BarChart,
@@ -36,6 +39,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import "./style.scss";
@@ -46,6 +51,7 @@ import {
   useUpdateProduct,
   useDeleteProduct,
 } from "../../../hooks/product";
+import { useGetAnalyticsStats } from "../../../hooks/admin";
 import type { IProduct } from "../../../api/product";
 
 const { Title, Text } = Typography;
@@ -54,19 +60,32 @@ const ProductManagementComponent: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingProduct, setEditingProduct] = useState<IProduct | null>(null);
-  const [period, setPeriod] = useState<"week" | "month" | "year">("week");
+  const [period, setPeriod] = useState<"week" | "month" | "year" | "custom">("week");
+  const [customDateRange, setCustomDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
   const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
 
   // Queries & Mutations
   const { data: productsRes, isLoading: isLoadingProducts } = useGetProducts();
   const { data: categoriesRes } = useGetCategories();
+  const { data: analyticsRes, isLoading: isLoadingAnalytics } = useGetAnalyticsStats() as any;
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
   const deleteProductMutation = useDeleteProduct();
 
   const products = productsRes?.data || [];
   const categories = categoriesRes?.data || [];
+  const analytics = (analyticsRes as any)?.data;
+
+  const defaultImportExport = { week: [], month: [], year: [], custom: [] };
+  const statsDataByPeriod = useMemo(() => {
+    if (!analytics?.importExportData) {
+      return defaultImportExport;
+    }
+    return analytics.importExportData;
+  }, [analytics]);
 
   useEffect(() => {
     if (searchParams.get("action") === "create") {
@@ -110,36 +129,10 @@ const ProductManagementComponent: React.FC = () => {
     "image",
   ];
 
-  // Mock data for Stats by Period (keep for UI)
-  const statsDataByPeriod = {
-    week: [
-      { name: "T2", import: 45, sold: 32 },
-      { name: "T3", import: 52, sold: 41 },
-      { name: "T4", import: 38, sold: 45 },
-      { name: "T5", import: 65, sold: 50 },
-      { name: "T6", import: 48, sold: 38 },
-      { name: "T7", import: 70, sold: 62 },
-      { name: "CN", import: 55, sold: 48 },
-    ],
-    month: [
-      { name: "Tuần 1", import: 320, sold: 280 },
-      { name: "Tuần 2", import: 410, sold: 350 },
-      { name: "Tuần 3", import: 380, sold: 420 },
-      { name: "Tuần 4", import: 450, sold: 390 },
-    ],
-    year: [
-      { name: "Tháng 1", import: 1200, sold: 950 },
-      { name: "Tháng 2", import: 1100, sold: 1050 },
-      { name: "Tháng 3", import: 1500, sold: 1300 },
-      { name: "Tháng 4", import: 1300, sold: 1150 },
-      { name: "Tháng 5", import: 1400, sold: 1200 },
-      { name: "Tháng 6", import: 1600, sold: 1450 },
-    ],
-  };
-
   const handleAdd = () => {
     setEditingProduct(null);
     form.resetFields();
+    setSearchText("");
     setIsModalVisible(true);
   };
 
@@ -167,8 +160,9 @@ const ProductManagementComponent: React.FC = () => {
   const handleModalOk = () => {
     form.validateFields().then(async (values) => {
       try {
+        console.log("Creating/Updating product with values:", values);
+        
         if (editingProduct) {
-          // Chỉ gửi các trường cần thiết khi cập nhật
           await updateProductMutation.mutateAsync({
             id: editingProduct.id,
             ...values,
@@ -181,11 +175,192 @@ const ProductManagementComponent: React.FC = () => {
           });
           message.success("Đã thêm sản phẩm mới");
         }
+        
+        setSearchText("");
         setIsModalVisible(false);
       } catch (error) {
+        console.error("Error creating/updating product:", error);
         message.error("Có lỗi xảy ra, vui lòng thử lại");
       }
     });
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Danh_sach_san_pham");
+
+      worksheet.properties.defaultRowHeight = 20;
+      worksheet.views = [{ state: "frozen", ySplit: 3 }];
+      worksheet.autoFilter = {
+        from: { row: 3, column: 1 },
+        to: { row: 3, column: 11 }
+      };
+
+      const titleRow1 = worksheet.addRow(["BÁO CÁO DANH SÁCH SẢN PHẨM"]);
+      titleRow1.font = { 
+        size: 18, 
+        bold: true, 
+        color: { argb: "FF1F4E79" } 
+      };
+      titleRow1.alignment = { 
+        vertical: "middle", 
+        horizontal: "center" 
+      };
+      worksheet.mergeCells("A1:K1");
+
+      const titleRow2 = worksheet.addRow([`Ngày xuất: ${dayjs().format("DD/MM/YYYY HH:mm:ss")}`]);
+      titleRow2.font = { 
+        size: 12, 
+        italic: true, 
+        color: { argb: "FF666666" } 
+      };
+      titleRow2.alignment = { 
+        vertical: "middle", 
+        horizontal: "center" 
+      };
+      worksheet.mergeCells("A2:K2");
+
+      const headers = [
+        "ID",
+        "Tên sản phẩm",
+        "Thương hiệu",
+        "Danh mục",
+        "Công dụng",
+        "Giá gốc",
+        "Giá khuyến mãi",
+        "Số lượng tồn",
+        "Trạng thái",
+        "Ngày tạo",
+        "Ngày cập nhật"
+      ];
+
+      const headerRow = worksheet.addRow(headers);
+      headerRow.height = 30;
+
+      const headerStyle = {
+        fill: {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF1F4E79" }
+        },
+        font: {
+          bold: true,
+          size: 11,
+          color: { argb: "FFFFFFFF" }
+        },
+        alignment: {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true
+        },
+        border: {
+          top: { style: "thin", color: { argb: "FFFFFFFF" } },
+          left: { style: "thin", color: { argb: "FFFFFFFF" } },
+          bottom: { style: "thin", color: { argb: "FFFFFFFF" } },
+          right: { style: "thin", color: { argb: "FFFFFFFF" } }
+        }
+      };
+
+      headerRow.eachCell((cell) => {
+        Object.assign(cell, headerStyle);
+      });
+
+      filteredProducts.forEach((product, index) => {
+        const row = worksheet.addRow([
+          product.id,
+          product.name,
+          product.brand || "N/A",
+          product.categoryData?.name || "N/A",
+          product.usage || "N/A",
+          product.price,
+          product.discountPrice || 0,
+          product.stock,
+          product.status === "active" ? "Đang bán" : "Ẩn",
+          product.createdAt ? dayjs(product.createdAt).format("DD/MM/YYYY HH:mm") : "N/A",
+          product.updatedAt ? dayjs(product.updatedAt).format("DD/MM/YYYY HH:mm") : "N/A"
+        ]);
+
+        row.height = 22;
+
+        const isEven = index % 2 === 0;
+        const rowFillColor = isEven ? { argb: "FFF5F8FA" } : { argb: "FFFFFFFF" };
+
+        row.eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFD0D7E3" } },
+            left: { style: "thin", color: { argb: "FFD0D7E3" } },
+            bottom: { style: "thin", color: { argb: "FFD0D7E3" } },
+            right: { style: "thin", color: { argb: "FFD0D7E3" } }
+          };
+
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: rowFillColor
+          };
+
+          if (colNumber === 6 || colNumber === 7) {
+            cell.alignment = { vertical: "middle", horizontal: "right" };
+            cell.numFmt = '#,##0"đ"';
+          } else if (colNumber === 1 || colNumber === 8) {
+            cell.alignment = { vertical: "middle", horizontal: "center" };
+          } else {
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+          }
+
+          if (colNumber === 8 && product.stock < 10) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFFE6E6" }
+            };
+            cell.font = { color: { argb: "FFC00000" }, bold: true };
+          }
+
+          if (colNumber === 9) {
+            if (product.status === "active") {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFE6FFE6" }
+              };
+              cell.font = { color: { argb: "FF007A33" }, bold: true };
+            } else {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFFFF0E6" }
+              };
+              cell.font = { color: { argb: "FFCC6600" }, bold: true };
+            }
+          }
+        });
+      });
+
+      worksheet.columns = [
+        { width: 8 },
+        { width: 35 },
+        { width: 18 },
+        { width: 18 },
+        { width: 25 },
+        { width: 15 },
+        { width: 18 },
+        { width: 12 },
+        { width: 12 },
+        { width: 18 },
+        { width: 18 }
+      ];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const fileName = `Bao_cao_san_pham_${dayjs().format('DDMMYYYY_HHmmss')}.xlsx`;
+      saveAs(blob, fileName);
+      message.success("Đã xuất file Excel chuyên nghiệp thành công!");
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      message.error("Lỗi khi xuất file Excel!");
+    }
   };
 
   const filteredProducts = products.filter((p) =>
@@ -335,43 +510,56 @@ const ProductManagementComponent: React.FC = () => {
                 <Space>
                   <BarChartOutlined /> Thống kê Nhập - Xuất hàng hóa
                 </Space>
-                <Select
-                  value={period}
-                  onChange={(value) => setPeriod(value)}
-                  style={{ width: 120 }}
-                  options={[
-                    { value: "week", label: "Xem Tuần" },
-                    { value: "month", label: "Xem Tháng" },
-                    { value: "year", label: "Xem Năm" },
-                  ]}
-                />
+                <Space>
+                  <Select
+                    value={period}
+                    onChange={(value) => setPeriod(value)}
+                    style={{ width: 140 }}
+                    options={[
+                      { value: "week", label: "Xem Tuần" },
+                      { value: "month", label: "Xem Tháng" },
+                      { value: "year", label: "Xem Năm" },
+                      { value: "custom", label: "Tùy chọn" },
+                    ]}
+                  />
+                  {period === "custom" && (
+                    <DatePicker.RangePicker
+                      value={customDateRange}
+                      onChange={(dates) => setCustomDateRange(dates)}
+                      style={{ width: 250 }}
+                      format="DD/MM/YYYY"
+                    />
+                  )}
+                </Space>
               </div>
             }
             bordered={false}
           >
-            <div style={{ height: 300, width: "100%" }}>
-              <ResponsiveContainer>
-                <BarChart data={statsDataByPeriod[period]}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar
-                    dataKey="import"
-                    fill="#52c41a"
-                    name="Nhập kho"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="sold"
-                    fill="#1890ff"
-                    name="Đã bán"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <Spin spinning={isLoadingAnalytics} tip="Đang tải dữ liệu...">
+              <div style={{ height: 300, width: "100%" }}>
+                <ResponsiveContainer>
+                  <BarChart data={statsDataByPeriod[period]}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="import"
+                      fill="#52c41a"
+                      name="Nhập kho"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="export"
+                      fill="#1890ff"
+                      name="Xuất kho (Bán ra)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Spin>
           </Card>
         </Col>
       </Row>
@@ -389,6 +577,9 @@ const ProductManagementComponent: React.FC = () => {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
             />
+            <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>
+              Xuất Excel
+            </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
               Thêm sản phẩm
             </Button>
@@ -434,7 +625,7 @@ const ProductManagementComponent: React.FC = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item
                 name="categoryId"
                 label="Danh mục"
@@ -449,12 +640,28 @@ const ProductManagementComponent: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col span={6}>
               <Form.Item name="usage" label="Công dụng">
                 <Input placeholder="Ví dụ: Dưỡng ẩm, sạch sâu..." />
               </Form.Item>
             </Col>
-            <Col span={8}>
+            <Col span={6}>
+              <Form.Item name="advice_id" label="Phân loại tư vấn (AI)">
+                <Select placeholder="Chọn loại tư vấn">
+                  <Select.Option value={1}>1 - Da khỏe mạnh</Select.Option>
+                  <Select.Option value={2}>2 - Mụn sưng viêm</Select.Option>
+                  <Select.Option value={3}>3 - Mụn đầu đen & Lỗ chân lông</Select.Option>
+                  <Select.Option value={4}>4 - Thâm nám</Select.Option>
+                  <Select.Option value={5}>5 - Lão hóa</Select.Option>
+                  <Select.Option value={6}>6 - Da nhạy cảm</Select.Option>
+                  <Select.Option value={7}>7 - Da khô</Select.Option>
+                  <Select.Option value={8}>8 - Da dầu</Select.Option>
+                  <Select.Option value={9}>9 - Hỗn hợp Thiên dầu</Select.Option>
+                  <Select.Option value={10}>10 - Hỗn hợp Thiên khô</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={6}>
               <Form.Item name="stock" label="Số lượng tồn">
                 <InputNumber style={{ width: "100%" }} min={0} />
               </Form.Item>

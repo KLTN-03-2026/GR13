@@ -13,6 +13,7 @@ export interface ProductAttributes {
   categoryId: number;
   brand?: string | null;
   status: "active" | "inactive";
+  advice_id?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -20,13 +21,12 @@ export interface ProductAttributes {
 export interface ProductCreationAttributes
   extends Optional<
     ProductAttributes,
-    "id" | "usage" | "discountPrice" | "images" | "stock" | "brand" | "status" | "createdAt" | "updatedAt"
-  > {}
+    "id" | "usage" | "discountPrice" | "images" | "stock" | "brand" | "status" | "advice_id" | "createdAt" | "updatedAt"
+  > { }
 
 class Product
   extends Model<ProductAttributes, ProductCreationAttributes>
-  implements ProductAttributes
-{
+  implements ProductAttributes {
   public id!: number;
   public name!: string;
   public description!: string;
@@ -39,6 +39,7 @@ class Product
   public categoryId!: number;
   public brand!: string | null;
   public status!: "active" | "inactive";
+  public advice_id!: number | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -63,9 +64,13 @@ class Product
       foreignKey: "productId",
       as: "favoriteProducts",
     });
-    Product.hasMany(models.ProductRecommendation, {
-      foreignKey: "product_id",
-      as: "productRecommendations",
+    Product.hasMany(models.Wishlist, {
+      foreignKey: "productId",
+      as: "wishlistItems",
+    });
+    Product.belongsTo(models.ProductRecommendation, {
+      foreignKey: "advice_id",
+      as: "recommendation",
     });
   }
 
@@ -120,6 +125,10 @@ class Product
         status: {
           type: DataTypes.ENUM("active", "inactive"),
           defaultValue: "active",
+        },
+        advice_id: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
         },
       },
       {

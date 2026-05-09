@@ -70,8 +70,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
         // notify other listeners (header) about auth change
         try {
           window.dispatchEvent(new Event("authChanged"));
-        } catch {}
-      } catch {}
+        } catch { }
+      } catch { }
       return;
     }
     const err = new Error(res?.mess || "Đăng nhập thất bại");
@@ -100,8 +100,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
         // notify other listeners (header) about auth change
         try {
           window.dispatchEvent(new Event("authChanged"));
-        } catch {}
-      } catch {}
+        } catch { }
+      } catch { }
       return;
     }
     const err = new Error(res?.mess || "Đăng nhập thất bại");
@@ -129,8 +129,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
         // notify other listeners (header) about auth change
         try {
           window.dispatchEvent(new Event("authChanged"));
-        } catch {}
-      } catch {}
+        } catch { }
+      } catch { }
       return;
     }
     const err = new Error(res?.mess || "Đăng nhập Google thất bại");
@@ -166,8 +166,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
           );
           try {
             window.dispatchEvent(new Event("authChanged"));
-          } catch {}
-        } catch {}
+          } catch { }
+        } catch { }
       }
       return res;
     }
@@ -192,8 +192,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren<{}>> = ({
       localStorage.removeItem("bc_token");
       try {
         window.dispatchEvent(new Event("authChanged"));
-      } catch {}
-    } catch {}
+      } catch { }
+    } catch { }
   };
 
   return (

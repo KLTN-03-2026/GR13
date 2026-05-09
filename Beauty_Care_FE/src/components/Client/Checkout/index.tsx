@@ -4,12 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as cartApi from "../../../api/cart";
 import * as orderApi from "../../../api/order";
 import * as paymentApi from "../../../api/payment";
-import { QRCodeCanvas } from "qrcode.react";
 import { 
   ArrowLeftOutlined, 
   LockOutlined, 
-  CreditCardOutlined,
-  WalletOutlined
+  WalletOutlined,
+  CheckCircleOutlined
 } from '@ant-design/icons';
 import { message } from 'antd';
 import "./style.scss";
@@ -33,30 +32,21 @@ const Checkout: React.FC = () => {
   const createOrderMutation = useMutation({
     mutationFn: (payload: any) => orderApi.createOrder(payload),
     onSuccess: async (res: any) => {
-      console.log("✅ Create Order Response:", res);
       queryClient.invalidateQueries({ queryKey: ["cart"] });
-      
       const orderId = res?.orderId || res?.data?.orderId || res?.id;
       
-      if (paymentMethod === "QR" || paymentMethod === "PAYOS") {
+      if (paymentMethod === "PAYOS") {
         if (orderId) {
           try {
-            console.log("📦 Creating payment link for orderId:", orderId);
             const paymentRes: any = await paymentApi.createPaymentLink(orderId);
-            console.log("💳 Payment Link Response:", paymentRes);
-            
             if (paymentRes?.err === 0 && paymentRes?.data?.checkoutUrl) {
-              console.log("🚀 Redirecting to checkout URL:", paymentRes.data.checkoutUrl);
               window.location.href = paymentRes.data.checkoutUrl;
             } else {
-              message.error(paymentRes?.mess || "Không thể tạo link thanh toán payOS");
+              message.error(paymentRes?.mess || "Không thể tạo link thanh toán PayOS");
             }
           } catch (error) {
-            console.error("❌ Payment Error:", error);
-            message.error("Lỗi khi tạo link thanh toán: " + (error as Error)?.message);
+            message.error("Lỗi khi tạo link thanh toán");
           }
-        } else {
-          message.error("Không nhận được orderId từ server");
         }
       } else {
         message.success("Đặt hàng thành công!");
@@ -64,17 +54,12 @@ const Checkout: React.FC = () => {
       }
     },
     onError: (error: any) => {
-      console.error("❌ Create Order Error:", error);
       message.error("Lỗi tạo đơn hàng: " + (error?.message || "Vui lòng thử lại"));
     },
   });
 
   const subtotal = cartItems.reduce((sum, item) => {
-    const price =
-      item?.productData?.discountPrice ||
-      item?.productData?.price ||
-      0;
-
+    const price = item?.productData?.discountPrice || item?.productData?.price || 0;
     return sum + price * (item?.quantity || 1);
   }, 0);
 
@@ -83,15 +68,13 @@ const Checkout: React.FC = () => {
 
   const handlePlaceOrder = () => {
     if (!firstName || !lastName || !phone || !address) {
-      alert("Vui lòng nhập đầy đủ thông tin!");
+      message.warning("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-
     if (cartItems.length === 0) {
-      alert("Giỏ hàng trống!");
+      message.warning("Giỏ hàng trống!");
       return;
     }
-
     createOrderMutation.mutate({
       shippingAddress: address,
       phone,
@@ -102,7 +85,6 @@ const Checkout: React.FC = () => {
   return (
     <div className="checkoutPage">
       <div className="container">
-
         {/* HEADER */}
         <header className="header">
           <div className="stepper">
@@ -113,12 +95,12 @@ const Checkout: React.FC = () => {
             <div className="line"></div>
             <div className="step">
               <span className="number">2</span>
-              <span className="label">Vận Chuyển</span>
+              <span className="label">Thanh Toán</span>
             </div>
             <div className="line"></div>
             <div className="step">
-              <span className="number">3</span>
-              <span className="label">Thanh Toán</span>
+              <span className="number"><CheckCircleOutlined /></span>
+              <span className="label">Hoàn Tất</span>
             </div>
           </div>
 
@@ -128,69 +110,73 @@ const Checkout: React.FC = () => {
         </header>
 
         <div className="layout">
-
-          {/* LEFT */}
+          {/* LEFT: SHIPPING & PAYMENT */}
           <main className="leftColumn">
-
             <section className="section">
-              <h2 className="sectionTitle">Địa Chỉ Giao Hàng</h2>
-
+              <h2 className="sectionTitle">Thông Tin Giao Hàng</h2>
               <div className="formGrid">
                 <div className="inputGroup">
                   <label>Họ</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                  <input 
+                    placeholder="Nhập họ của bạn"
+                    value={firstName} 
+                    onChange={(e) => setFirstName(e.target.value)} 
+                  />
                 </div>
-
                 <div className="inputGroup">
                   <label>Tên</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                  <input 
+                    placeholder="Nhập tên của bạn"
+                    value={lastName} 
+                    onChange={(e) => setLastName(e.target.value)} 
+                  />
                 </div>
-
                 <div className="inputGroup">
                   <label>Số điện thoại</label>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <input 
+                    placeholder="VD: 0912345678"
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)} 
+                  />
                 </div>
-
                 <div className="inputGroup">
-                  <label>Địa chỉ</label>
-                  <input value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <label>Địa chỉ nhận hàng</label>
+                  <input 
+                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
+                    value={address} 
+                    onChange={(e) => setAddress(e.target.value)} 
+                  />
                 </div>
               </div>
             </section>
 
             <section className="section">
               <h2 className="sectionTitle">Phương Thức Thanh Toán</h2>
-
               <div className="paymentOptions">
-
-                {/* CARD */}
-             
-
-                {/* COD */}
-                <label className="paymentItem">
+                <label className={`paymentItem ${paymentMethod === 'COD' ? 'selected' : ''}`}>
                   <input
                     type="radio"
+                    name="payment"
                     checked={paymentMethod === 'COD'}
                     onChange={() => setPaymentMethod('COD')}
                   />
                   <div className="paymentContent">
-                    💵 COD
+                    💵 Thanh toán khi nhận hàng (COD)
                   </div>
                 </label>
 
-                {/* QR / PAYOS */}
-                <label className="paymentItem">
+                <label className={`paymentItem ${paymentMethod === 'PAYOS' ? 'selected' : ''}`}>
                   <input
                     type="radio"
+                    name="payment"
                     checked={paymentMethod === 'PAYOS'}
                     onChange={() => setPaymentMethod('PAYOS')}
                   />
                   <div className="paymentContent">
                     <WalletOutlined />
-                    <span>Thanh toán PayOS</span>
+                    <span>Thanh toán qua PayOS</span>
                   </div>
                 </label>
-
               </div>
             </section>
 
@@ -199,36 +185,31 @@ const Checkout: React.FC = () => {
               onClick={handlePlaceOrder}
               disabled={createOrderMutation.isPending || cartLoading}
             >
-              {createOrderMutation.isPending ? "Đang xử lý..." : "XÁC NHẬN ĐẶT HÀNG"} <LockOutlined />
+              {createOrderMutation.isPending ? "Đang xử lý..." : "ĐẶT HÀNG NGAY"} <LockOutlined />
             </button>
-
           </main>
 
-          {/* RIGHT */}
+          {/* RIGHT: ORDER SUMMARY */}
           <aside className="rightColumn">
             <div className="orderSummary">
-              <h3 className="summaryTitle">Đơn Hàng</h3>
+              <h3 className="summaryTitle">Đơn Hàng Của Bạn</h3>
 
               <div className="productList">
                 {cartLoading ? (
-                  <div>Đang tải giỏ hàng...</div>
+                  <div className="loading-state">Đang tải giỏ hàng...</div>
                 ) : (
                   cartItems?.map((item) => (
                     <div className="productItem" key={item?.id}>
                       <div className="imgBadge">
-                        <img src={item?.productData?.image} />
+                        <img src={item?.productData?.image} alt={item?.productData?.name} />
                         <span className="badge">{item?.quantity}</span>
                       </div>
-
                       <div className="pInfo">
                         <span className="pName">{item?.productData?.name}</span>
                       </div>
-
                       <div className="pPrice">
                         {(
-                          item?.productData?.discountPrice ||
-                          item?.productData?.price ||
-                          0
+                          (item?.productData?.discountPrice || item?.productData?.price || 0) * (item?.quantity || 1)
                         ).toLocaleString("vi-VN")}đ
                       </div>
                     </div>
@@ -241,14 +222,16 @@ const Checkout: React.FC = () => {
                   <span>Tạm tính</span>
                   <span>{subtotal.toLocaleString("vi-VN")}đ</span>
                 </div>
-
+                <div className="priceRow">
+                  <span>Phí vận chuyển</span>
+                  <span>Miễn phí</span>
+                </div>
                 <div className="priceRow">
                   <span>Thuế (8%)</span>
                   <span>{tax.toLocaleString("vi-VN")}đ</span>
                 </div>
-
                 <div className="totalRow">
-                  <span>Tổng</span>
+                  <span>Tổng cộng</span>
                   <span className="totalAmount">
                     {totalAmount.toLocaleString("vi-VN")}đ
                   </span>
@@ -256,12 +239,10 @@ const Checkout: React.FC = () => {
               </div>
 
               <div className="guarantee">
-                <p><LockOutlined /> Thanh toán bảo mật</p>
+                <LockOutlined /> <span>Thanh toán bảo mật & mã hóa SSL</span>
               </div>
-
             </div>
           </aside>
-
         </div>
       </div>
     </div>

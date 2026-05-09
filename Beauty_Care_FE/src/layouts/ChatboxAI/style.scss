@@ -1,110 +1,345 @@
-$primary-color: #C2185B;
 @use "sass:color";
-$text-dark: #1a1a1a;
-$glass-bg: rgba(255,255,255,0.6);
-$glass-border: rgba(255,255,255,0.4);
-$shadow: 0 10px 30px rgba(0,0,0,0.12);
+
+$primary-pink: #FF5FB1;
+$bg-dark-glass: rgba(15, 15, 15, 0.75);
+$bg-matte-black: #121212;
+$text-light: #fdfdfd;
+$text-muted: #b0b0b0;
+$font-serif: 'Playfair Display', serif;
+$font-sans: 'Inter', sans-serif;
+$glass-border: rgba(255, 255, 255, 0.1);
+$shadow-premium: 0 25px 60px rgba(0, 0, 0, 0.6);
+$transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 
 .chatbox-ai-root {
+  /* FLOATING TOGGLE */
+  .ant-progress-text { color: #ffffff !important; font-weight: 700; }
+
   .chatbox-toggle {
+
     position: fixed;
-    right: 28px;
-    bottom: 28px;
+    right: 40px;
+    bottom: 100px;
     z-index: 1200;
-    background: linear-gradient(180deg, $primary-color, color.adjust($primary-color, $lightness: -6%));
-    border: none;
-    box-shadow: 0 8px 24px rgba(194,33,104,0.28);
-    transition: transform .28s ease, opacity .28s ease;
-    &:hover { transform: translateY(-3px); }
+    width: 65px;
+    height: 65px;
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    transition: $transition;
+    animation: pulse-pink 3s infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+
+
+    &:hover {
+      transform: scale(1.1);
+      border-color: $primary-pink;
+      color: $primary-pink;
+    }
   }
 
+  /* CHAT WINDOW */
   .chatbox-window {
     position: fixed;
-    left: 0;
     top: 0;
-    width: 800px;
-    max-width: calc(100% - 56px);
-    height: 640px;
-    border-radius: 18px;
+    left: 0;
+    width: 1000px;
+    max-width: calc(100% - 40px);
+    height: 760px;
+    max-height: calc(100vh - 40px);
+    border-radius: 24px;
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    /* Only animate opacity & shadow to avoid transform transitions which interfere with dragging */
-    transition: opacity .32s cubic-bezier(.2,.9,.3,1), box-shadow .32s ease;
+    transition: opacity .4s ease, box-shadow .4s ease;
     z-index: 1199;
+    background: $bg-dark-glass;
+    backdrop-filter: blur(25px) saturate(150%);
+    border: 1px solid $glass-border;
 
     &.visible {
       opacity: 1;
       pointer-events: auto;
-      box-shadow: $shadow;
+      box-shadow: $shadow-premium;
     }
-
-    background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.6));
-    backdrop-filter: blur(8px) saturate(120%);
-    border: 1px solid $glass-border;
 
     .chatbox-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(0,0,0,0.04);
-      cursor: move; /* drag handle */
+      padding: 20px 30px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: move;
+      background: rgba(0, 0, 0, 0.3);
 
-      .no-drag { cursor: default; }
+      .header-title {
+        font-family: $font-serif;
+        font-weight: 600;
+        color: #fff;
+        font-size: 20px;
+      }
 
-      .header-left { display: flex; align-items: center; gap: 12px; }
-      .header-icon { font-size: 20px; color: $primary-color; }
-      .header-title { font-weight: 700; color: $text-dark; font-size: 16px; }
+      .header-icon { color: $primary-pink; font-size: 22px; }
+
+      .ghost-btn-header {
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 50px;
+        font-weight: 600;
+        transition: 0.3s;
+        &:hover { border-color: #fff; background: rgba(255,255,255,0.1); }
+      }
+      
+      .close-btn { color: #fff; &:hover { color: $primary-pink; } }
     }
 
     .chatbox-body {
-      padding: 20px;
-      height: calc(100% - 72px);
+      padding: 30px;
+      height: calc(100% - 75px);
       display: flex;
       flex-direction: column;
+      overflow: hidden;
+    }
+  }
 
-      .phase-1 {
-        display: flex; gap: 18px; align-items: stretch; justify-content: center;
+  /* PHASE 1: ACTIONS */
+  .phase-1 {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    align-items: stretch; // Use stretch for equal height
+    max-height: 450px; // Limit max height if needed
+    margin: auto 0;
+    
+    .action-card {
+      flex: 1;
+      max-width: 360px;
+      padding: 50px 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      text-align: center;
+      transition: $transition;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
 
-        .action-card {
-          flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 28px;
-          border-radius: 14px; background: $glass-bg; border: 1px solid $glass-border; box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-          text-align: center;
-          .action-icon { font-size: 36px; color: $primary-color; }
-          .action-title { font-weight: 700; font-size: 18px; color: $text-dark; }
-          .action-desc { color: color.adjust(#000, $lightness: -35%); font-size: 13px; }
-          .action-btn { margin-top: 8px; border-radius: 30px; padding: 8px 22px; }
+      &:hover {
+        transform: translateY(-8px);
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba($primary-pink, 0.5);
+      }
+      .action-icon { font-size: 50px; color: $primary-pink; margin-bottom: 20px; }
+      .action-title { font-family: $font-sans; color: #fff; font-size: 20px; font-weight: 700; }
+      .action-desc { color: $text-muted; margin-bottom: 25px; min-height: 44px; } // min-height to align buttons
+      .action-btn {
+        border-radius: 50px; font-weight: 700; height: 45px; padding: 0 35px;
+        background: transparent !important;
+        border: 1px solid #fff !important;
+        color: #fff !important;
+        transition: $transition;
+        
+        &:hover {
+          background: $primary-pink !important;
+          border-color: $primary-pink !important;
+          color: #fff !important;
+          box-shadow: 0 0 15px rgba($primary-pink, 0.5);
+        }
+      }
+    }
+  }
+
+  /* ANALYSIS DASHBOARD (THE CORE REFACTOR) */
+  .analysis-dashboard {
+    display: flex;
+    gap: 0; // No gap, we want the split look
+    height: 100%;
+    width: 100%;
+    
+    .dashboard-left {
+      flex: 0 0 60%;
+      padding-right: 30px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+
+      &::-webkit-scrollbar { width: 5px; }
+      &::-webkit-scrollbar-thumb { background: $primary-pink; border-radius: 10px; }
+
+      .photo-wrap {
+        width: 100%;
+        height: 400px;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        background: #000;
+        img { width: 100%; height: 100%; object-fit: contain; }
+        .scanning-line {
+          position: absolute; left: 0; right: 0; height: 3px;
+          background: linear-gradient(90deg, transparent, rgba($primary-pink, 0.8), transparent);
+          animation: scan 3s linear infinite; top: 0;
         }
       }
 
-      .phase-2 { display: flex; gap: 16px; height: 100%; }
-      .left { flex: 1; display:flex; align-items:center; justify-content:center; }
-      .right { flex: 1; display:flex; flex-direction:column; gap: 12px; }
-
-      .photo-wrap {
-        width: 92%; height: 420px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid rgba(0,0,0,0.05);
-        img { width: 100%; height: 100%; object-fit: cover; display:block; }
-        .scanning-line { position: absolute; left: -20%; right: -20%; height: 3px; background: linear-gradient(90deg, transparent, rgba($primary-color,0.9), transparent); top: 10%; animation: scan 3s linear infinite; }
+      .metrics-panel {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 25px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        .score-list { display: flex; flex-direction: column; gap: 15px; }
+        .score-row {
+          .label { font-weight: 600; color: #fff; font-size: 14px; margin-bottom: 4px; }
+        }
+        .compact-summary {
+          margin-top: 25px; display: flex; align-items: center; justify-content: space-between;
+          .score-info { 
+            .label { color: $text-muted; } 
+            .value { font-size: 36px; color: $primary-pink; font-weight: 800; font-family: $font-serif; } 
+          }
+          .skin-tag { padding: 5px 15px; font-weight: 700; font-size: 14px; }
+        }
       }
 
-      @keyframes scan { 0%{ top: 0% } 50%{ top: 55% } 100%{ top: 100% } }
-
-      .score-list { display:flex; flex-direction:column; gap:10px; padding-right:10px; }
-      .score-row { display:flex; flex-direction:column; gap:6px; .label{font-weight:600;color:$text-dark;} }
-
-      .summary { margin-top:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-      .total { font-size:18px; color:$text-dark; font-weight:700; }
-      .score { color: $primary-color; font-size:20px; margin-left:6px; }
-
-      .phase-3 { display:flex; flex-direction:column; gap:12px; }
-      .recommend-title { font-weight:700; font-size:16px; margin-bottom:6px; }
-      .product-scroller { display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; }
-      .product-card { min-width:160px; border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:8px; align-items:center; background:$glass-bg; border:1px solid $glass-border; }
-      .product-card img { width:100%; height:100px; object-fit:cover; border-radius:8px; }
-      .prod-name{ font-weight:700; font-size:14px; text-align:center; }
-      .prod-price{ color:$primary-color; font-weight:700; }
-      .prod-actions{ display:flex; gap:8px; width:100%; justify-content:space-between; }
+      .advice-panel, .routine-panel {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 25px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        .panel-title { font-family: $font-serif; font-size: 20px; color: #fff; margin-bottom: 15px; }
+        .advice-content { line-height: 1.8; color: $text-muted; white-space: pre-line; }
+        .routine-flex { display: flex; gap: 20px; }
+        .routine-card {
+          flex: 1; padding: 20px; border-radius: 15px;
+          &.morning { background: rgba(255, 229, 143, 0.05); border: 1px solid rgba(255, 229, 143, 0.2); }
+          &.evening { background: rgba(173, 198, 255, 0.05); border: 1px solid rgba(173, 198, 255, 0.2); }
+          .r-label { font-weight: 800; color: #fff; margin-bottom: 10px; font-size: 12px; }
+          .r-content { font-size: 13px; color: $text-muted; line-height: 1.6; white-space: pre-line; }
+        }
+      }
     }
+
+    .dashboard-right {
+      flex: 0 0 40%;
+      background: $bg-matte-black;
+      border-radius: 24px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+
+      .recommend-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        
+        .panel-title {
+          font-family: $font-serif;
+          font-size: 22px;
+          color: #fff;
+          margin-bottom: 20px;
+          &:before { content: ""; display: inline-block; width: 4px; height: 18px; background: $primary-pink; margin-right: 12px; vertical-align: middle; border-radius: 2px; }
+        }
+      }
+
+      .scrollable-area {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 12px;
+        &::-webkit-scrollbar { width: 4px; background: rgba(255, 255, 255, 0.05); }
+        &::-webkit-scrollbar-thumb { background: $primary-pink; border-radius: 10px; }
+      }
+
+      /* PRODUCT CARDS */
+      .product-item-card {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        margin-bottom: 18px;
+        padding: 15px;
+        transition: $transition;
+        
+        &:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba($primary-pink, 0.3); }
+
+        .ant-card-body { padding: 0; }
+
+        .p-link {
+          display: flex; gap: 15px; text-decoration: none;
+          img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
+          .p-info {
+            flex: 1;
+            .p-name { color: #fff; font-weight: 600; font-size: 15px; margin-bottom: 5px; line-height: 1.4; }
+            .p-price { color: $primary-pink; font-weight: 700; font-size: 16px; }
+          }
+        }
+
+        .p-actions {
+          display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);
+          .ant-btn-text { color: #888; &:hover { color: #fff; } }
+          .ant-btn-primary { background: $primary-pink; border: none; font-weight: 700; border-radius: 8px; }
+        }
+      }
+
+      .blog-mini-item {
+        display: flex; gap: 15px; padding: 15px; border-radius: 15px; background: rgba(255, 255, 255, 0.03); margin-bottom: 12px; transition: 0.3s;
+        &:hover { background: rgba(255, 255, 255, 0.08); }
+        img { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+        .b-info { flex: 1; .b-title { color: #fff; font-weight: 600; font-size: 13px; line-height: 1.4; } .b-tag { color: $primary-pink; font-size: 11px; margin-top: 4px; font-weight: 700; } }
+      }
+    }
+  }
+
+  /* HISTORY PHASE */
+  .phase-history {
+    flex: 1; overflow-y: auto; padding-right: 15px;
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb { background: $primary-pink; border-radius: 10px; }
+    .history-header { font-family: $font-serif; font-size: 24px; color: #fff; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+    .history-item {
+      display: flex; gap: 20px; align-items: center;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 15px; margin-bottom: 15px;
+      cursor: pointer; transition: $transition;
+      &:hover { transform: translateX(8px); border-color: $primary-pink; background: rgba(255,255,255,0.08); }
+      .history-img { width: 70px; height: 70px; border-radius: 12px; overflow: hidden; flex-shrink: 0; img { width: 100%; height: 100%; object-fit: cover; } }
+      .history-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+      .history-date { color: #fff; font-size: 14px; font-weight: 700; }
+      .history-type { color: $text-muted; font-size: 13px; }
+      .history-score { color: $primary-pink; font-weight: 800; font-size: 14px; margin-top: 2px; }
+    }
+  }
+}
+
+/* ANIMATIONS */
+@keyframes pulse-pink {
+  0% { box-shadow: 0 0 0 0 rgba(255, 95, 177, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 95, 177, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 95, 177, 0); }
+}
+
+@keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .chatbox-ai-root .chatbox-window {
+    width: 95vw; height: 90vh;
+    .analysis-dashboard { flex-direction: column; overflow-y: auto; }
+    .dashboard-left, .dashboard-right { flex: 1 0 auto; width: 100%; padding-right: 0; }
+    .dashboard-right { margin-top: 30px; }
+  }
+}
+
+@media (max-width: 768px) {
+  .chatbox-ai-root .chatbox-window {
+    .phase-1 { flex-direction: column; padding: 20px; .action-card { max-width: 100%; padding: 30px; } }
+    .dashboard-left .photo-wrap { height: 300px; }
+    .dashboard-left .routine-flex { flex-direction: column; }
   }
 }

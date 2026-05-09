@@ -29,3 +29,24 @@ export const verifyToken = (
     next();
   });
 };
+
+export const verifyTokenOptional = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    return next();
+  }
+
+  const accessToken = token.split(" ")[1];
+  if (!accessToken) return next();
+
+  jwt.verify(accessToken, process.env.JWT_SECRET as string, (err, user) => {
+    if (!err) {
+      (req as any).user = user;
+    }
+    next();
+  });
+};

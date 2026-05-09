@@ -292,7 +292,7 @@ const SettingsManagementComponent: React.FC = () => {
     <div className="settings-management">
       <Title level={2}>Cài đặt hệ thống</Title>
 
-      <Card variant="shadow" className="settings-card">
+      <Card  className="settings-card">
         <Tabs defaultActiveKey="1" tabPosition="left" items={items} />
       </Card>
     </div>

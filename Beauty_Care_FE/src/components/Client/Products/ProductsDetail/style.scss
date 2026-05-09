@@ -1,198 +1,490 @@
-$primary-color: #C2185B; 
 @use 'sass:color';
-// Variables - Màu sắc sang trọng cho mỹ phẩm
-$accent-dark: #1a1a1a;
-$text-main: #222222;
-$text-light: #777777;
-$border-soft: #f0f0f0;
-$bg-body: #fcfcfc;
-$shadow-luxury: 0 10px 30px rgba(0, 0, 0, 0.05);
+
+// Luxury Variables
+$primary-pink: #FF5FB1;
+$bg-matte-black: #0a0a0a;
+$bg-glass: rgba(255, 255, 255, 0.05);
+$text-light: #fdfdfd;
+$text-muted: rgba(255, 255, 255, 0.7);
+$font-serif: 'Playfair Display', serif;
+$transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+$glass-border: rgba(255, 255, 255, 0.1);
 
 .productDetailPage {
-  background-color: $bg-body;
-  padding: 40px 0;
+  background-color: $bg-matte-black;
+  padding: 80px 0;
   min-height: 100vh;
+  color: $text-light;
+  font-family: 'Inter', sans-serif;
 
-  // Header điều hướng
+  // Navigation
   .backButton {
     max-width: 1200px;
-    margin: 0 auto 20px;
-    padding: 0 20px;
-    display: flex;
-    justify-content: flex-start;
+    margin: 0 auto 40px;
+    padding: 0 30px;
 
     .backBtn {
-      color: $text-light;
+      color: $text-muted;
+      font-size: 14px;
       font-weight: 500;
-      &:hover { color: $primary-color; }
+      transition: $transition;
+      padding: 0;
+      
+      &:hover {
+        color: #fff;
+        transform: translateX(-5px);
+      }
     }
   }
 
-  // Container chính - Sửa lỗi vỡ khung ở đây
+  // Main Container
   .productDetailContainer.luxury {
     max-width: 1200px;
     margin: 0 auto;
-    background: #ffffff;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: $shadow-luxury;
-
-    // Sửa lỗi Row/Col của Ant Design bị đè
+    background: transparent;
+    padding: 0 30px;
+    
     .ant-row {
       margin-left: 0 !important;
       margin-right: 0 !important;
     }
   }
 
-  // Cột bên trái: Ảnh sản phẩm
+  // IMAGE GALLERY (Left Column)
   .gallery {
     .main-photo {
       width: 100%;
-      height: 500px; // Cố định chiều cao để không bị quá dài
-      border-radius: 12px;
+      height: 600px;
+      border-radius: 24px;
       overflow: hidden;
-      background: #fdfdfd;
-      border: 1px solid $border-soft;
+      background: $bg-glass;
+      backdrop-filter: blur(10px);
+      border: 1px solid $glass-border;
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba($primary-pink, 0.05);
+      transition: $transition;
+
+      .ant-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
       img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain; // Giữ nguyên tỉ lệ ảnh
-        transition: transform 0.5s ease;
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
       }
-      &:hover img { transform: scale(1.08); }
+      
+      &:hover {
+        border-color: rgba($primary-pink, 0.3);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba($primary-pink, 0.1);
+        img { transform: scale(1.05); }
+      }
     }
 
     .thumbs {
-      margin-top: 20px;
+      margin-top: 30px;
       display: flex;
-      gap: 12px;
-      justify-content: center;
+      gap: 15px;
+      justify-content: flex-start;
 
-      .ant-image {
-        border: 2px solid transparent;
-        border-radius: 8px;
+      .thumb-item {
+        width: 80px;
+        height: 100px;
+        border-radius: 12px;
         overflow: hidden;
-        transition: all 0.3s ease;
-        
-        &:hover { border-color: $primary-color; transform: translateY(-3px); }
-        &[style*="solid"] { border-color: $primary-color !important; } // Active thumb
+        background: $bg-glass;
+        border: 1px solid $glass-border;
+        cursor: pointer;
+        transition: $transition;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          border-radius: 8px;
+          opacity: 0.6;
+          transition: 0.3s;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.3);
+          img { opacity: 1; }
+        }
+
+        &.active {
+          border-color: $primary-pink;
+          background: rgba($primary-pink, 0.1);
+          box-shadow: 0 0 15px rgba($primary-pink, 0.2);
+          img { opacity: 1; }
+        }
       }
     }
   }
 
-  // Cột bên phải: Thông tin sản phẩm
-  .productName {
-    font-size: 32px;
-    font-weight: 700;
-    color: $text-main;
-    margin: 10px 0;
-    line-height: 1.2;
-  }
+  // PRODUCT INFO (Right Column)
+  .productHeader {
+    .ant-breadcrumb {
+      margin-bottom: 25px;
+      .ant-breadcrumb-link { color: rgba(255, 255, 255, 0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+      .ant-breadcrumb-separator { color: rgba(255, 255, 255, 0.2); }
+    }
 
-  .ratingSection {
-    margin-bottom: 20px;
-    .ratingText { color: $text-light; margin-left: 8px; font-size: 14px; }
+    .tag-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      .ant-tag {
+        background: transparent;
+        border: 1px solid $primary-pink;
+        color: $primary-pink;
+        border-radius: 50px;
+        padding: 2px 15px;
+        font-weight: 600;
+        letter-spacing: 1px;
+      }
+    }
+
+    .productName {
+      font-family: $font-serif;
+      font-size: 48px;
+      color: #fff;
+      margin-bottom: 15px;
+      line-height: 1.1;
+      font-weight: 600;
+    }
+
+    .ratingSection {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 35px;
+      .ant-rate { color: $primary-pink; font-size: 14px; }
+      .ratingText { color: $text-muted; font-size: 14px; }
+    }
   }
 
   .priceSection {
-    background: #fdf8fa;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
+    background: $bg-glass;
+    backdrop-filter: blur(10px);
+    border: 1px solid $glass-border;
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 40px;
 
-    .currentPrice {
-      font-size: 28px;
-      font-weight: 800;
-      color: $primary-color;
+    .priceRow {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      margin-bottom: 20px;
+
+      .currentPrice {
+        font-family: $font-serif;
+        font-size: 32px;
+        color: $primary-pink;
+        font-weight: 700;
+      }
+      .originalPrice {
+        color: rgba(255, 255, 255, 0.3);
+        text-decoration: line-through;
+        font-size: 20px;
+      }
     }
-    .originalPrice {
-      color: #bbb;
-      text-decoration: line-through;
-      margin-left: 15px;
-      font-size: 18px;
-    }
-  }
 
-  .shortDesc {
-    color: #555;
-    line-height: 1.7;
-    margin-bottom: 25px;
-    font-size: 15px;
-  }
-
-  // Khu vực chọn số lượng và nút bấm
-  .metaRow {
-    display: flex;
-    align-items: center;
-    gap: 30px;
-    margin-bottom: 30px;
-    padding: 15px 0;
-    border-top: 1px dashed $border-soft;
-    border-bottom: 1px dashed $border-soft;
-
-    .ant-input-number {
-      border-radius: 6px;
-      width: 80px;
-    }
-  }
-
-  .ant-btn-primary {
-    background: $primary-color;
-    border-color: $primary-color;
-    height: 50px;
-    padding: 0 35px;
-    border-radius: 8px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    box-shadow: 0 4px 15px rgba(194, 24, 91, 0.2);
-
-    &:hover {
-      background: color.adjust($primary-color, $lightness: -5%);
-      transform: translateY(-2px);
-    }
-  }
-
-  // Tabs
-  .ant-tabs {
-    margin-top: 40px;
-    .ant-tabs-nav-list { font-weight: 600; }
-    .ant-tabs-content-holder {
-      padding: 20px 0;
-      color: #444;
+    .shortDesc {
+      color: $text-muted;
+      font-size: 15px;
       line-height: 1.8;
+      margin-bottom: 30px;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+      .qty-selector {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        width: 100px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        
+        .ant-input-number {
+          background: transparent;
+          border: none;
+          width: 100%;
+          color: #fff;
+          &:focus { box-shadow: none; }
+          .ant-input-number-input { color: #fff; text-align: center; }
+          .ant-input-number-handler-wrap { background: transparent; border-left: 1px solid rgba(255,255,255,0.1); }
+          .ant-input-number-handler { border-bottom: 1px solid rgba(255,255,255,0.1); .anticon { color: #fff; } }
+        }
+      }
+
+      .btn-add-cart {
+        flex: 1;
+        height: 50px;
+        background: $primary-pink;
+        border-color: $primary-pink;
+        color: #fff;
+        border-radius: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 10px 20px rgba($primary-pink, 0.2);
+        
+        &:hover:not(:disabled) {
+          background: color.adjust($primary-pink, $lightness: 5%);
+          transform: translateY(-2px);
+          box-shadow: 0 15px 30px rgba($primary-pink, 0.4);
+        }
+      }
+
+      .btn-wish {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: $transition;
+        
+        &:hover {
+          border-color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        
+        &.active {
+          background: rgba($primary-pink, 0.1);
+          border-color: $primary-pink;
+          color: $primary-pink;
+        }
+      }
     }
   }
 
-  // Sản phẩm liên quan
-  .related-section {
-    margin-top: 50px;
-    h3 { font-size: 22px; font-weight: 700; margin-bottom: 25px; }
-    
-    .ant-card {
-      border: none;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-      border-radius: 12px;
-      transition: all 0.3s ease;
+  // TABS SECTION
+  .ant-tabs {
+    margin-top: 60px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+    .ant-tabs-nav {
+      &:before { border-bottom: none; }
       
-      img { border-radius: 12px 12px 0 0; height: 200px; object-fit: cover; }
-      &:hover { transform: translateY(-5px); box-shadow: $shadow-luxury; }
+      .ant-tabs-tab {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 15px;
+        font-weight: 500;
+        padding: 25px 0;
+        margin: 0 40px 0 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: $transition;
+
+        &:hover { color: #fff; }
+        
+        &.ant-tabs-tab-active {
+          .ant-tabs-tab-btn { color: $primary-pink; text-shadow: 0 0 10px rgba($primary-pink, 0.3); }
+        }
+      }
+
+      .ant-tabs-ink-bar {
+        background: $primary-pink;
+        height: 2px;
+        box-shadow: 0 0 10px $primary-pink;
+      }
+    }
+
+    .ant-tabs-content {
+      padding: 40px 0;
+      color: $text-muted;
+      font-size: 16px;
+      line-height: 1.8;
+      
+      strong { color: #fff; }
+      
+      ul { padding-left: 20px; li { margin-bottom: 10px; } }
+      
+      .reviews-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+      }
+
+      .review-card-luxury {
+        background: $bg-glass;
+        border: 1px solid $glass-border;
+        border-radius: 20px;
+        padding: 30px;
+        transition: $transition;
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .review-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
+
+          .reviewer-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+
+            .luxury-avatar {
+              background: rgba($primary-pink, 0.2);
+              border: 1px solid rgba($primary-pink, 0.3);
+              color: $primary-pink;
+              font-weight: 700;
+            }
+
+            .reviewer-name {
+              color: #fff;
+              font-weight: 600;
+              font-size: 16px;
+            }
+
+            .review-date {
+              color: rgba(255, 255, 255, 0.3);
+              font-size: 12px;
+            }
+          }
+
+          .verified-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #52c41a;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(82, 196, 26, 0.1);
+            padding: 4px 12px;
+            border-radius: 50px;
+          }
+        }
+
+        .review-rating {
+          margin-bottom: 15px;
+          .ant-rate { color: $primary-pink; font-size: 14px; }
+        }
+
+        .review-comment {
+          color: $text-muted;
+          font-size: 15px;
+          line-height: 1.6;
+        }
+      }
+
+      .empty-reviews {
+        text-align: center;
+        padding: 60px 0;
+        color: $text-muted;
+        p { margin: 5px 0; }
+      }
+    }
+  }
+
+  // RELATED PRODUCTS WRAPPER
+  .related-section-wrapper {
+    transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+    
+    &.pushed-down {
+      transform: translateY(50px);
+    }
+  }
+
+  .related-section {
+    margin-top: 100px;
+    padding-top: 60px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+    .section-title {
+      font-family: $font-serif;
+      font-size: 32px;
+      color: #fff;
+      margin-bottom: 40px;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+    }
+
+    .related-card {
+      background: $bg-glass;
+      border: 1px solid transparent;
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: $transition;
+      
+      .img-wrap {
+        height: 280px;
+        background: transparent;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img { max-width: 100%; max-height: 100%; object-fit: contain; transition: 0.5s; }
+      }
+
+      .info {
+        padding: 20px;
+        text-align: center;
+        .p-name { color: #fff; font-size: 14px; font-weight: 500; margin-bottom: 10px; height: 40px; overflow: hidden; }
+        .p-price { color: $primary-pink; font-weight: 700; font-size: 16px; }
+      }
+
+      &:hover {
+        transform: translateY(-10px);
+        border-color: rgba($primary-pink, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        .img-wrap img { transform: scale(1.1); }
+      }
     }
   }
 }
 
-// Responsive
+// RESPONSIVE
+@media (max-width: 1024px) {
+  .productDetailPage {
+    .gallery .main-photo { height: 450px; }
+    .related-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+}
+
 @media (max-width: 768px) {
-  .productDetailContainer.luxury {
-    padding: 20px;
-  }
-  .gallery .main-photo {
-    height: 350px;
-  }
-  .productName {
-    font-size: 24px;
+  .productDetailPage {
+    padding: 40px 0;
+    .productName { font-size: 32px; }
+    .gallery .main-photo { height: 350px; }
+    .layout-row { flex-direction: column; }
+    .ant-tabs .ant-tabs-nav .ant-tabs-tab { margin: 0 20px 0 0; font-size: 13px; }
   }
 }

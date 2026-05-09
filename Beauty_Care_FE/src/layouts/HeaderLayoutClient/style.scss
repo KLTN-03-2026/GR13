@@ -1,8 +1,8 @@
-$primary-color: #C2185B;
+$primary-color: #FF5FB1;
 $primary-pink: $primary-color;
 @use 'sass:color';
 $gold-soft: #C9A66B;
-$hover-dark: rgb(63, 20, 27);
+$hover-dark: rgb(211, 184, 204);
 $transition-smooth: all 0.28s ease;
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
@@ -10,7 +10,6 @@ $transition-smooth: all 0.28s ease;
 $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
 
 .header-layout-client {
-  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -18,10 +17,22 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
   display: flex;
   flex-direction: column;
   transition: background 220ms ease, box-shadow 220ms ease, height 220ms ease, padding 220ms ease;
-  background-color: rgba(255,255,255,0.98); /* default: visible white for readability */
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
   will-change: background, box-shadow;
+
+  &.is-home {
+    position: absolute !important;
+    background: transparent !important;
+    border-bottom: none;
+    box-shadow: none;
+  }
+
+  &.is-internal {
+    position: sticky;
+    background: rgba(255, 245, 247, 0.9) !important;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
 
   .header-container {
     max-width: 1400px;
@@ -52,7 +63,8 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
       font-family: "Georgia", serif;
       font-size: 2.5rem;
       font-weight: 500;
-      color: $primary-color;
+      color: #FF69B4 !important;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       letter-spacing: 0.2px;
     }
   }
@@ -68,7 +80,8 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
       position: relative;
       margin: 0;
       display: inline-block;
-      color: #111; /* ensure high contrast */
+      color: pink !important;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       font-size: 1rem;
       font-weight: 600;
       font-family: $font-sans;
@@ -85,7 +98,7 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
       bottom: -6px;
       width: 60%;
       height: 2px;
-      background: $primary-color;
+      background: wheat;
       transform: translateX(-50%) scaleX(0);
       transform-origin: center;
       transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
@@ -99,7 +112,7 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
     }
 
     .nav-link.active {
-      color: $primary-color;
+      color: wheat !important;
     }
   }
 
@@ -108,9 +121,7 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
     align-items: center;
     gap: 15px;
     flex-shrink: 0;
-    align-items: center;
 
-    // 1. Cụm khi CHƯA đăng nhập (Auth Buttons)
     .auth-buttons {
       display: flex;
       gap: 12px;
@@ -118,89 +129,62 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
       .auth-btn {
         outline: none;
         background-color: transparent;
-        color: $primary-color;
-        border: 1px solid rgba($primary-color, 0.12);
+        color: pink !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255, 0.4);
         padding: 10px 24px;
         border-radius: 10px;
         font-weight: 600;
         font-size: 14px;
         cursor: pointer;
         transition: $transition-smooth;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
         &.login {
           background: transparent;
-          color: $primary-color;
-          border: 1px solid rgba($primary-color, 0.14);
           &:hover {
-            background: rgba($primary-color, 0.04);
+            background: rgba(255,255,255, 0.1);
             transform: translateY(-2px);
           }
         }
 
         &.register {
-          background-color: $primary-color;
-          color: #fff;
-          box-shadow: 0 8px 30px rgba($primary-color, 0.12);
-          border: none;
+          background-color: transparent;
+          border: 1px solid #ffffff;
           &:hover {
+            background: rgba(255,255,255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 14px 46px rgba($primary-color, 0.16);
           }
-        }
-
-        &:hover {
-          transform: scale(1.05);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
         }
       }
     }
 
-    // 2. Cụm khi ĐÃ đăng nhập (Luxury Logged In)
     .user-logged-in {
-    display: flex;
-    align-items: center;
-    gap: 22px; // refined spacing
+      display: flex;
+      align-items: center;
+      gap: 22px;
 
-      // Cụm Giỏ hàng
-      .cart-wrapper {
+      .cart-wrapper, .wishlist-wrapper {
         position: relative;
         cursor: pointer;
         display: flex;
         align-items: center;
-
-          .action-icon {
-            font-size: 22px;
-            color: #6b6b6b;
-            transition: transform 0.22s ease, color 0.22s ease;
-          }
-
-        &:hover .action-icon {
-          transform: translateY(-3px) scale(1.06);
-          color: $primary-color;
-        }
-      }
-
-      .wishlist-wrapper {
-        position: relative;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        margin-right: 8px;
 
         .action-icon {
-          font-size: 20px;
-          color: #6b6b6b;
+          font-size: 22px;
+          color: #ffffff !important;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
           transition: transform 0.22s ease, color 0.22s ease;
         }
 
         &:hover .action-icon {
           transform: translateY(-3px) scale(1.06);
-          color: $primary-color;
         }
       }
 
-      // Profile Section
+      .wishlist-wrapper .action-icon {
+        font-size: 20px;
+      }
+
       .user-profile-section {
         display: flex;
         align-items: center;
@@ -211,8 +195,7 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
         transition: $transition-smooth;
 
         &:hover {
-          background-color: #fdf2f6;
-          .user-name { color: $hover-dark; }
+          background-color: rgba(255,255,255,0.1);
         }
 
         .avatar-wrapper {
@@ -220,8 +203,7 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
           height: 44px;
           border-radius: 50%;
           overflow: hidden;
-          border: 2px solid rgba($primary-color, 0.12);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+          border: 2px solid rgba(255,255,255, 0.3);
 
           img {
             width: 100%;
@@ -233,15 +215,15 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
         .user-name {
           font-size: 14px;
           font-weight: 600;
-          color: #111;
+          color: #ffffff !important;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
           transition: color 0.3s;
         }
       }
 
-      // Nút Đăng xuất ngoài cùng
       .logout-btn-minimal {
         background: transparent;
-        border: 1px solid #eee;
+        border: 1px solid rgba(255,255,255,0.4);
         padding: 8px 16px;
         border-radius: 50px;
         display: flex;
@@ -249,20 +231,19 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
         gap: 8px;
         font-size: 13px;
         font-weight: 600;
-        color: #666;
+        color: #ffffff !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         cursor: pointer;
         transition: $transition-smooth;
 
         &:hover {
-          background: #fdf2f6;
-          color: $primary-pink;
-          border-color: $primary-pink;
+          background: rgba(255,255,255,0.1);
           transform: translateX(3px);
         }
         
         span {
           @media (max-width: 1200px) {
-            display: none; // Ẩn chữ trên màn hình nhỏ cho gọn
+            display: none;
           }
         }
       }
@@ -283,19 +264,11 @@ $font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
   }
 }
 
-.header-layout-client.scrolled {
-  background: rgba(255, 255, 255, 0.78);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  height: 80px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  border-bottom: 1px solid rgba(0,0,0,0.03);
-  padding-top: 6px;
-}
-
 .header-content-wrapper {
   width: 100%;
-  padding-top: 100px;
+  padding-top: 0;
+  min-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-
 }

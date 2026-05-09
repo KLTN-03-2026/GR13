@@ -33,6 +33,7 @@ import {
   SyncOutlined,
   TruckOutlined,
   ReloadOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import {
   Bar,
@@ -44,11 +45,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import "./style.scss";
 
 const { Title, Text } = Typography;
 
-type Period = "week" | "month" | "year";
+type Period = "week" | "month" | "year" | "custom";
 
 type OrderStatus = "pending" | "paid" | "shipping" | "completed" | "cancelled";
 
@@ -103,6 +106,9 @@ const paymentTag = (status: string) => {
 
 const OrderManagementComponent: React.FC = () => {
   const [period, setPeriod] = useState<Period>("week");
+  const [customDateRange, setCustomDateRange] = useState<
+    [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
+  >(null);
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<string | "all">("all");
   const [search, setSearch] = useState("");
@@ -260,7 +266,14 @@ const OrderManagementComponent: React.FC = () => {
         packing: 80,
       },
     ];
-    return { week, month, year } satisfies Record<Period, any[]>;
+    const custom = [
+      { name: "15/04", success: 10, delivering: 6, failed: 1, packing: 7 },
+      { name: "16/04", success: 12, delivering: 8, failed: 2, packing: 9 },
+      { name: "17/04", success: 8, delivering: 7, failed: 1, packing: 8 },
+      { name: "18/04", success: 14, delivering: 9, failed: 1, packing: 10 },
+      { name: "19/04", success: 11, delivering: 8, failed: 2, packing: 8 },
+    ];
+    return { week, month, year, custom } satisfies Record<Period, any[]>;
   }, []);
 
   const filteredOrders = useMemo(() => {
@@ -386,6 +399,172 @@ const OrderManagementComponent: React.FC = () => {
       setIsCreateOpen(false);
       message.success("Đã tạo đơn hàng");
     });
+  };
+
+  const getStatusText = (status: string) => {
+    const s = status?.toLowerCase();
+    if (s === "completed" || s === "thành công") return "Thành công";
+    if (s === "shipping" || s === "đang giao") return "Đang giao";
+    if (s === "cancelled" || s === "thất bại") return "Đã hủy";
+    if (s === "paid" || s === "đang soạn hàng") return "Đang soạn hàng";
+    return "Chờ xác nhận";
+  };
+
+  const getPaymentText = (status: string) => {
+    const s = status?.toLowerCase();
+    const isPaid = s === "paid" || s === "shipping" || s === "completed";
+    return isPaid ? "Đã thanh toán" : "Chưa thanh toán";
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Danh_sach_don_hang");
+
+      worksheet.properties.defaultRowHeight = 20;
+      worksheet.views = [{ state: 'frozen', ySplit: 3 }];
+      worksheet.autoFilter = {
+        from: { row: 3, column: 1 },
+        to: { row: 3, column: 11 }
+      };
+
+      const titleRow1 = worksheet.addRow(["BÁO CÁO DANH SÁCH ĐƠN HÀNG"]);
+      titleRow1.font = { 
+        size: 18, 
+        bold: true, 
+        color: { argb: "FF1F4E79" } 
+      };
+      titleRow1.alignment = { 
+        vertical: "middle", 
+        horizontal: "center" 
+      };
+      worksheet.mergeCells("A1:K1");
+
+      const titleRow2 = worksheet.addRow([`Ngày xuất: ${dayjs().format("DD/MM/YYYY HH:mm:ss")}`]);
+      titleRow2.font = { 
+        size: 12, 
+        italic: true, 
+        color: { argb: "FF666666" } 
+      };
+      titleRow2.alignment = { 
+        vertical: "middle", 
+        horizontal: "center" 
+      };
+      worksheet.mergeCells("A2:K2");
+
+      const headers = [
+        "ID",
+        "Mã đơn",
+        "Khách hàng",
+        "Số điện thoại",
+        "Địa chỉ",
+        "Trạng thái",
+        "Thanh toán",
+        "Loại đơn",
+        "Tổng tiền",
+        "Thời gian",
+        "Ghi chú"
+      ];
+
+      const headerRow = worksheet.addRow(headers);
+      headerRow.height = 30;
+
+      const headerStyle = {
+        fill: {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF1F4E79" }
+        },
+        font: {
+          bold: true,
+          size: 11,
+          color: { argb: "FFFFFFFF" }
+        },
+        alignment: {
+          vertical: "middle",
+          horizontal: "center",
+          wrapText: true
+        },
+        border: {
+          top: { style: "thin", color: { argb: "FFFFFFFF" } },
+          left: { style: "thin", color: { argb: "FFFFFFFF" } },
+          bottom: { style: "thin", color: { argb: "FFFFFFFF" } },
+          right: { style: "thin", color: { argb: "FFFFFFFF" } }
+        }
+      };
+
+      headerRow.eachCell((cell) => {
+        Object.assign(cell, headerStyle);
+      });
+
+      filteredOrders.forEach((order, index) => {
+        const row = worksheet.addRow([
+          order.id,
+          order.code,
+          order.customerName,
+          order.phone,
+          order.address,
+          getStatusText(order.status),
+          getPaymentText(order.status),
+          order.orderType,
+          Number(order.total || 0),
+          order.createdAt,
+          order.note || ""
+        ]);
+
+        row.height = 22;
+
+        const isEven = index % 2 === 0;
+        const rowFillColor = isEven ? { argb: "FFF5F8FA" } : { argb: "FFFFFFFF" };
+
+        row.eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFD0D7E3" } },
+            left: { style: "thin", color: { argb: "FFD0D7E3" } },
+            bottom: { style: "thin", color: { argb: "FFD0D7E3" } },
+            right: { style: "thin", color: { argb: "FFD0D7E3" } }
+          };
+
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: rowFillColor
+          };
+
+          if (colNumber === 9) {
+            cell.alignment = { vertical: "middle", horizontal: "right" };
+            cell.numFmt = '#,##0"đ"';
+          } else if (colNumber === 1 || colNumber === 2) {
+            cell.alignment = { vertical: "middle", horizontal: "center" };
+          } else {
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+          }
+        });
+      });
+
+      worksheet.columns = [
+        { width: 8 },
+        { width: 18 },
+        { width: 25 },
+        { width: 15 },
+        { width: 40 },
+        { width: 15 },
+        { width: 18 },
+        { width: 15 },
+        { width: 18 },
+        { width: 20 },
+        { width: 30 }
+      ];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const fileName = `Bao_cao_don_hang_${dayjs().format('DDMMYYYY_HHmmss')}.xlsx`;
+      saveAs(blob, fileName);
+      message.success("Đã xuất file Excel chuyên nghiệp thành công!");
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      message.error("Lỗi khi xuất file Excel!");
+    }
   };
 
   const columns = [
@@ -586,16 +765,27 @@ const OrderManagementComponent: React.FC = () => {
                 <Space>
                   <BarChartOutlined /> Thống kê đơn theo trạng thái
                 </Space>
-                <Select
-                  value={period}
-                  onChange={(v) => setPeriod(v)}
-                  style={{ width: 140 }}
-                  options={[
-                    { value: "week", label: "Xem Tuần" },
-                    { value: "month", label: "Xem Tháng" },
-                    { value: "year", label: "Xem Năm" },
-                  ]}
-                />
+                <Space>
+                  <Select
+                    value={period}
+                    onChange={(v) => setPeriod(v)}
+                    style={{ width: 140 }}
+                    options={[
+                      { value: "week", label: "Xem Tuần" },
+                      { value: "month", label: "Xem Tháng" },
+                      { value: "year", label: "Xem Năm" },
+                      { value: "custom", label: "Tùy chọn" },
+                    ]}
+                  />
+                  {period === "custom" && (
+                    <DatePicker.RangePicker
+                      value={customDateRange}
+                      onChange={(dates) => setCustomDateRange(dates)}
+                      style={{ width: 250 }}
+                      format="DD/MM/YYYY"
+                    />
+                  )}
+                </Space>
               </div>
             }
             bordered={false}
@@ -674,6 +864,9 @@ const OrderManagementComponent: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>
+              Xuất Excel
+            </Button>
             <Button type="primary" onClick={openCreate}>
               Tạo đơn
             </Button>

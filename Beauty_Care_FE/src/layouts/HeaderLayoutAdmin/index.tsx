@@ -13,7 +13,7 @@ import {
   Typography,
   List,
   Card,
-  message 
+  message
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -31,7 +31,7 @@ import {
   CheckCircleOutlined,
   DownOutlined,
 } from "@ant-design/icons";
-  
+
 import "./style.scss";
 
 const { Header } = Layout;
@@ -72,7 +72,7 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
     return currentUser.avatar || currentUser.img || null;
   }, [currentUser]);
 
-  
+
 
   const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
     if (key === "profile") {
@@ -85,9 +85,10 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
     }
     if (key === "logout") {
       message.success("Đã đăng xuất");
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      localStorage.clear();
+      window.dispatchEvent(new Event('authChanged'));
       navigate("/");
+      window.location.reload();
     }
   };
 
@@ -170,9 +171,9 @@ const HeaderLayoutAdmin: React.FC<HeaderLayoutAdminProps> = ({
             </Tooltip>
 
             <Tooltip title="Toàn màn hình">
-              <Button 
-                type="text" 
-                icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />} 
+              <Button
+                type="text"
+                icon={isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                 onClick={toggleFullscreen}
                 className="icon-btn-luxury"
               />

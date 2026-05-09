@@ -1,5 +1,5 @@
 import "./style.scss";
-import Banner from "../../assets/images/background.png";
+import Banner from "../../assets/images/BG_DN.jpg";
 
 import { Outlet } from "react-router";
 

@@ -1,7 +1,17 @@
 import ConsultationChatComponent from "../../../components/Client/ConsultationChat";
 const ConsultationChatPage = () => {
   return (
-    <div style={{ position: "fixed", top: 100, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+    <div style={{ 
+      height: "calc(100vh - 100px)", 
+      width: "100%",
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      background: "#f0f2f5",
+      padding: "20px",
+      overflow: "hidden",
+      boxSizing: "border-box"
+    }}>
       <ConsultationChatComponent />
     </div>
   );

@@ -16,7 +16,7 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     return {
       folder: process.env.CLOUDINARY_FOLDER || "Tech-Spa",
-      format: "jpg", // hoặc 'png', 'webp', v.v.
+      resource_type: "auto",
       public_id: file.originalname.split(".")[0] + "-" + Date.now(),
     };
   },
@@ -24,4 +24,5 @@ const storage = new CloudinaryStorage({
 
 const uploadCloud = multer({ storage });
 
+export { cloudinary };
 export default uploadCloud;

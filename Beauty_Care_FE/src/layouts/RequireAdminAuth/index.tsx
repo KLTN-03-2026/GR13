@@ -8,7 +8,7 @@ const RequireAdminAuth = ({ children }: { children: React.ReactNode }) => {
   try {
     role = userRaw ? JSON.parse(userRaw)?.role_code ?? null : null;
   } catch {
-    role = null;  
+    role = null;
   }
 
   const ok = !!token && (role === "R1" || role === "R2");

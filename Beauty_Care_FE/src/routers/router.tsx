@@ -15,6 +15,7 @@ import BlogManagementPage from "../pages/Admin/BlogManagement";
 import BlogCategoryManagementPage from "../pages/Admin/BlogCategoryManagement";
 import ReviewManagementPage from "../pages/Admin/ReviewManagement";
 import AnalyticsManagementPage from "../pages/Admin/AnalyticsManagement";
+import AdviceManagementPage from "../pages/Admin/AdviceManagement";
 import SettingsManagementPage from "../pages/Admin/SettingsManagement";
 import RevenueManagementPage from "../pages/Admin/RevenueManagement";
 import OrderSuccessManagementPage from "../pages/Admin/OrderSuccessManagement";
@@ -40,6 +41,7 @@ import ConsultationChatPage from "../pages/Client/ConsultationChat";
 import OrderSuccess from "../components/Client/OrderSuccess";
 import AuthClientLayout from "../layouts/AuthLayoutClient";
 import ChatManagementPage from "../pages/Admin/ChatManagement";
+import DiscountManagementPage from "../pages/Admin/DiscountManagement";
 
 const router = createBrowserRouter([
   {
@@ -63,7 +65,7 @@ const router = createBrowserRouter([
         path: "blog",
         element: <BlogPage />,
       },
-      
+
       {
         path: "blog/:id",
         element: <BlogDetailPage />,
@@ -144,6 +146,10 @@ const router = createBrowserRouter([
         element: <ProductManagementPage />,
       },
       {
+        path: "discounts",
+        element: <DiscountManagementPage />,
+      },
+      {
         path: "orders",
         element: <OrderManagementPage />,
       },
@@ -166,6 +172,10 @@ const router = createBrowserRouter([
       {
         path: "reviews",
         element: <ReviewManagementPage />,
+      },
+      {
+        path: "advice",
+        element: <AdviceManagementPage />,
       },
       {
         path: "chat",

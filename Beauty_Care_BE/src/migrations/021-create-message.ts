@@ -32,7 +32,7 @@ export default {
         onDelete: "CASCADE",
       },
       message_type: {
-        type: Sequelize.ENUM("text", "image"),
+        type: Sequelize.ENUM("text", "image", "file", "sticker"),
         defaultValue: "text",
       },
       content: {

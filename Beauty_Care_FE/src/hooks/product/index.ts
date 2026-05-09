@@ -22,6 +22,8 @@ export const useCreateProduct = () => {
     mutationFn: productApi.createProductAPI,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] });
     },
   });
 };
@@ -32,6 +34,8 @@ export const useUpdateProduct = () => {
     mutationFn: productApi.updateProductAPI,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] });
     },
   });
 };
@@ -42,6 +46,8 @@ export const useDeleteProduct = () => {
     mutationFn: (id: number) => productApi.deleteProductAPI(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] });
     },
   });
 };

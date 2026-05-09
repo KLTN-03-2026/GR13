@@ -15,18 +15,21 @@ export const initSocket = (server: http.Server) => {
   io.on("connection", (socket) => {
     console.log(`⚡ User connected: ${socket.id}`);
 
-    socket.on("joinRoom", (conversationId: number) => {
-      socket.join(`conversation-${conversationId}`);
-      console.log(`👤 User joined room: conversation-${conversationId}`);
+    socket.on("joinConversation", (conversationId) => {
+      // Use the ID as the room name directly to allow expert_ID, user_ID, or conversation_ID
+      const roomName = conversationId.toString().startsWith("conversation_") || 
+                       conversationId.toString().startsWith("expert_") || 
+                       conversationId.toString().startsWith("user_") 
+                       ? conversationId.toString() 
+                       : `conversation_${conversationId}`;
+      
+      socket.join(roomName);
+      console.log(`User ${socket.id} joined room ${roomName}`);
     });
 
     socket.on("leaveRoom", (conversationId: number) => {
       socket.leave(`conversation-${conversationId}`);
       console.log(`👤 User left room: conversation-${conversationId}`);
-    });
-
-    socket.on("sendMessage", (data) => {
-      io.to(`conversation-${data.conversationId}`).emit("receiveMessage", data);
     });
 
     socket.on("disconnect", () => {

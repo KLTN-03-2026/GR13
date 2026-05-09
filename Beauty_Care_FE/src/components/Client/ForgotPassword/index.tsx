@@ -34,19 +34,6 @@ const ForgotPassword: React.FC = () => {
         ← Quay lại trang chủ
       </Link>
 
-      <div
-        className="imageSidebar"
-        style={loginimg ? { backgroundImage: `url(${loginimg})` } : {}}
-      >
-        <div className="overlayContent">
-          <div className="logoGroup">
-             <span>BeautyCare</span>
-          </div>
-          <p className="quote">"Vẻ đẹp thực sự bắt đầu từ lúc bạn quyết định là chính mình."</p>
-          <span className="collection">— BỘ SƯU TẬP BIÊN TẬP 2026</span>
-        </div>
-      </div>
-
       <div className="formContent">
         <div className="formWrapper">
           <h2 className="titleBig">Quên Mật Khẩu</h2>

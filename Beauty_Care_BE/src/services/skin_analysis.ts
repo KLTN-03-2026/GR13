@@ -4,7 +4,6 @@ export const getSkinAnalysisHistory = async (userId: number) => {
   try {
     const history = await db.SkinAnalysisHistory.findAll({
       where: { user_id: userId },
-      include: [{ model: db.AnalysisFeedback, as: "feedback" }],
       order: [["createdAt", "DESC"]],
     });
     return {

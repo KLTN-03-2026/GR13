@@ -1,0 +1,106 @@
+$primary: #C2185B;
+$bg-gradient: #111111;
+
+.luxury-loading-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: $bg-gradient;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .logo-wrapper {
+    position: relative;
+    width: 150px;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    // The Glow Effect behind the logo
+    .glow-effect {
+      position: absolute;
+      width: 120%;
+      height: 120%;
+      background: radial-gradient(circle, rgba(194, 24, 91, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+      border-radius: 50%;
+      z-index: 0;
+      animation: glowPulse 2s infinite ease-in-out;
+    }
+
+    .pulse-logo {
+      width: 100%;
+      height: auto;
+      z-index: 1;
+      animation: logoPulse 2s infinite ease-in-out;
+      filter: drop-shadow(0 8px 20px rgba(194, 24, 91, 0.1));
+    }
+  }
+
+  .beauty-quote {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 20px;
+    font-weight: 300;
+    color: #555;
+    letter-spacing: 1px;
+    text-align: center;
+    margin: 0;
+    max-width: 80%;
+  }
+
+  .progress-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px; // Thin as a thread
+    background-color: rgba(194, 24, 91, 0.05);
+    overflow: hidden;
+
+    .minimal-progress-bar {
+      height: 100%;
+      background-color: $primary;
+      box-shadow: 0 0 10px rgba(194, 24, 91, 0.5);
+    }
+  }
+
+  // Keyframes
+  @keyframes logoPulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes glowPulse {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.9);
+      opacity: 0.5;
+    }
+  }
+}

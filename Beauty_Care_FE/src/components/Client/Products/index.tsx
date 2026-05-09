@@ -1,177 +1,256 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../hooks/useAuth";
-import { message } from "antd";
-import {
-  Button,
-  Checkbox,
-  Drawer,
-  Input,
-  Pagination,
-  Rate,
-  Select,
-  Slider,
-  Spin,
-  Row,
-  Col,
-  Typography,
-} from "antd";
+import { message, Button, Input, Rate, Select, Spin, Typography } from "antd";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import * as cartApi from "../../../api/cart";
+import * as wishlistApi from "../../../api/wishlist";
 import {
-  FilterOutlined,
   HeartOutlined,
+  HeartFilled,
   ShoppingCartOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-// Import trực tiếp file SCSS
 import "./style.scss";
-// Products will be fetched from API
 
-const ProductsComponent = () => {
-  const [query, setQuery] = useState("");
-  const { user } = useAuth();
+// Swiper
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, EffectFade, Pagination as SwiperPagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "swiper/css/pagination";
+
+// --- SUB-COMPONENT: PRODUCT CARD ---
+const ProductCard = ({ product, isFavorite, onToggleWishlist, onAddToCart }: any) => {
   const navigate = useNavigate();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
-  const [sortKey, setSortKey] = useState<string>("popular");
-  const [page, setPage] = useState(1);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const handleAddToCart = () => {
-    if (!user) {
-      message.error('Bạn phải đăng nhập để tiếp tục');
-    } else {
-      message.success('Đã thêm vào giỏ hàng thành công!');
-    }
-  };
+  const [localFavorite, setLocalFavorite] = useState(isFavorite);
 
   useEffect(() => {
-    let mounted = true;
-    setLoading(true);
-    axios
-      .get("http://localhost:8088/api/v1/product")
-      .then((res) => {
-        const data = res.data?.data ?? res.data;
-        const items = Array.isArray(data) ? data : [];
-          const mapped = items.map((p: any) => ({
-          id: p.id ?? p.productId ?? "",
-          name: p.name ?? p.productName ?? "",
-          image: p.image ?? p.thumbnail ?? "",
-          category: p.categoryData?.name ?? p.category ?? "",
-          price: Number(p.price ?? 0),
-          originalPrice: p.discountPrice ?? p.originalPrice ?? null,
-          rating: Number(p.rating ?? 4.5),
-          reviews: Number(p.reviews ?? 0),
-          isNew: Boolean(p.isNew ?? false),
-          inStock: Number(p.stock ?? 0) > 0,
-        }));
-        if (mounted) setProducts(mapped);
-        if (items.length === 0) message.info("Không tìm thấy sản phẩm");
-      })
-      .catch((err) => {
-        console.error("Failed to fetch products", err);
-        message.error("Không thể lấy danh sách sản phẩm");
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    setLocalFavorite(isFavorite);
+  }, [isFavorite]);
 
-  // Logic Lọc sản phẩm
-  const filtered = useMemo(() => {
-    return products
-      .filter((p) => {
-        const name = (p.name ?? "").toString();
-        const price = Number(p.price ?? 0);
-        const matchQuery = name.toLowerCase().includes(query.toLowerCase());
-        const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
-        const matchPrice = price >= priceRange[0] && price <= priceRange[1];
-        return matchQuery && matchCategory && matchPrice;
-      })
-      .sort((a, b) => {
-        if (sortKey === "price-asc") return Number(a.price ?? 0) - Number(b.price ?? 0);
-        if (sortKey === "price-desc") return Number(b.price ?? 0) - Number(a.price ?? 0);
-        return Number(b.rating ?? 0) - Number(a.rating ?? 0);
-      });
-  }, [products, query, selectedCategories, priceRange, sortKey]);
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLocalFavorite(!localFavorite); // Optimistic Update
+    onToggleWishlist(product.id);
+  };
 
-  const pageSize = 9;
-  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  const FilterPanel = (
-    <div className="filter-panel-content">
-      <div className="filter-group">
-        <h4 className="filter-label">Danh mục sản phẩm</h4>
-        <Checkbox.Group 
-          options={["Serum", "Kem dưỡng", "Làm sạch", "Toner", "Chống nắng"]} 
-          value={selectedCategories}
-          onChange={(v) => setSelectedCategories(v as string[])}
-        />
-      </div>
-      <div className="filter-group">
-        <h4 className="filter-label">Khoảng giá (VND)</h4>
-        <Slider range min={0} max={2000000} step={50000} value={priceRange} onChange={(v) => setPriceRange(v as [number, number])} />
-        <div className="price-display">
-          <span>{priceRange[0].toLocaleString()}đ</span>
-          <span>{priceRange[1].toLocaleString()}đ</span>
-        </div>
-      </div>
-      <Button className="reset-btn" block onClick={() => {setQuery(""); setSelectedCategories([]); setPriceRange([0, 2000000]);}}>
-        Xoá tất cả bộ lọc
-      </Button>
-    </div>
-  );
+  const handleAddToCartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onAddToCart(product);
+  };
 
   return (
-    <div className="products-page">
-      {/* 1. HERO SECTION LUXURY */}
-      <section className="hero-banner">
-        <div className="container">
-          <Row gutter={[60, 0]} align="middle">
-            <Col xs={24} md={12}>
-              <Typography.Text className="hero-badge">SUMMER COLLECTION 2026</Typography.Text>
-              <Typography.Title level={1} className="hero-title">
-                Đánh thức vẻ đẹp <br/> <span>từ sâu bên trong</span>
-              </Typography.Title>
-              <Typography.Paragraph className="hero-desc">
-                Khám phá dòng sản phẩm Botanical Radiance mới nhất - Sự kết hợp hoàn hảo giữa thảo dược quý hiếm và công nghệ tế bào.
-              </Typography.Paragraph>
-              <Button className="hero-btn">MUA NGAY BỘ SƯU TẬP</Button>
-            </Col>
-            <Col xs={24} md={12}>
-              <div className="hero-img-box">
-                <img src="https://images.unsplash.com/photo-1612817288484-6f916006741a?w=800" alt="Hero" />
-                <div className="floating-card">
-                  <strong>98%</strong>
-                  <span>Gốc tự nhiên</span>
+    <div
+      className={`product-card dark-card ${!product.inStock ? 'out-of-stock' : ''}`}
+      onClick={() => navigate(`/products/${product.id}`)}
+    >
+      <div className="card-media">
+        <img src={product.image} alt={product.name} />
+        {product.isNew && <span className="tag-new">MỚI</span>}
+        {!product.inStock && <div className="overlay-out">Hết hàng</div>}
+        <button 
+          className={`wish-btn ${localFavorite ? 'active' : ''}`} 
+          onClick={handleWishlistClick}
+        >
+          {localFavorite ? <HeartFilled /> : <HeartOutlined />}
+        </button>
+      </div>
+      <div className="card-body">
+        <span className="card-cat">{product.category}</span>
+        <h3 className="card-title">{product.name}</h3>
+        <div className="card-rating">
+          <Rate disabled defaultValue={Number(product.rating ?? 0)} style={{ fontSize: 12 }} />
+          <span>({product.reviews ?? 0})</span>
+        </div>
+        <div className="card-price">
+          <span className="current-price">{Number(product.price ?? 0).toLocaleString()}đ</span>
+          {product.originalPrice && <span className="old-price">{Number(product.originalPrice).toLocaleString()}đ</span>}
+        </div>
+        <button 
+          className="add-cart-btn" 
+          disabled={!product.inStock} 
+          onClick={handleAddToCartClick}
+        >
+          <ShoppingCartOutlined /> THÊM VÀO GIỎ
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN COMPONENT ---
+const ProductsComponent = () => {
+  const [query, setQuery] = useState("");
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  const [selectedBrand, setSelectedBrand] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<string>("popular");
+
+  // Fetch Products
+  const { data: productsData, isLoading: loading } = useQuery({
+    queryKey: ["products"],
+    queryFn: async () => {
+      const res = await axios.get("http://localhost:8088/api/v1/product");
+      const data = res.data?.data ?? res.data;
+      const items = Array.isArray(data?.items ? data.items : data) ? (data?.items ? data.items : data) : [];
+      return items.map((p: any) => ({
+        id: p.id ?? p.productId ?? "",
+        name: p.name ?? p.productName ?? "",
+        image: p.image ?? p.thumbnail ?? "",
+        category: p.categoryData?.name ?? p.category ?? "",
+        brand: p.brand ?? "Thương hiệu Khác",
+        price: Number(p.price ?? 0),
+        originalPrice: p.discountPrice ?? p.originalPrice ?? null,
+        rating: Number(p.rating ?? 4.5),
+        reviews: Number(p.reviews ?? 0),
+        isNew: Boolean(p.isNew ?? false),
+        inStock: Number(p.stock ?? 0) > 0,
+      }));
+    }
+  });
+  const products = productsData ?? [];
+
+  // Fetch Wishlist for IDs
+  const { data: wishlistData } = useQuery({
+    queryKey: ["wishlist"],
+    queryFn: () => wishlistApi.getWishlist(),
+    enabled: !!token
+  });
+  const favoriteIds = useMemo(() => {
+    const list = wishlistData?.data ?? wishlistData ?? [];
+    return new Set((Array.isArray(list) ? list : []).map((i: any) => i.productId));
+  }, [wishlistData]);
+
+  // Mutations
+  const addToCartMutation = useMutation({
+    mutationFn: (p: any) => cartApi.addToCart(p.id, 1),
+    onSuccess: (res, product) => {
+      message.success({
+        content: `Đã thêm ${product.name} vào giỏ hàng`,
+        style: { marginTop: '10vh' }
+      });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onError: () => message.error("Không thể thêm vào giỏ hàng")
+  });
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: (id: number) => wishlistApi.toggleWishlist(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    }
+  });
+
+  const handleAddToCart = (product: any) => {
+    if (!token) {
+      message.warning("Vui lòng đăng nhập để sử dụng tính năng này");
+      return navigate("/login");
+    }
+    addToCartMutation.mutate(product);
+  };
+
+  const handleToggleWishlist = (id: any) => {
+    if (!token) {
+      message.warning("Vui lòng đăng nhập để sử dụng tính năng này");
+      return navigate("/login");
+    }
+    toggleWishlistMutation.mutate(Number(id));
+  };
+
+  // Brands & Filtering logic
+  const brandsList = useMemo(() => {
+    const brands = new Set(products.map((p: any) => p.brand));
+    return ["all", ...Array.from(brands)];
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    return products
+      .filter((p: any) => {
+        const name = (p.name ?? "").toString();
+        const matchQuery = name.toLowerCase().includes(query.toLowerCase());
+        const matchBrand = selectedBrand === "all" || p.brand === selectedBrand;
+        return matchQuery && matchBrand;
+      })
+      .sort((a: any, b: any) => {
+        if (sortKey === "price-asc") return a.price - b.price;
+        if (sortKey === "price-desc") return b.price - a.price;
+        return b.rating - a.rating;
+      });
+  }, [products, query, selectedBrand, sortKey]);
+
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    filtered.forEach((p: any) => {
+      if (!groups[p.brand]) groups[p.brand] = [];
+      groups[p.brand].push(p);
+    });
+    return groups;
+  }, [filtered]);
+
+  return (
+    <div className="products-page dark-aesthetic">
+      {/* 1. HERO SLIDER */}
+      <section className="product-hero-slider">
+        <Swiper
+          modules={[Autoplay, EffectFade, SwiperPagination]}
+          effect="fade"
+          speed={1000}
+          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          pagination={{ clickable: true }}
+          loop={true}
+          className="mySwiper"
+        >
+          {[
+            { 
+              title: "KHÁM PHÁ BÍ QUYẾT LÀM ĐẸP", 
+              desc: "Ưu đãi đến 30% khi mua trọn bộ chăm sóc sắc đẹp.", 
+              img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=2000" 
+            },
+            { 
+              title: "MUA 1 TẶNG 1 - GIỚI HẠN", 
+              desc: "Tỏa sáng rạng rỡ với bộ sưu tập tinh chất phục hồi.", 
+              img: "https://images.unsplash.com/photo-1615397323315-46016183377a?q=80&w=2000" 
+            }
+          ].map((s, i) => (
+            <SwiperSlide key={i}>
+              <div className="slide-bg" style={{ backgroundImage: `url('${s.img}')` }}>
+                <div className="slide-overlay"></div>
+                <div className="slide-content container">
+                  <Typography.Title level={1} className="slide-title">{s.title}</Typography.Title>
+                  <Typography.Paragraph className="slide-desc">{s.desc}</Typography.Paragraph>
+                  <button className="ghost-btn">MUA NGAY</button>
                 </div>
               </div>
-            </Col>
-          </Row>
-        </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </section>
 
-      {/* 2. TOOLBAR */}
       <div className="container">
+        {/* 2. TOOLBAR */}
         <div className="products-toolbar">
           <Input 
             prefix={<SearchOutlined />} 
-            placeholder="Tìm kiếm sản phẩm sắc đẹp..." 
+            placeholder="Tìm kiếm sản phẩm..." 
             className="search-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <div className="toolbar-right">
-            <Button className="mobile-filter-btn" icon={<FilterOutlined />} onClick={() => setDrawerOpen(true)}>Bộ lọc</Button>
+            <Select 
+              value={selectedBrand} 
+              onChange={setSelectedBrand} 
+              className="brand-select dark-select"
+              options={brandsList.map(b => ({ value: b, label: b === "all" ? "Tất cả thương hiệu" : b }))} 
+            />
             <Select 
               value={sortKey} 
               onChange={setSortKey} 
-              className="sort-select"
+              className="sort-select dark-select"
               options={[
                 { value: "popular", label: "Phổ biến nhất" },
                 { value: "price-asc", label: "Giá: Thấp đến Cao" },
@@ -182,67 +261,40 @@ const ProductsComponent = () => {
         </div>
 
         {/* 3. MAIN CONTENT */}
-        <div className="main-layout">
-          <aside className="sidebar-filters">{FilterPanel}</aside>
-          
-          <div className="results-area">
-            {loading ? (
-              <div className="loading-center" style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-                <Spin size="large" />
-              </div>
-            ) : (
-              <>
-                <div className="results-grid">
-                  {pageItems.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`product-card ${!p.inStock ? 'out-of-stock' : ''}`}
-                      onClick={() => navigate(`/products/${p.id}`)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="card-media">
-                        <img src={p.image} alt={p.name} />
-                        {p.isNew && <span className="tag-new">MỚI</span>}
-                        {!p.inStock && <div className="overlay-out">Hết hàng</div>}
-                        <button className="wish-btn"><HeartOutlined /></button>
-                      </div>
-                      <div className="card-body">
-                        <span className="card-cat">{p.category}</span>
-                        <h3 className="card-title">{p.name}</h3>
-                        <div className="card-rating">
-                          <Rate disabled defaultValue={Number(p.rating ?? 0)} style={{ fontSize: 12 }} />
-                          <span>({p.reviews ?? 0})</span>
-                        </div>
-                        <div className="card-price">
-                          <span className="current-price">{Number(p.price ?? 0).toLocaleString()}đ</span>
-                          {p.originalPrice && <span className="old-price">{Number(p.originalPrice).toLocaleString()}đ</span>}
-                        </div>
-                        <button className="add-cart-btn" disabled={!p.inStock} onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}>
-                          <ShoppingCartOutlined /> THÊM VÀO GIỎ
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pagination-box">
-                  <Pagination 
-                    current={page} 
-                    total={filtered.length} 
-                    pageSize={pageSize} 
-                    onChange={setPage} 
-                    showSizeChanger={false}
-                  />
-                </div>
-              </>
-            )}
-          </div>
+        <div className="results-area">
+          {loading ? (
+            <div className="loading-center" style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+              <Spin size="large" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="empty-state">
+              <p>Không tìm thấy sản phẩm nào</p>
+              <Button className="ghost-btn" onClick={() => {setQuery(""); setSelectedBrand("all");}}>Xoá bộ lọc</Button>
+            </div>
+          ) : (
+            <div className="brand-groups-container">
+              {Object.keys(groupedProducts).map((brandName) => (
+                <section key={brandName} className="brand-section">
+                  <Typography.Title level={2} className="brand-title">
+                    {brandName === "Thương hiệu Khác" ? brandName : `Thương hiệu ${brandName}`}
+                  </Typography.Title>
+                  <div className="results-grid">
+                    {groupedProducts[brandName].map((p) => (
+                      <ProductCard 
+                        key={p.id} 
+                        product={p} 
+                        isFavorite={favoriteIds.has(Number(p.id))}
+                        onToggleWishlist={handleToggleWishlist}
+                        onAddToCart={handleAddToCart}
+                      />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      <Drawer title="Bộ lọc sản phẩm" placement="left" onClose={() => setDrawerOpen(false)} open={drawerOpen}>
-        {FilterPanel}
-      </Drawer>
     </div>
   );
 };

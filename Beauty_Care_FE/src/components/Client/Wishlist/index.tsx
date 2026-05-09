@@ -1,128 +1,152 @@
-import "./style.scss";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import axios from "axios";
-import { Row, Col, Card, Button, Empty, Skeleton, message, Popconfirm } from "antd";
-import { ShoppingCartOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Row, Col, Card, Button, Empty, Skeleton, message } from "antd";
+import { ShoppingCartOutlined, HeartFilled, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import * as cartApi from "../../../api/cart";
+import * as wishlistApi from "../../../api/wishlist";
+import "./style.scss";
 
 interface ProductItem {
   id: number | string;
+  productId?: number;
   name?: string;
   price?: number;
   images?: string[];
   image?: string;
   stock?: number;
+  category?: string;
+  productData?: any;
 }
 
 const Wishlist: React.FC = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState<ProductItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
 
-  const fetchWishlist = async () => {
-    setLoading(true);
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.get("http://localhost:8088/api/v1/wishlist", { headers });
-      const data = res.data?.data ?? res.data ?? [];
-      setItems(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-      message.error("Không thể tải danh sách yêu thích");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch Wishlist using React Query
+  const { data: wishlistData, isLoading: loading } = useQuery({
+    queryKey: ["wishlist"],
+    queryFn: () => wishlistApi.getWishlist(),
+    enabled: !!token
+  });
 
-  useEffect(() => {
-    fetchWishlist();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  const items: ProductItem[] = Array.isArray(wishlistData?.data ?? wishlistData) 
+    ? (wishlistData?.data ?? wishlistData) 
+    : [];
 
-  const handleAddToCart = async (productId: number | string) => {
-    if (!token) return navigate("/login");
-    try {
-      const res = await axios.post(
-        "http://localhost:8088/api/v1/cart/add",
-        { productId: Number(productId), quantity: 1 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (res.data?.err === 0) message.success("Đã thêm vào giỏ hàng");
-      else message.error(res.data?.mess || "Thêm vào giỏ hàng thất bại");
-    } catch (err: any) {
-      console.error(err);
-      message.error(err?.response?.data?.mess || "Lỗi khi thêm vào giỏ hàng");
-    }
-  };
-
-  const handleRemove = async (productId: number | string) => {
-    if (!token) return navigate("/login");
-    try {
-      const res = await axios.delete(`http://localhost:8088/api/v1/wishlist/remove/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+  // Mutations
+  const addToCartMutation = useMutation({
+    mutationFn: (p: any) => cartApi.addToCart(p.id, 1),
+    onSuccess: (res, product) => {
+      message.success({
+        content: `Đã thêm ${product.name} vào giỏ hàng`,
+        style: { marginTop: '10vh' }
       });
-      if (res.data?.err === 0) {
-        setItems((s) => s.filter((p) => String(p.id) !== String(productId)));
-        message.success("Đã xóa khỏi danh sách yêu thích");
-      } else message.error(res.data?.mess || "Xóa thất bại");
-    } catch (err: any) {
-      console.error(err);
-      message.error(err?.response?.data?.mess || "Lỗi khi xóa");
-    }
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    },
+    onError: () => message.error("Không thể thêm vào giỏ hàng")
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (productId: number) => wishlistApi.toggleWishlist(productId),
+    onSuccess: () => {
+      message.success("Đã xóa khỏi danh sách yêu thích");
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    },
+    onError: () => message.error("Xóa thất bại")
+  });
+
+  const handleAddToCart = (e: React.MouseEvent, p: ProductItem) => {
+    e.stopPropagation();
+    if (!token) return navigate("/login");
+    addToCartMutation.mutate(p);
+  };
+
+  const handleRemove = (e: React.MouseEvent, productId: number | string) => {
+    e.stopPropagation();
+    if (!token) return navigate("/login");
+    removeMutation.mutate(Number(productId));
+  };
+
+  const handleCardClick = (productId: number | string) => {
+    navigate(`/products/${productId}`);
   };
 
   return (
-    <div className="wishlist-page">
+    <div className="wishlist-page dark-aesthetic">
       <div className="container">
-        <div className="page-header"><h2>Danh sách yêu thích của bạn</h2></div>
+        <div className="page-header">
+          <h2>Danh Sách Yêu Thích</h2>
+          <p style={{ color: '#888' }}>Những tuyệt phẩm bạn đã chọn lựa để chăm sóc vẻ đẹp của mình.</p>
+        </div>
 
         {loading ? (
-          <Row gutter={[24, 24]}>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Col xs={24} sm={12} md={12} lg={6} key={i}>
-                <Card className="fav-skel-card">
-                  <Skeleton active paragraph={{ rows: 4 }} />
-                </Card>
+          <Row gutter={[30, 30]}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={i}>
+                <div className="fav-skel-card">
+                  <Skeleton active paragraph={{ rows: 5 }} />
+                </div>
               </Col>
             ))}
           </Row>
         ) : items.length === 0 ? (
           <div className="empty-state">
-            <Empty description="Danh sách yêu thích rỗng" />
-            <Button type="primary" onClick={() => navigate('/products')} style={{ marginTop: 16 }}>
+            <Empty 
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="Chưa có sản phẩm nào trong danh sách yêu thích của bạn." 
+            />
+            <button className="ghost-btn" onClick={() => navigate('/products')}>
               Tiếp tục mua sắm
-            </Button>
+            </button>
           </div>
         ) : (
-          <Row gutter={[24, 24]}>
-            {items.map((p) => {
-              const img = (p.images && p.images[0]) || p.image || "https://via.placeholder.com/300x300?text=No+Image";
+          <Row gutter={[30, 30]}>
+            {items.map((item) => {
+              const p = item.productData || {};
+              const img = p.image || (p.images && p.images[0]) || "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400";
+              const productId = item.productId || item.id;
+              
               return (
-                <Col xs={24} sm={12} md={12} lg={6} key={String(p.id)}>
-                  <Card
-                    hoverable
-                    className="fav-card"
-                    cover={<img alt={p.name} src={img} className="product-img" />}
-                  >
+                <Col xs={24} sm={12} md={8} lg={6} key={String(item.id)}>
+                  <div className="fav-card" onClick={() => handleCardClick(productId)}>
+                    <div className="product-img-wrap">
+                      <img alt={p.name} src={img} />
+                      <button 
+                        className="wish-btn-overlay" 
+                        onClick={(e) => handleRemove(e, productId)}
+                        title="Xóa khỏi yêu thích"
+                      >
+                        <HeartFilled />
+                      </button>
+                    </div>
+
                     <div className="product-meta">
-                      <h4 className="product-name" onClick={() => navigate(`/products/${p.id}`)}>{p.name}</h4>
-                      <div className="product-price">{p.price ? `${p.price.toLocaleString()}₫` : "—"}</div>
-                      <div className={`stock ${p.stock && p.stock > 0 ? 'in' : 'out'}`}>
-                        {p.stock && p.stock > 0 ? 'Còn hàng' : 'Hết hàng'}
+                      <div className="product-name">{p.name || "Sản phẩm"}</div>
+                      <div className="product-price">{p.price ? `${Number(p.price).toLocaleString()}₫` : "—"}</div>
+                      <div className={`stock ${Number(p.stock ?? 0) > 0 ? 'in' : 'out'}`}>
+                        {Number(p.stock ?? 0) > 0 ? (
+                          <><CheckCircleOutlined /> Còn hàng</>
+                        ) : (
+                          <><CloseCircleOutlined /> Hết hàng</>
+                        )}
                       </div>
                     </div>
 
                     <div className="card-actions">
-                      <Button type="primary" icon={<ShoppingCartOutlined />} onClick={() => handleAddToCart(p.id)}>
+                      <Button 
+                        type="primary" 
+                        icon={<ShoppingCartOutlined />} 
+                        onClick={(e) => handleAddToCart(e, p)}
+                        disabled={Number(p.stock ?? 0) <= 0}
+                      >
                         Thêm vào giỏ
                       </Button>
-                      <Popconfirm title="Xóa sản phẩm khỏi yêu thích?" onConfirm={() => handleRemove(p.id)} okText="Xóa" cancelText="Hủy">
-                        <Button danger icon={<DeleteOutlined />} className="btn-delete" />
-                      </Popconfirm>
                     </div>
-                  </Card>
+                  </div>
                 </Col>
               );
             })}

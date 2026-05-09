@@ -7,6 +7,10 @@ export async function createConversation(data: { userId: number; expertId: numbe
   });
 }
 
+export async function getAllConversations() {
+  return apiFetch('/api/v1/conversation', { method: 'GET' });
+}
+
 export async function getConversationsByUserId(userId: number) {
   return apiFetch(`/api/v1/conversation/user/${userId}`, { method: 'GET' });
 }

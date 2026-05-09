@@ -77,7 +77,7 @@ const HelpManagementComponent: React.FC = () => {
 
       <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
         <Col xs={24} lg={6}>
-          <Card variant="shadow" className="help-card">
+          <Card  className="help-card">
             <Title level={4} style={{ marginTop: 0 }}>Mục lục</Title>
             <Anchor items={anchorItems} affix={false} />
           </Card>
@@ -85,7 +85,7 @@ const HelpManagementComponent: React.FC = () => {
 
         <Col xs={24} lg={18}>
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Card variant="shadow" className="help-card" id="overview">
+            <Card  className="help-card" id="overview">
               <Title level={4} style={{ marginTop: 0 }}>
                 <DashboardOutlined /> Tổng quan hệ thống
               </Title>
@@ -108,7 +108,7 @@ const HelpManagementComponent: React.FC = () => {
               />
             </Card>
 
-            <Card variant="shadow" className="help-card" id="quick-add">
+            <Card  className="help-card" id="quick-add">
               <Title level={4} style={{ marginTop: 0 }}>
                 <PlusOutlined /> Thêm nhanh
               </Title>
@@ -122,7 +122,7 @@ const HelpManagementComponent: React.FC = () => {
               </div>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="notifications">
+            <Card  className="help-card" id="notifications">
               <Title level={4} style={{ marginTop: 0 }}>
                 <BellOutlined /> Thông báo
               </Title>
@@ -132,7 +132,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="users">
+            <Card  className="help-card" id="users">
               <Title level={4} style={{ marginTop: 0 }}>
                 <UserOutlined /> Quản lý người dùng
               </Title>
@@ -142,7 +142,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="products">
+            <Card  className="help-card" id="products">
               <Title level={4} style={{ marginTop: 0 }}>
                 <ShoppingOutlined /> Quản lý sản phẩm
               </Title>
@@ -151,7 +151,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="orders">
+            <Card  className="help-card" id="orders">
               <Title level={4} style={{ marginTop: 0 }}>
                 <OrderedListOutlined /> Quản lý đơn hàng
               </Title>
@@ -160,7 +160,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="bookings">
+            <Card  className="help-card" id="bookings">
               <Title level={4} style={{ marginTop: 0 }}>
                 <CalendarOutlined /> Quản lý lịch hẹn (Bookings)
               </Title>
@@ -169,7 +169,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="content">
+            <Card  className="help-card" id="content">
               <Title level={4} style={{ marginTop: 0 }}>
                 <FileTextOutlined /> Bài viết & <StarOutlined /> Đánh giá
               </Title>
@@ -189,7 +189,7 @@ const HelpManagementComponent: React.FC = () => {
               </Row>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="analytics">
+            <Card  className="help-card" id="analytics">
               <Title level={4} style={{ marginTop: 0 }}>
                 <BarChartOutlined /> Phân tích hành vi
               </Title>
@@ -198,7 +198,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card" id="settings">
+            <Card  className="help-card" id="settings">
               <Title level={4} style={{ marginTop: 0 }}>
                 <SettingOutlined /> Cài đặt hệ thống
               </Title>
@@ -207,7 +207,7 @@ const HelpManagementComponent: React.FC = () => {
               </Text>
             </Card>
 
-            <Card variant="shadow" className="help-card">
+            <Card  className="help-card">
               <Title level={4} style={{ marginTop: 0 }}>Câu hỏi thường gặp</Title>
               <Collapse items={faqItems} />
               <Divider />

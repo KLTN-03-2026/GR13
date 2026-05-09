@@ -4,8 +4,8 @@ import { Request, Response } from "express";
 
 export const getSkinAnalysisHistory = async (req: Request, res: Response) => {
   try {
-    const { id: userId } = (req as any).user;
-    const response = await services.getSkinAnalysisHistory(userId);
+    const userId = req.params.userId || (req as any).user.id;
+    const response = await services.getSkinAnalysisHistory(+userId);
     return res.status(200).json(response);
   } catch (error) {
     return InternalServerError(res);

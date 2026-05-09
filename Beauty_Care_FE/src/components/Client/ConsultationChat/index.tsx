@@ -8,6 +8,9 @@ import {
   Tooltip,
   Spin,
   message,
+  Modal,
+  Tag,
+  Divider,
 } from "antd";
 import {
   SendOutlined,
@@ -17,13 +20,16 @@ import {
   SmileOutlined,
   FileImageOutlined,
   PaperClipOutlined,
+  FileTextOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
+import { Popover } from "antd";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSocket } from "../../../contexts/SocketContext";
 import {
   createConversation,
 } from "../../../api/conversation";
-import { createMessage, getMessagesByConversationId } from "../../../api/message";
+import { createMessage, getMessagesByConversationId, uploadFile } from "../../../api/message";
 import "./style.scss";
 
 const { Text } = Typography;
@@ -33,7 +39,7 @@ type MessageType = {
   conversation_id: number;
   content: string;
   sender_id: number;
-  message_type: "text" | "image";
+  message_type: "text" | "image" | "file" | "sticker";
   is_read: boolean;
   createdAt: string;
   sender?: {
@@ -56,6 +62,21 @@ type ConversationType = {
   updatedAt: string;
 };
 
+const STICKERS = [
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f60a/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f60d/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f602/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f973/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f618/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f929/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f60e/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f44d/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f44c/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f496/512.gif",
+  "https://fonts.gstatic.com/s/e/notoemoji/latest/1f338/512.gif",
+];
+
 const ConsultationChat: React.FC = () => {
   const { user, token } = useAuth();
   const { socket, isConnected } = useSocket();
@@ -63,8 +84,12 @@ const ConsultationChat: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const joinedRoomRef = useRef<number | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const EXPERT_ID = 2;
 
@@ -79,28 +104,39 @@ const ConsultationChat: React.FC = () => {
   }, [user, token]);
 
   useEffect(() => {
-    if (socket && conversation && user) {
+    if (socket && isConnected && conversation && user) {
       const userData = user as any;
-      
+
+      // Join personal user room for background updates
+      if (userData.id) {
+        socket.emit("joinConversation", `user_${userData.id}`);
+      }
+
       if (joinedRoomRef.current !== conversation.id) {
-        if (joinedRoomRef.current !== null) {
-          socket.emit("leaveRoom", joinedRoomRef.current);
-        }
-        socket.emit("joinRoom", conversation.id);
+        socket.emit("joinConversation", conversation.id);
         joinedRoomRef.current = conversation.id;
       }
 
-      socket.on("receiveMessage", (newMessage: MessageType) => {
-        if (newMessage.sender_id !== userData.id) {
-          setMessages((prev) => [...prev, newMessage]);
+      const handleReceiveMessage = (newMessage: MessageType) => {
+        console.log("📩 Client received socket message:", newMessage);
+        // Default to text if type is missing or invalid
+        const msg = { ...newMessage, message_type: newMessage.message_type || "text" };
+        
+        if (msg.conversation_id === conversation.id && msg.sender_id !== userData.id) {
+          setMessages((prev) => {
+            if (prev.find(m => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         }
-      });
+      };
+
+      socket.on("receiveMessage", handleReceiveMessage);
 
       return () => {
-        socket.off("receiveMessage");
+        socket.off("receiveMessage", handleReceiveMessage);
       };
     }
-  }, [socket, conversation, user]);
+  }, [socket, isConnected, conversation, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -163,6 +199,85 @@ const ConsultationChat: React.FC = () => {
     }
   };
 
+  const handleStickerClick = async (url: string) => {
+    if (!conversation || !user) return;
+    const userData = user as any;
+
+    const newMessageData = {
+      conversation_id: conversation.id,
+      sender_id: userData.id,
+      message_type: "sticker" as const,
+      content: url,
+    };
+
+    try {
+      const msgRes = await createMessage(newMessageData);
+      if (msgRes.err === 0) {
+        setMessages((prev) => [...prev, msgRes.data]);
+      }
+    } catch (error) {
+      console.error("Error sending sticker:", error);
+    }
+  };
+
+  const onImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !conversation) return;
+
+    try {
+      setUploading(true);
+      const uploadRes = await uploadFile(file);
+      if (uploadRes.url) {
+        const userData = user as any;
+        const newMessageData = {
+          conversation_id: conversation.id,
+          sender_id: userData.id,
+          message_type: "image" as const,
+          content: uploadRes.url,
+        };
+        const msgRes = await createMessage(newMessageData);
+        if (msgRes.err === 0) {
+          setMessages((prev) => [...prev, msgRes.data]);
+        }
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      message.error("Tải ảnh thất bại");
+    } finally {
+      setUploading(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+    }
+  };
+
+  const onFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !conversation) return;
+
+    try {
+      setUploading(true);
+      const uploadRes = await uploadFile(file);
+      if (uploadRes.url) {
+        const userData = user as any;
+        const newMessageData = {
+          conversation_id: conversation.id,
+          sender_id: userData.id,
+          message_type: "file" as const,
+          content: uploadRes.url,
+        };
+        const msgRes = await createMessage(newMessageData);
+        if (msgRes.err === 0) {
+          setMessages((prev) => [...prev, msgRes.data]);
+        }
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      message.error("Tải tệp thất bại");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSend();
@@ -179,6 +294,20 @@ const ConsultationChat: React.FC = () => {
       return `${msg.sender.firstName || ""} ${msg.sender.lastName || ""}`.trim();
     }
     return msg.sender_id === EXPERT_ID ? "Chuyên gia" : "Bạn";
+  };
+
+  const getExpertName = () => {
+    if (conversation?.expertData) {
+      return `${conversation.expertData.firstName || ""} ${conversation.expertData.lastName || ""}`.trim();
+    }
+    return "Chuyên gia tư vấn";
+  };
+
+  const getExpertAvatar = () => {
+    if (conversation?.expertData?.avatar) {
+      return conversation.expertData.avatar;
+    }
+    return "https://api.dicebear.com/9.x/avataaars/svg?seed=DrNguyen";
   };
 
   const getSenderAvatar = (msg: MessageType) => {
@@ -207,7 +336,7 @@ const ConsultationChat: React.FC = () => {
       <div className="chat-content">
         <div className="chat-header">
           <div className="chat-user-info">
-            <Avatar size={40} src="https://api.dicebear.com/9.x/avataaars/svg?seed=DrNguyen" />
+            <Avatar size={40} src={getExpertAvatar()} />
             <div className="user-text">
               <Text strong className="user-name">Chat cùng chuyên gia</Text>
               <Text type="secondary" className="user-status">
@@ -216,14 +345,13 @@ const ConsultationChat: React.FC = () => {
             </div>
           </div>
           <Space size="middle">
-            <Tooltip title="Gọi thoại">
-              <Button type="text" shape="circle" icon={<PhoneOutlined />} />
-            </Tooltip>
-            <Tooltip title="Gọi video">
-              <Button type="text" shape="circle" icon={<VideoCameraOutlined />} />
-            </Tooltip>
             <Tooltip title="Xem thông tin">
-              <Button type="text" shape="circle" icon={<InfoCircleOutlined />} />
+              <Button 
+                type="text" 
+                shape="circle" 
+                icon={<InfoCircleOutlined />} 
+                onClick={() => setShowInfoModal(true)}
+              />
             </Tooltip>
           </Space>
         </div>
@@ -239,14 +367,48 @@ const ConsultationChat: React.FC = () => {
                 {!isMe(msg) && (
                   <Avatar size={32} src={getSenderAvatar(msg)} className="msg-avatar" />
                 )}
-                <div className="message-bubble">
+                <div className={`message-bubble ${msg.message_type || "text"}`}>
                   <div className="bubble-content">
                     {!isMe(msg) && (
                       <Text strong style={{ display: "block", marginBottom: 4, fontSize: 12 }}>
                         {getSenderName(msg)}
                       </Text>
                     )}
-                    <p>{msg.content}</p>
+                    
+                    {(msg.message_type === "text" || !msg.message_type) && <p>{msg.content}</p>}
+                    
+                    {msg.message_type === "image" && (
+                      <div className="image-container">
+                        <img 
+                          src={msg.content} 
+                          alt="Hình ảnh" 
+                          style={{ maxWidth: '100%', borderRadius: 8, cursor: 'pointer', display: 'block' }} 
+                          onClick={() => window.open(msg.content, '_blank')}
+                        />
+                      </div>
+                    )}
+                    
+                    {msg.message_type === "sticker" && (
+                      <img 
+                        src={msg.content} 
+                        alt="Sticker" 
+                        style={{ width: 120, height: 120, display: 'block' }} 
+                      />
+                    )}
+                    
+                    {msg.message_type === "file" && (
+                      <div className="file-message" onClick={() => window.open(msg.content, '_blank')}>
+                        <FileTextOutlined style={{ fontSize: 24, marginRight: 8 }} />
+                        <div style={{ flex: 1 }}>
+                          <Text strong ellipsis style={{ width: 150, display: 'block' }}>
+                            {msg.content.split('/').pop()?.split('-')[0] || "Tài liệu"}
+                          </Text>
+                          <Text type="secondary" size="small">Nhấp để tải xuống</Text>
+                        </div>
+                        <DownloadOutlined />
+                      </div>
+                    )}
+                    
                     <span className="msg-time">{formatTime(msg.createdAt)}</span>
                   </div>
                 </div>
@@ -261,9 +423,52 @@ const ConsultationChat: React.FC = () => {
 
         <div className="chat-footer">
           <div className="footer-actions">
-            <Button type="text" icon={<SmileOutlined />} />
-            <Button type="text" icon={<FileImageOutlined />} />
-            <Button type="text" icon={<PaperClipOutlined />} />
+            <Popover
+              content={
+                <div style={{ width: 250, display: 'flex', flexWrap: 'wrap', gap: 8, padding: 8 }}>
+                  {STICKERS.map((url, i) => (
+                    <img 
+                      key={i} 
+                      src={url} 
+                      alt="sticker" 
+                      style={{ width: 50, height: 50, cursor: 'pointer' }}
+                      onClick={() => handleStickerClick(url)}
+                    />
+                  ))}
+                </div>
+              }
+              title="Nhãn dán"
+              trigger="click"
+            >
+              <Button type="text" icon={<SmileOutlined />} />
+            </Popover>
+            
+            <Button 
+              type="text" 
+              icon={<FileImageOutlined />} 
+              onClick={() => imageInputRef.current?.click()}
+              loading={uploading}
+            />
+            <Button 
+              type="text" 
+              icon={<PaperClipOutlined />} 
+              onClick={() => fileInputRef.current?.click()}
+              loading={uploading}
+            />
+            
+            <input 
+              type="file" 
+              ref={imageInputRef} 
+              style={{ display: 'none' }} 
+              accept="image/*" 
+              onChange={onImageSelect}
+            />
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={onFileSelect}
+            />
           </div>
           <Input
             placeholder="Nhập tin nhắn..."
@@ -271,7 +476,7 @@ const ConsultationChat: React.FC = () => {
             onChange={(e) => setInputText(e.target.value)}
             onPressEnter={handleKeyPress}
             size="large"
-            disabled={!conversation || !isConnected}
+            disabled={!conversation || !isConnected || uploading}
             suffix={
               <Button
                 type="primary"
@@ -279,12 +484,53 @@ const ConsultationChat: React.FC = () => {
                 icon={<SendOutlined />}
                 onClick={handleSend}
                 className="send-btn"
-                disabled={!conversation || !isConnected}
+                disabled={!conversation || !isConnected || uploading}
               />
             }
           />
         </div>
       </div>
+
+      {/* Thông tin chuyên gia Modal */}
+      <Modal
+        title="Thông tin cuộc hội thoại"
+        open={showInfoModal}
+        onCancel={() => setShowInfoModal(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setShowInfoModal(false)}>
+            Đóng
+          </Button>
+        ]}
+        width={450}
+      >
+        <div style={{ padding: '10px 0' }}>
+          {/* Section 1: Bạn */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+            <Avatar size={60} src={user?.avatar || "https://api.dicebear.com/9.x/avataaars/svg?seed=You"} />
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>BẠN</Text>
+              <br />
+              <Text strong style={{ fontSize: 16 }}>{user?.firstName} {user?.lastName}</Text>
+              <br />
+              <Tag color="blue">Khách hàng</Tag>
+            </div>
+          </div>
+
+          <Divider style={{ margin: '12px 0' }}>Đang kết nối cùng</Divider>
+
+          {/* Section 2: Chuyên gia */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 20 }}>
+            <Avatar size={60} src={getExpertAvatar()} />
+            <div>
+              <Text type="secondary" style={{ fontSize: 12 }}>CHUYÊN GIA TƯ VẤN</Text>
+              <br />
+              <Text strong style={{ fontSize: 16 }}>{getExpertName()}</Text>
+              <br />
+              <Text type="secondary">Chuyên gia tư vấn</Text>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

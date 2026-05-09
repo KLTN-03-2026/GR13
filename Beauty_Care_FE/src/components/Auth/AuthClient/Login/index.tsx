@@ -12,7 +12,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 interface FormErrors {
   email?: string;
   password?: string;
-} 
+}
 
 const LoginComponent = () => {
   const [formData, setFormData] = useState({
@@ -99,9 +99,10 @@ const LoginComponent = () => {
             name="email"
             placeholder=" "
             value={formData.email}
-onChange={handleChange}
+            onChange={handleChange}
             isError={!!errors.email}
             messageError={errors.email}
+            style={{ color: "black" }}
           />
 
           <InputCommonPassword
@@ -113,6 +114,7 @@ onChange={handleChange}
             onChange={handleChange}
             isError={!!errors.password}
             messageError={errors.password}
+            style={{ color: "black" }}
           />
 
           <div className="forgot-password">
@@ -132,15 +134,15 @@ onChange={handleChange}
 
           <div className="divider">
           </div>
-            <p className="txt-divider" style={{textAlign: 'center',fontSize: '14px',color: '#999',marginTop: '20px',marginBottom: '20px'}}>  Hoặc tiếp tục với Google</p>
-          <button 
-            type="button" 
-            className="googleBtn" 
-            style={{ width: '100%'}}
+          <p className="txt-divider" style={{ textAlign: 'center', fontSize: '14px', color: '#999', marginTop: '20px', marginBottom: '20px' }}>  Hoặc tiếp tục với Google</p>
+          <button
+            type="button"
+            className="googleBtn"
+            style={{ width: '100%' }}
             onClick={() => googleLogin()}
             disabled={isPending}
           >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" style={{marginRight: '10px',marginBottom:"-5px"}}/>
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" style={{ marginRight: '10px', marginBottom: "-5px" }} />
             Đăng nhập với Google
           </button>
 

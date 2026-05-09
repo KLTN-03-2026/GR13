@@ -13,7 +13,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketInstance = io(import.meta.env.VITE_API_URL || "http://localhost:8088", {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8088";
+    // Socket.io should connect to the base URL (without /api/v1)
+    const socketUrl = apiUrl.replace("/api/v1", "");
+    
+    const socketInstance = io(socketUrl, {
       transports: ["websocket"],
     });
 
